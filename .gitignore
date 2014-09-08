@@ -1,0 +1,8 @@
+*.db
+*.db-journal
+*.pyc
+*.pyo
+*.ropeproject
+*.swp
+*~
+.TAGS
