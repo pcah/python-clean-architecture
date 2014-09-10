@@ -1,3 +1,5 @@
+import six
+
 from .base import Trait
 from ..exceptions import TraitValidationError
 
@@ -7,16 +9,18 @@ class Int(Trait):
 
 
 class Long(Trait):
-    _value_types = (long, int)
+    _value_types = six.integer_types
 
 
 class Long(Trait):
-    _value_types = (float, long, int)
+    _value_types = (float,) + six.integer_types
 
 
 class Complex(Trait):
-    _value_types = (complex, float, long, int)
+    _value_types = (complex, float) + six.integer_types
 
 
-class String(Trait):
-    _value_types = (string, unicode)
+class Text(Trait):
+    """
+    """
+    _value_types = six.string_types

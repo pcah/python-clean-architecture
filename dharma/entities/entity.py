@@ -14,7 +14,7 @@ class Options(object):
 
     def traits(self):
         " Returns traits of the owning Entity "
-        raise NotImplementedError
+        raise NotImplementedError  # TODO
 
 
 class EntityMeta(type):
@@ -22,13 +22,18 @@ class EntityMeta(type):
 
     def __new__(cls, name, bases, attrs):
         # supply all traits with their labels
-        for name, attr in attrs.items():
+        attrs_orig = attrs.copy()  # shallow copy for iterating on unchanged iterable
+        for name, attr in attrs_orig.items():
+            # instantiate uninstantiated Traits (feature # TODO)
+            if issubclass(attr, Trait):
+                attrs[name] = attr = attr()
+            # inform the trait instance about its name on the entity
             if isinstance(attr, Trait):
                 attr.label = name
-        # build the meta options
-        opts_dict = attrs.pop('_Opts', {})
+        # build the entity and its meta options
+        opts_dict = attrs.pop('EntityOpts', {})  # XXX error, a class instance cant be unsplat later!
         self = super(EntityMeta, cls).__new__(cls, name, bases, attrs)
-        attrs['_opts'] = Options(self, **opts_dict)
+        self.entity_opts = Options(self, **opts_dict)
         return self
 
 

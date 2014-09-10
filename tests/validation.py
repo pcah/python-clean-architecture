@@ -2,7 +2,7 @@ from .factories import build_datasets
 
 import pytest
 
-from dharma.traits import Int, String
+from dharma.traits import Int, Text
 from dharma.exceptions import TraitValidationError
 from dharma.utils import frozendict
 
@@ -26,7 +26,7 @@ class NegativeValidation(object):
 
     data = {
         (Int,): [1, 1.0, 1L],
-        (String,): ['a', u'unicode'],
+        (Text,): ['a', u'unicode'],
     }
 
     datasets = build_datasets(data)
