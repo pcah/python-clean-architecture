@@ -5,11 +5,11 @@ from ..exceptions import TraitInstantiationError
 
 class Trait(object):
 
-    # pattern for __dict__ key on the entity; space char is intended as not to collide with any proper attribute name
+    # pattern for __dict__ key on the Nature; space char is intended as not to collide with any proper attribute name
     __callbacks_key_pattern = '%s callbacks'
 
     def __init__(self, default=None, validators=None):
-        # the entity instance and the label (name of the trait on the entity) are to be injected from the entity scope
+        # the Nature instance and the label (name of the trait on the Nature) are to be injected from the Nature scope
         self.instance = None
         self.label = None
         # kwargs
@@ -33,18 +33,18 @@ class Trait(object):
     # Descriptor protocol
 
     def __get__(self, instance, owner):
-        " Gets the value from the entity "
-        assert instance is self.instance or instance is None, "Trait sanity test: owning entity hasn't been properly set on initialization."
-        assert isinstance(self.label, six.binary_type), "Trait sanity test: trait label hasn't been properly set."
-        # class case: the trait is called from the Entity class
+        " Gets the value from the Nature "
+        assert instance is self.instance or instance is None, "Trait sanity test: Nature hasn't been properly set on initialization."
+        assert isinstance(self.label, six.binary_type), "Trait sanity test: trait label hasn't been properly set on initialization."
+        # class case: the trait is called from the Nature class
         if instance is None:
             return self
         # instance case
         return self._get_value()
 
     def __set__(self, instance, new_value):
-        assert instance and instance is self.instance, "Trait sanity test: owning entity hasn't been properly set on initialization."
-        assert isinstance(self.label, six.binary_type), "Trait sanity test: trait label hasn't been properly set."
+        assert instance and instance is self.instance, "Trait sanity test: Nature hasn't been properly set on initialization."
+        assert isinstance(self.label, six.binary_type), "Trait sanity test: trait label hasn't been properly set on initialization."
         value_changed = (new_value != self._get_value)
         self.validate(new_value)  # TODO validate on every assign or only on value_changed?
         if value_changed:
