@@ -9,6 +9,6 @@ Spheres of consideration:
 * Time/space cost optimization taken as the second matter.
 
 Tiers of Dharma:
-* Technical details: traits & natures
-* Domain-specific logic: entities, aggregates, value objects, shared entities (between bounded contexts), domain services
-* Application-specific logic: application services, gateways, CQRS stacks, sagas.
+* Technical details: traits & natures, validators.
+* Domain-specific logic: entities, aggregates, value objects, shared entities (between bounded contexts), policies, factories, domain services, repositories.
+* Application-specific logic: application services, gateways, CQRS stacks, sagas. Task-, event- and data-driven applications, commands.
