@@ -1,14 +1,18 @@
+import inspect
 import six
 
 from ..exceptions import TraitInstantiationError
+from ..utils import is_argspec_valid, OrderedSet
 
 
-_INIT_ERROR_MSG = "Trait sanity test: Nature instance hasn't been properly set "
-    "on initialization. Either you are using Trait outside of Nature scope or "
+_INIT_ERROR_MSG = "Trait sanity test: Nature instance hasn't been properly set"
+    " on initialization. Either you are using Trait outside of Nature scope or"
+    " Nature initialization hasn't been finished yet."
+_LABEL_ERROR_MSG = "Trait sanity test: trait label hasn't been properly set on"
+    " initialization. Either you are using Trait outside of Nature scope or "
     "Nature initialization hasn't been finished yet."
-_LABEL_ERROR_MSG = "Trait sanity test: trait label hasn't been properly set on "
-    "initialization. Either you are using Trait outside of Nature scope or "
-    "Nature initialization hasn't been finished yet."
+_INVALID_SIGN_MSG = "Trait sanity test: function passed to the listener seems "
+    "not to have valid signature. Check method docstring for details."
 
 
 class Trait(object):
@@ -17,25 +21,43 @@ class Trait(object):
     # sure we are not colliding with any proper attribute name
     _listener_key_pattern = '%s change listeners'
 
-    def __init__(self, default=None, validators=None, volatile=False):
+    _cast_to = None
+
+    def __init__(self, default=None, cast=False, validators=None,
+                 class_listeners=None, volatile=False):
         """
         Params:
             default - default value of the Trait. It is not validated, so you
                 are supposed to know what you are doing. None is treated as no
                 default value. Default: None
-            validators - iterable of (value) -> None functions that are called
-                when Trait changes its value. They are supposed to raise
-                TraitValidationError if they consider value to be invalid.
-                Validators are supported on per-Nature-class basis.
-            volatile - trait should not be treated as persistent. Default: False.
+            validators - iterable of (value, Nature) -> None functions that
+                are called when Trait changes its value. They are supposed
+                to raise `TraitValidationError` if they consider value to be
+                invalid. Nature argument is given for the sake of cross-trait
+                validation on Nature instance. Validators are supported
+                on per-Nature-class basis.
+            cast - a boolean describing whether value assigned to the trait
+                should be casted to the expected type of value. Casting is done
+                before validation.
+            class_listeners - iterable of per-Nature-class listeners. Trait
+                implements observable pattern, including on Trait instance per
+                the Nature-implementing class. With this argument you can
+                declare the listeners during Trait declaration.
+            volatile - trait should not be treated as persistent.
+                Default: False.
         """
         # the Nature instance and the label (name of the trait on the Nature)
         # are to be injected from the Nature scope
         self._instance = None
         self._label = None
+
         # kwargs
         self.default = default
         self.validators = validators or ()
+        self.cast = cast
+        self.cast_to = None
+        # ordered set of change listeners per-Nature-class
+        self._class_listeners = OrderedSet(listeners) if listeners else None
 
     @property
     def instance(self):
@@ -75,7 +97,9 @@ class Trait(object):
         """
         raise TraitInstantiationError("You shouldn't use pure Trait class.")
 
+    ############
     # Descriptor protocol
+    ############
 
     def __get__(self, instance, owner):
         """
@@ -98,22 +122,38 @@ class Trait(object):
         """
         assert instance and instance is self._instance, _INIT_ERROR_MSG
         assert isinstance(self._label, six.string_types), _LABEL_ERROR_MSG
-        value_changed = (new_value != self._get_value())
-        if value_changed:
+
+        old_value = self._get_value()
+        new_value = self.prepare_value(new_value)
+        if new_value != old_value:
             # logic fires only in the case when the value changes
             self.validate(new_value)
             self._set_value(new_value)
-            # notify observers about change done
-            key = self._listener_key_pattern % self._label
-            for listener in instance.__class__.__dict__.get(key, ()):
-                listener(self.__value, new_value, instance)
+            # notify listeners about change done
+            self._notify(old_value)
 
     def __delete__(self, obj):
         # TODO Deletes the record (as usual) or sets the value to undefined/None?
         del self.instance.__dict__[self._label]
         # or self._set_value(undefined)
 
+    ############
     # Validation
+    ############
+
+    def prepare_value(self, value):
+        """
+        Returns:
+            value casted according to the type described by `_cast_to`
+            attribute
+        """
+        if self.cast:
+            assert self._cast_to, ""  # TODO
+            try:
+                return self._cast_to(new_value)
+            except (TypeError, ValueError):
+                raise  # TODO
+        return value
 
     def validate(self, value):
         """
@@ -133,13 +173,45 @@ class Trait(object):
                 type(value), self._value_types)
             raise TraitValidationError(msg)
         for validator in self.validators:
-            validator(value)
+            try:  # TODO how to call?
+                validator(value, self._instance)
+            except TypeError:
+                # case: only value
+                validator(value)
 
-    # Observable pattern
+    ############
+    # Observable pattern for Nature class & instance
+    ############
 
-    def change_listener(self, listener):
+    def _notify(self, old_value):
         """
-        Decorator that marks a function or method as a change listener on
+        Fires notifications to per-class and per-instance listeners. Old value
+        is passed as argument, new value is just the current value (we're
+        after the assignment).
+
+        Params:
+            old_value - trait value before assignment.
+
+        Returns:
+            None.
+        """
+        new_value = self._get_value()
+        instance = self._instance
+        # per-Nature-class listeners
+        if self._class_listeners:
+            for listener in self._class_listeners:
+                # TODO do we need to pass the instance?
+                listener(self.__value, new_value, instance)
+        # per-Nature-instance listeners
+        key = self._listener_key_pattern % self._label
+        if key in instance.__dict__:
+            for listener in instance.__dict__.get(key, ()):
+                # TODO do we need to pass the instance?
+                listener(self.__value, new_value, instance)
+
+    def add_class_listener(self, listener):
+        """
+        Adds a function or method as a change listener on
         per-Nature-class basis.
 
         Params:
@@ -149,19 +221,57 @@ class Trait(object):
                 its value. It is supposed to serve as a listener of the trait
                 value. The listeners are supported on per-Nature-class basis.
         Returns:
-            the initial `listener` argument
+            None
+        """
+        if not self._class_listeners:
+            self._class_listeners = OrderedSet()
+        self._class_listeners.append(listener)
+
+    def class_listener(self, listener):
+        """
+        Decorator that marks a function or method as a change listener on
+        per-Nature-class basis. To be used within the Nature scope.
+
+        Params:
+            listener - a function or method of
+                    (old_value, new_value, Trait) -> None
+                signature that is going to be called whenever the trait changes
+                its value. It is supposed to serve as a listener of the trait
+                value. The listeners are supported on per-Nature-class basis.
+        Returns:
+            the initial `listener` argument untouched. It just adds it to the
+            internal collection of listeners of the Trait.
+        """
+        self.add_class_listener(listener)
+        # it's intended as a decorator, so return the `listener` untouched
+        return listener
+
+    def add_instance_listener(self, listener):
+        """
+        Adds a function or method as a change listener on
+        per-Nature-instance basis.
+
+        Params:
+            listener - a function or method of
+                    (old_value, new_value, Trait) -> None
+                signature that is going to be called whenever the trait changes
+                its value. It is supposed to serve as a listener of the trait
+                value. The listeners are supported on per-Nature-instance
+                basis.
+        Returns:
+            None
         """
         assert self._instance, _INIT_ERROR_MSG
         assert isinstance(self._label, six.string_types), _LABEL_ERROR_MSG
-        key = self._listener_key_pattern % self._label
-        # per-class change listeners
+        # we're asserting valid listener signature here (without relying on
+        # duck-typing), because listener is passed here, but the potential
+        # TypeError is going to be raised much further during the runtime
+        assert is_argspec_valid(listener, arg_number=3), _INVALID_SIGN_MSG
 
-        # TODO should I hang per-Nature-class attributes on Nature class or
-        # on trait instance? if on trait, Nature-implementing class must be
-        # hashable
-        nature = self._instance.__class__
+        # per-Nature-instance change listeners
+        # trait signs itself with its label in the instance __dict__
+        key = self._listener_key_pattern % self._label
+        nature = self._instance
         if key not in nature.__dict__:
-            nature.__dict__[key] = set()
+            nature.__dict__[key] = OrderedSet()
         nature.__dict__[key].add(listener)
-        # it's intended as a decorator, so return the `listener`
-        return listener

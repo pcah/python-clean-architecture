@@ -3,6 +3,9 @@ from collections import namedtuple
 
 class frozendict(dict):
     """
+    Frozen (unmutable) version of dict. Name is left to be consistent with
+    set/frozenset pair.
+
     The code is taken from:
     code.activestate.com/recipes/414283-frozen-dictionaries/
     """
@@ -51,6 +54,31 @@ class frozendict(dict):
 
     def __repr__(self):
         return "frozendict(%s)" % dict.__repr__(self)
+
+
+class OrderedSet(set):
+    pass  # TODO
+
+
+def is_argspec_valid(function, arg_number=None, kwargs_names=None):
+    """
+    Args:
+        function - function to be checked.
+        arg_number - number of all arguments (named or not) which is going to
+            be used calling the function.
+        kwargs_names - iterable of names for keyword arguments whose existence
+            in signature is going to be verified.
+
+    Returns:
+        bool - True iff function is valid to be valid with specified arg
+            number and keyword arguments names.
+    """
+    # TODO if six.PY3 use SignatureObject
+    # else:
+    # import inspect
+    # (len(inspect.getargspec(listener).args) == 3 or
+    #  inspect.getargspec(listener).varargs is not None)
+    return True
 
 
 # Named tuple of (trait_class, args=(), kwargs={}) schema
