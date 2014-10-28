@@ -1,3 +1,4 @@
+import inspect
 import six
 
 from dharma.utils import frozendict
@@ -11,7 +12,7 @@ class Dharma(object):
     Meta of Django Model/ModelForm.
     """
 
-    def __init__(self, nature, traits, dharma_def=None):
+    def __init__(self, nature, traits, dharma=None, **kwargs):
         """
         Params:
             nature - Nature instance owning this Dharma instance
@@ -23,7 +24,7 @@ class Dharma(object):
         self._nature = nature
         self._kwargs = kwargs
         self._traits = frozendict(traits)
-        if dharma_def:
+        if dharma:
             # process the definition of the dharma
             pass  # TODO
 
@@ -38,29 +39,32 @@ class NatureMeta(type):
     The metaclass that is doing the hard job building API of Nature.
     """
 
-    def __new__(cls, name, bases, attrs):
+    def __new__(metacls, name, bases, attrs):
         # supply all traits with their labels
         traits = {}
         # shallow copy for iterating on unchanged iterable, because attrs dict
         # will be changed
-        for name, attr in attrs.copy():
+        for name, attr in attrs.copy().items():
             # instantiate uninstantiated Traits (feature # TODO)
-            if issubclass(attr, Trait):
+            if inspect.isclass(attr) and issubclass(attr, Trait):
                 attrs[name] = attr = attr()
             # inform the trait instance about its name on the Nature
             if isinstance(attr, Trait):
-                # injecting label & instance to the traits
-                attr._label = name
-                attr._instance = self
                 # gathering traits and their labels for Dharma
                 traits[name] = attr
         # build the Nature and its meta options
-        dharma_def = attrs.pop('Dharma', None)
-        assert not isinstance(dharma, Trait), "Trait sanity test: you probably"
-            "didn't want to pass a Trait as a Dharma"
-        self = super(NatureMeta, cls).__new__(cls, name, bases, attrs)
-        self.dharma = Dharma(nature=self, dharma_def=dharma_def, traits=traits)
-        return self
+        instance = super(NatureMeta, metacls).__new__(
+            metacls, name, bases, attrs)
+        dharma = attrs.pop('Dharma', None)
+        assert not isinstance(dharma, Trait), (
+               "Trait sanity test: you probably didn't want to pass a Trait as "
+               "a Dharma")
+        instance.dharma = Dharma(nature=instance, dharma=dharma, traits=traits)
+        for name, trait in traits.items():
+            # injecting label & instance to the traits
+            attr._label = name
+            attr._instance = instance
+        return instance
 
 
 class Nature(six.with_metaclass(NatureMeta, object)):

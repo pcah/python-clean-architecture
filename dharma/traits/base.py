@@ -1,21 +1,36 @@
-import inspect
 import six
 
 from ..exceptions import TraitInstantiationError
 from ..utils import is_argspec_valid, OrderedSet
 
 
-_INIT_ERROR_MSG = "Trait sanity test: Nature instance hasn't been properly set"
+_INIT_ERROR_MSG = (
+    "Trait sanity test: Nature instance hasn't been properly set"
     " on initialization. Either you are using Trait outside of Nature scope or"
-    " Nature initialization hasn't been finished yet."
-_LABEL_ERROR_MSG = "Trait sanity test: trait label hasn't been properly set on"
+    " Nature initialization hasn't been finished yet.")
+_LABEL_ERROR_MSG = (
+    "Trait sanity test: trait label hasn't been properly set on"
     " initialization. Either you are using Trait outside of Nature scope or "
-    "Nature initialization hasn't been finished yet."
-_INVALID_SIGN_MSG = "Trait sanity test: function passed to the listener seems "
-    "not to have valid signature. Check method docstring for details."
+    "Nature initialization hasn't been finished yet.")
+_INVALID_SIGN_MSG = (
+    "Trait sanity test: function passed to the listener seems to have invalid "
+    "signature. Check method docstring for details.")
+_INVALID_SIGN_MSG = (
+    "Trait sanity test: function passed to the listener seems not to have valid"
+    " signature. Check method docstring for details.")
+_CAST_TYPE_ERROR = (
+    "Trait sanity test: you're trying to use a casting trait without correctly "
+    "specifying the casting type.")
+
 
 
 class Trait(object):
+    """
+    Nature
+    observable
+    validation
+    default value
+    """
 
     # pattern for __dict__ key on the Nature; space char is intended to be
     # sure we are not colliding with any proper attribute name
@@ -27,8 +42,8 @@ class Trait(object):
                  class_listeners=None, volatile=False):
         """
         Params:
-            default - default value of the Trait. It is not validated, so you
-                are supposed to know what you are doing. None is treated as no
+            default - default value of the Trait. It is not validated (you
+                are supposed to know what you are doing). None is treated as no
                 default value. Default: None
             validators - iterable of (value, Nature) -> None functions that
                 are called when Trait changes its value. They are supposed
@@ -38,7 +53,7 @@ class Trait(object):
                 on per-Nature-class basis.
             cast - a boolean describing whether value assigned to the trait
                 should be casted to the expected type of value. Casting is done
-                before validation.
+                before validation. Default: False
             class_listeners - iterable of per-Nature-class listeners. Trait
                 implements observable pattern, including on Trait instance per
                 the Nature-implementing class. With this argument you can
@@ -55,7 +70,7 @@ class Trait(object):
         self.default = default
         self.validators = validators or ()
         self.cast = cast
-        self.cast_to = None
+        self._cast_to = None
         # ordered set of change listeners per-Nature-class
         self._class_listeners = OrderedSet(listeners) if listeners else None
 
@@ -88,7 +103,7 @@ class Trait(object):
         """
         Technical method for setting the value from the instance `__dict__`.
         """
-        return self._instance.__dict__[self._label] = value
+        self._instance.__dict__[self._label] = value
 
     @property
     def _value_types(self):
@@ -124,10 +139,15 @@ class Trait(object):
         assert isinstance(self._label, six.string_types), _LABEL_ERROR_MSG
 
         old_value = self._get_value()
-        new_value = self.prepare_value(new_value)
+        new_value = self._preprocess_value(new_value)
         if new_value != old_value:
             # logic fires only in the case when the value changes
-            self.validate(new_value)
+            if self.cast:
+                new_value = self.cast(new_value)
+            else:
+                self.validate_type(new_value)
+            self.validate_value(new_value)
+            # the new value is assumed to be valid
             self._set_value(new_value)
             # notify listeners about change done
             self._notify(old_value)
@@ -141,21 +161,40 @@ class Trait(object):
     # Validation
     ############
 
-    def prepare_value(self, value):
+    def _preprocess_value(self, value):
         """
+        A hook for preparing assigned value BEFORE value is checked whether it
+        is to be changed. Useful if your assigning process has to change
+        the value in some way, ie. instantiates the class of the value.
+
+        Params:
+            value - raw value to reprocess.
         Returns:
-            value casted according to the type described by `_cast_to`
-            attribute
+            Preprocessed value.
         """
-        if self.cast:
-            assert self._cast_to, ""  # TODO
-            try:
-                return self._cast_to(new_value)
-            except (TypeError, ValueError):
-                raise  # TODO
         return value
 
-    def validate(self, value):
+    def cast(self, value):
+        """
+        Casts new value to the type specified by `_cast_to` attribute.
+        Can be used as a hook for more sophisticated logic.
+
+        Param:
+            value - value to be cast.
+
+        Returns:
+            casted value.
+        """
+        assert self._cast_to, _CAST_TYPE_ERROR
+        return self._cast_to(value)
+
+    def validate_type(self, value):
+        if not isinstance(value, self._value_types):
+            msg = "Invalid type of value: was {}; should be: {}".format(
+                type(value), self._value_types)
+            raise TraitValidationError(msg)
+
+    def validate_value(self, value):
         """
         Validates a value to be assigned. If overridden to introduce custom
         validation, it should call its super version or take the responsibility
@@ -168,10 +207,6 @@ class Trait(object):
             TraitValidationError - when the value isn't one of `_value_types`
             or doesn't conform one of validators.
         """
-        if not isinstance(value, self._value_types):
-            msg = "Invalid type of value: was {}; should be: {}".format(
-                type(value), self._value_types)
-            raise TraitValidationError(msg)
         for validator in self.validators:
             try:  # TODO how to call?
                 validator(value, self._instance)
@@ -186,8 +221,8 @@ class Trait(object):
     def _notify(self, old_value):
         """
         Fires notifications to per-class and per-instance listeners. Old value
-        is passed as argument, new value is just the current value (we're
-        after the assignment).
+        is passed as argument, new value is just the current value (we are at
+        the point right after the assignment).
 
         Params:
             old_value - trait value before assignment.
@@ -201,13 +236,13 @@ class Trait(object):
         if self._class_listeners:
             for listener in self._class_listeners:
                 # TODO do we need to pass the instance?
-                listener(self.__value, new_value, instance)
+                listener(old_value, new_value, instance)
         # per-Nature-instance listeners
         key = self._listener_key_pattern % self._label
         if key in instance.__dict__:
             for listener in instance.__dict__.get(key, ()):
                 # TODO do we need to pass the instance?
-                listener(self.__value, new_value, instance)
+                listener(old_value, new_value, instance)
 
     def add_class_listener(self, listener):
         """
@@ -263,7 +298,7 @@ class Trait(object):
         """
         assert self._instance, _INIT_ERROR_MSG
         assert isinstance(self._label, six.string_types), _LABEL_ERROR_MSG
-        # we're asserting valid listener signature here (without relying on
+        # we're asserting valid listener signature (without relying on
         # duck-typing), because listener is passed here, but the potential
         # TypeError is going to be raised much further during the runtime
         assert is_argspec_valid(listener, arg_number=3), _INVALID_SIGN_MSG
@@ -275,3 +310,4 @@ class Trait(object):
         if key not in nature.__dict__:
             nature.__dict__[key] = OrderedSet()
         nature.__dict__[key].add(listener)
+

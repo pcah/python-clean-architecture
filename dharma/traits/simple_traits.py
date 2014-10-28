@@ -8,6 +8,10 @@ class Int(Trait):
     _value_types = (int,)
 
 
+class Float(Trait):
+    _value_types = (int,)
+
+
 class Long(Trait):
     _value_types = six.integer_types
 

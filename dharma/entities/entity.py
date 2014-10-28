@@ -1,4 +1,4 @@
-from .traits.nature import Nature
+from ..traits.nature import Nature
 
 
 class Entity(Nature):

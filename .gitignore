@@ -1,8 +1,13 @@
-*.db
-*.db-journal
-*.pyc
-*.pyo
-*.ropeproject
+# Python temp
+*.py[cod]
+
+# IDEs
 *.swp
 *~
+*.ropeproject
+*.psproj
 .TAGS
+
+# DB
+*.db
+*.db-journal
