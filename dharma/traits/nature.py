@@ -1,4 +1,9 @@
-import inspect
+"""
+Module 'dharma.traits.nature' defines minimal API for a trait-oriented class.
+Look at docstrings of Nature, NatureMeta and Dharma classes.
+"""
+# pylint: disable=protected-access, too-few-public-methods
+
 import six
 
 from dharma.utils import frozendict
@@ -17,9 +22,9 @@ class Dharma(object):
         Params:
             nature - Nature instance owning this Dharma instance
             traits - iterable of all traits of the nature
-            dharma_def - "meta"-class interpreted as a definition for
-                the Dharma. It is supposed to have attributes that
-                Dharma interprets as its parameters.
+            dharma - "meta"-class interpreted as a definition for the Dharma.
+                It is supposed to have attributes that Dharma interprets as
+                its parameters.
         """
         self._nature = nature
         self._kwargs = kwargs
@@ -39,32 +44,24 @@ class NatureMeta(type):
     The metaclass that is doing the hard job building API of Nature.
     """
 
-    def __new__(metacls, name, bases, attrs):
-        # supply all traits with their labels
+    def __new__(mcs, name, bases, attrs):
+        # fetch Dharma definition
+        dharma = attrs.pop('Dharma', None)
+        assert not isinstance(dharma, Trait) and attrs.get('dharma') is None, (
+            "Trait sanity test -- you probably didn't want to pass a Trait as "
+            "a Dharma")
+        # create the type instance
+        cls = super(NatureMeta, mcs).__new__(mcs, name, bases, attrs)
         traits = {}
-        # shallow copy for iterating on unchanged iterable, because attrs dict
-        # will be changed
-        for name, attr in attrs.copy().items():
-            # instantiate uninstantiated Traits (feature # TODO)
-            if inspect.isclass(attr) and issubclass(attr, Trait):
-                attrs[name] = attr = attr()
-            # inform the trait instance about its name on the Nature
+        for name, attr in attrs.items():
             if isinstance(attr, Trait):
                 # gathering traits and their labels for Dharma
                 traits[name] = attr
-        # build the Nature and its meta options
-        instance = super(NatureMeta, metacls).__new__(
-            metacls, name, bases, attrs)
-        dharma = attrs.pop('Dharma', None)
-        assert not isinstance(dharma, Trait), (
-               "Trait sanity test: you probably didn't want to pass a Trait as "
-               "a Dharma")
-        instance.dharma = Dharma(nature=instance, dharma=dharma, traits=traits)
-        for name, trait in traits.items():
-            # injecting label & instance to the traits
-            attr._label = name
-            attr._instance = instance
-        return instance
+                # injecting label & instance to the traits
+                attr._label = name
+                attr._nature = cls
+        cls.dharma = Dharma(nature=cls, dharma=dharma, traits=traits)
+        return cls
 
 
 class Nature(six.with_metaclass(NatureMeta, object)):
@@ -75,3 +72,11 @@ class Nature(six.with_metaclass(NatureMeta, object)):
         trait-oriented meta-level control and information for your
         Nature-implementing class.
     """
+    dharma = None
+
+    def __new__(cls):
+        instance = super(Nature, cls).__new__(cls)
+        # inject instance to the trait
+        for trait in cls.dharma.traits.values():
+            trait._instance = instance
+        return instance

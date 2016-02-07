@@ -6,7 +6,6 @@ from dharma.exceptions import TraitInstantiationError
 def simple_entity_factory(trait_class, args=None, kwargs=None, trait_name=None,
                           entity_name=None, force_instantiate=False):
     "Builds an entity with a single trait of specified type and name."
-    print trait_class, trait_name, entity_name, args, kwargs, force_instantiate
     # construct the trait
     trait_name = trait_name or 'trait'
     if args or kwargs or force_instantiate:
@@ -22,7 +21,6 @@ def simple_entity_factory(trait_class, args=None, kwargs=None, trait_name=None,
         trait = trait_class
     # construct the class
     entity_name = entity_name or 'DynamicallyBuiltEntity'
-    print entity_name, Entity, trait_name, trait
     entity_class = type(entity_name, (Entity,), {trait_name: trait})
     entity_object = entity_class()
 

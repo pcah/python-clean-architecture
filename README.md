@@ -3,6 +3,7 @@ Inspirations:
 * Clean design patterns of application by Bob Martin (Architecture the Lost Years: http://www.youtube.com/watch?v=WpkDN78P884)
 * Traits by Enthought, Inc.
 * Domain Driven Development by Martin Fowler & Eric Evans
+* boundary interfaces: flask.reqparse http://flask-restful.readthedocs.org/en/latest/reqparse.html#other-locations
 
 Spheres of consideration:
 * Clean design and ease of lightweight testing the key fragments of code on the first place.
