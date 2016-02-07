@@ -36,9 +36,9 @@ class frozendict(dict):
                             else:
                                 v_.append(elm)
                         arg[k] = tuple(v_)
-                args_.append( arg )
+                args_.append(arg)
             else:
-                args_.append( arg )
+                args_.append(arg)
 
         dict.__init__(new, *args_, **kw)
         return new
@@ -83,5 +83,7 @@ def is_argspec_valid(function, arg_number=None, kwargs_names=None):
 
 
 # Named tuple of (trait_class, args=(), kwargs={}) schema
-TraitDefinition = namedtuple('TraitDefinition', ['trait_class', 'args', 'kwargs'])
+TraitDefinition = namedtuple(
+    'TraitDefinition', ['trait_class', 'args', 'kwargs']
+)
 TraitDefinition.__new__.__defaults__ = ((), frozendict())

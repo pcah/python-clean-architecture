@@ -1,14 +1,10 @@
 import six
 
 from .base import Trait
-from ..exceptions import TraitValidationError
+from ..exceptions import TraitValidationError  # noqa
 
 
 class Int(Trait):
-    _value_types = (int,)
-
-
-class Float(Trait):
     _value_types = (int,)
 
 
@@ -16,7 +12,7 @@ class Long(Trait):
     _value_types = six.integer_types
 
 
-class Long(Trait):
+class Float(Trait):
     _value_types = (float,) + six.integer_types
 
 

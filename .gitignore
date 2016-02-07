@@ -1,12 +1,13 @@
 # Python temp
 *.py[cod]
+.cache
+*.egg-info
 
 # IDEs
 *.swp
 *~
-*.ropeproject
-*.psproj
-.TAGS
+.idea
+*.bat
 
 # DB
 *.db

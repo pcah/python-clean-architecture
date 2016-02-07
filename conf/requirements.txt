@@ -1,5 +1,0 @@
-argparse==1.2.1
-ipython==2.2.0
-py==1.4.23
-pytest==2.6.1
-wsgiref==0.1.2

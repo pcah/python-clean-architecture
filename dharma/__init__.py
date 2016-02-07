@@ -1,1 +1,1 @@
-from entities import Entity
+from dharma.entities import Entity  # noqa

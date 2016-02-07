@@ -1,9 +1,12 @@
-from dharma import Entity
-from dharma.traits import Str, Int, Float
+import pytest  # noqa
 
-trait_type_list = [Str, Int, Float,]
+# from dharma import Entity
+# from dharma.traits import Float, Int, Text
 
+# trait_type_list = [Text, Int, Float,]
 
+'''
 @pytest.fixture(scope='session', params=trait_type_list)
 def trait_entities(request):
-   return build_entity_with_trait(request.param)
+    return build_entity_with_trait(request.param)
+'''
