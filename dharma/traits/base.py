@@ -1,8 +1,8 @@
 import abc
 import six
 
-from ..exceptions import TraitInstantiationError  # noqa
-from ..utils import is_argspec_valid, OrderedSet
+from dharma.exceptions import TraitInstantiationError  # noqa
+from dharma.utils import is_argspec_valid, OrderedSet
 
 
 _INIT_ERROR_MSG = (
