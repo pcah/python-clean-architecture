@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 
 
+def get_all_subclasses(cls):
+    for subclass in cls.__subclasses__():
+        for cls in get_all_subclasses(subclass):
+            yield cls
+        yield subclass
+
+
 def is_argspec_valid(function, arg_number=None, kwargs_names=None):
     """
     Args:

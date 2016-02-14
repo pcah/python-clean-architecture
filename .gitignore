@@ -1,7 +1,10 @@
-# Python temp
+# Python
 *.py[cod]
 .cache
+
+# build & test
 *.egg-info
+.tox
 
 # IDEs
 *.swp

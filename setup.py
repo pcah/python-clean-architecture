@@ -5,9 +5,10 @@ from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
 NAME = 'dharma'
-VERSION = (0, 0, 1)
+VERSION = (0, 0, 1, 'dev')
 INSTALL_REQUIRES = (
     'traitlets>=4.0.0',
+    'six',
 )
 TEST_REQUIRE = (
     'pytest>=2.8',
