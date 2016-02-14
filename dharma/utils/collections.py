@@ -1,6 +1,18 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from collections import MutableSet
 import copy
+
+
+def get_duplicates(collection):
+    seen = set()
+    seen2 = set()
+    for item in collection:
+        if item in seen:
+            seen2.add(item)
+        else:
+            seen.add(item)
+    return seen2
 
 
 # noinspection PyPep8Naming
