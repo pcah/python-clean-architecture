@@ -1,11 +1,18 @@
 # -*- coding: utf-8 -*-
 
 
-def get_all_subclasses(cls):
+def _subclasses_recursive_search(cls):
     for subclass in cls.__subclasses__():
-        for cls in get_all_subclasses(subclass):
+        for cls in _subclasses_recursive_search(subclass):
             yield cls
         yield subclass
+
+
+def get_all_subclasses(cls):
+    """
+    Returns a set of all (direct or indirect) subclasses of the `cls` class.
+    """
+    return set(_subclasses_recursive_search(cls))
 
 
 def is_argspec_valid(function, arg_number=None, kwargs_names=None):
