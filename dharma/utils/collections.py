@@ -4,10 +4,14 @@ from collections import MutableSet
 import copy
 
 
-def get_duplicates(collection):
+def get_duplicates(iterable):
+    """
+    Returns set of duplicated items from iterable. Item is duplicated if it
+    appears at least two times.
+    """
     seen = set()
     seen2 = set()
-    for item in collection:
+    for item in iterable:
         if item in seen:
             seen2.add(item)
         else:
