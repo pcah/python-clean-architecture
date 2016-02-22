@@ -3,6 +3,7 @@
 # core
 traitlets==4.0.0
 PyYAML==3.11
+JsonWeb==0.8.2
 
 # dev env
 ipython==4.0.2
