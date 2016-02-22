@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import six
 
 
 def _subclasses_recursive_search(cls):
@@ -13,6 +14,12 @@ def get_all_subclasses(cls):
     Returns a set of all (direct or indirect) subclasses of the `cls` class.
     """
     return set(_subclasses_recursive_search(cls))
+
+
+def get_func_name(func):
+    if six.PY3:
+        return func.__name__
+    return func.func_name
 
 
 def is_argspec_valid(function, arg_number=None, kwargs_names=None):
