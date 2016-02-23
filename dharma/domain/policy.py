@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from jsonweb import decode, encode
 import six
 
@@ -14,42 +15,60 @@ def policy_constructor(cls, d):
     return instance
 
 
-@encode.to_object()
-@decode.from_object(policy_constructor)
 class PolicyMeta(type):
+    """
+    A metaclass that is enwrapping the class with JsonWeb encode/decode
+    decorators.
+    """
 
     def __new__(mcs, name, bases, attrs):
+        """Enwrap the class with JsonWeb decorators"""
         cls = type.__new__(mcs, name, bases, attrs)
+        cls = encode.to_object()(cls)
+        cls = decode.from_object(policy_constructor)(cls)
         return cls
 
 
 @six.add_metaclass(PolicyMeta)
 class Policy(object):
+    """
+    A self-JSON-serializable class which consists of:
+    * a collection of persistent attributes, defined by SERIALIZED_ATTRS list,
+    * a collections of functions [sic!], defined by STRATEGY_CHOICES dict.
+
+    Attributes which names are listed in SERIALIZED_ATTRS (and only those) are
+    serialized.
+
+    STRATEGY_MODULE defines a module which declares some collections of
+    functions. Keys of STRATEGY_CHOICES dict are names of strategy_roles,
+    which serves as names of groups of strategies and kwargs of
+    Policy.__init__. Values of STRATEGY_CHOICES are lists of names of
+    functions from STRATEGY_MODULE. They describe valid choices of values to
+    appropriate Policy.__init__ kwargs.
+
+    If you search for an example, look at the tests at tests/domain/policy.py
+
+    NB: Comparing equality of two policies focus only on comparing values of
+    SERIALIZED_ATTRS and STRATEGY_CHOICES.keys()
+    """
 
     # module from which strategies are imported
-    STRATEGY_MODULE = None
+    STRATEGY_MODULE = object()
     # dict of role_name: a list of strategy_names
-    STRATEGY_CHOICES = {'generate_food': 1}
+    STRATEGY_CHOICES = {}
     # a list of attributes to be persisted by to_json handler
-    SERIALIZED_ATTRS = ('turn_length',)
+    SERIALIZED_ATTRS = ()
 
-    BOARD_CLASS = None
-
-    def __init__(self, turn_length, **strategies):
+    def __init__(self, **strategies):
         """
         Params:
-            turn_length - turn time length in miliseconds; this is how long
-                server will wait for the players to give orders.
             strategies - a dictionary of strategy_role: strategy_name
                 where strategy_role is a key to STRATEGY_CHOICES dict, and
                 strategy_name is pythonic name of the strategy function.
         """
-        assert self.BOARD_CLASS, "No BOARD_CLASS declared."
         assert set(strategies.keys()) == set(self.STRATEGY_CHOICES.keys()), (
             "Invalid set of strategies. Given: {}. Expected: {}.".format(
                 strategies.keys(), self.STRATEGY_CHOICES.keys()))
-
-        self.turn_length = turn_length
 
         # get strategy functions for all roles declared by STRATEGY_CHOICES
         # for each role
@@ -80,10 +99,10 @@ class Policy(object):
             for role in self.STRATEGY_CHOICES
         )
         # additional attributes to serialize
-        d.update(dict(
+        d.update(
             (key, getattr(self, key))
             for key in self.SERIALIZED_ATTRS
-        ))
+        )
         # __type__ name for jsonweb object_hook
         d['__type__'] = type(self).__name__
         return d
