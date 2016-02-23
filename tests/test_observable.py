@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 from mock import Mock
 
-from dharma.traits import Int, Nature
+from dharma.data.traits import Int, Nature
 
 mock = Mock()
 

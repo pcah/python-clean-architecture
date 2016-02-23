@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 import pytest
 
-from dharma.traits import Int, Text
-from dharma.exceptions import TraitValidationError
+from dharma.data.traits import Int, Text
+from dharma.data.exceptions import TraitValidationError
 from dharma.utils import frozendict
 
 from .factories import build_datasets
