@@ -1,6 +1,6 @@
 # encoding: utf-8
-from dharma import Entity
-from dharma.exceptions import TraitInstantiationError
+from dharma.data.entities import Entity
+from dharma.data.exceptions import TraitInstantiationError
 
 
 def simple_entity_factory(trait_class, args=None, kwargs=None, trait_name=None,

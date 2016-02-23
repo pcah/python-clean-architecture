@@ -3,6 +3,6 @@
 
 __all__ = ['duplicated']
 
-duplicated = None
+duplicated = "duplicated from b.py"
 
 not_imported = 'not imported'

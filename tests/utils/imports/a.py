@@ -11,7 +11,7 @@ def function():
     pass
 
 
-duplicated = 'duplicated'
+duplicated = 'duplicated from a.py'
 
 
 _private = 'private'
