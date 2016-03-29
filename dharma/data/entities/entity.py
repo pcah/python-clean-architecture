@@ -1,4 +1,4 @@
-from dharma.traits.nature import Nature
+from dharma.data.traits.nature import Nature
 
 
 class Entity(Nature):

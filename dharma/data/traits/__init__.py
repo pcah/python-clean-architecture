@@ -1,9 +1,6 @@
-from .base import Trait  # noqa
+from .base import undefined_value, Trait  # noqa
 from .nature import Nature  # noqa
 from .simple_traits import Int, Long, Float, Complex, Text
-# from .collection import Mapping, Sequence
-# from .type_based import Instance, Type
-
 
 Mapping = Sequence = Instance = Type = lambda x: x
 

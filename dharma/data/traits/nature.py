@@ -35,8 +35,12 @@ class Dharma(object):
 
     @property
     def traits(self):
-        " Returns traits of the Nature "
+        """Returns all traits of the Nature"""
         return self._traits
+
+    def __getitem__(self, item):
+        """Returns the trait of specified name"""
+        return self._traits[item]
 
 
 class NatureMeta(type):

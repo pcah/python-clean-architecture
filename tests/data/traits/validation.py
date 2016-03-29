@@ -4,8 +4,7 @@ import pytest
 from dharma.data.traits import Int, Text
 from dharma.data.exceptions import TraitValidationError
 from dharma.utils import frozendict
-
-from .factories import build_datasets
+from dharma.utils.tests.factories import build_datasets
 
 
 class PositiveValidation(object):
@@ -13,7 +12,7 @@ class PositiveValidation(object):
     data = {
         (Int,): [1],  # Int
         (Int, (42,)): [1],  # Int with default value
-        (Int, (), frozendict(cast=True)): [1, 1.0]  # Int with casting
+        (Int, (), frozendict()): [1, 1.0]  # Int with casting
     }
 
     datasets = build_datasets(data)
