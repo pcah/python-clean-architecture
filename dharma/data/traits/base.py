@@ -1,8 +1,12 @@
-import abc
+# -*- coding: utf-8 -*-
 import six
 
-from dharma.exceptions import TraitInstantiationError  # noqa
-from dharma.utils import is_argspec_valid, OrderedSet
+from dharma.data.exceptions import (  # noqa
+    TraitInstantiationError,
+    TraitValidationError,
+)
+from dharma.utils import is_argspec_valid, OrderedSet, Sentinel
+from .validation import construct_validators
 
 
 _INIT_ERROR_MSG = (
@@ -17,36 +21,49 @@ _INVALID_SIGN_MSG = (
     "Trait sanity test: function passed to the listener seems to have invalid "
     "signature. Check method docstring for details.")
 
+# sentinel object for expressing that a value of a trait hasn't been set
+# NB: None object might be a valid value set on a trait
+undefined_value = Sentinel('undefined_value', 'dharma.data.traits')
+
 
 class Trait(object):
     """
     Nature
     observable
-    validation
-    default value
     """
 
     # pattern for __dict__ key on the Nature; space char is intended to be
     # sure we are not colliding with any proper attribute name
     _listener_key_pattern = '%s instance listeners'
 
-    def __init__(self, default=None, class_listeners=None, volatile=False):
+    def __init__(self, genus=None, default=undefined_value, validators=None,
+                 class_listeners=None, volatile=False):
         """
         Params:
+            genus -- type of the trait, that is used by validation mechanism;
+                it might be expressed with:
+                * a simple class (int, dict, str, etc.),
+                * a class from the 'typing' module (vide: PEP 0484),
+                * a class from .typing (This, etc.)
+                * a string with a name from the above cases.
             default -- default value of the Trait. It is not validated (you
-                are supposed to know what you are doing). None is treated as no
-                default value. Default: None
+                are supposed to know what you are doing).
+                Default: sentinel object "dharma.data.traits.undefined_value"
             class_listeners -- iterable of per-Nature-class listeners. Trait
                 implements observable pattern, including on Trait instance per
                 the Nature-implementing class. With this argument you can
                 declare the listeners during Trait declaration.
-            volatile -- trait should not be treated as persistent.
+            volatile -- the trait should not be treated as persistent.
                 Default: False.
         """
         # the label (name of the trait on the Nature) is to be injected from
         # the Nature scope
         self._label = None
-        # kwargs
+        # validation
+        self.genus = genus
+        self.validators = construct_validators(genus) if genus else []
+        if validators:
+            self.validators.extend(validators)
         self.default = default
         self.volatile = volatile
         # ordered set of change listeners per-Nature-class
@@ -74,12 +91,6 @@ class Trait(object):
         Technical method for setting the value from the instance `__dict__`.
         """
         instance.__dict__[self._label] = value
-
-    @abc.abstractproperty
-    def _value_types(self):
-        """
-        Overridden in descendants to define basic types of valid values.
-        """
 
     ############
     # Descriptor protocol
@@ -110,17 +121,16 @@ class Trait(object):
         new_value = self.preprocess_value(new_value)
         if new_value != old_value:
             # logic fires only in the case when the value changes
-            self.validate(new_value)
+            validation_errors = self.validate(new_value)
+            if validation_errors:
+                raise TraitValidationError(*validation_errors)
             # the new value is assumed to be valid
             self._set_value(instance, new_value)
-            # notify listeners about change done
+            # notify listeners about the change done
             self._notify(instance, old_value)
 
     def __delete__(self, instance):
-        # TODO Deletes the record (as usual) or sets the value to
-        # undefined/None?
-        del instance.__dict__[self._label]
-        # or self._set_value(undefined)
+        self._set_value(instance, undefined_value)
 
     ############
     # Validation
@@ -140,10 +150,18 @@ class Trait(object):
         """
         return value
 
-    @abc.abstractmethod
     def validate(self, new_value):
-        """
-        """
+        errors = []
+        for validator in self.validators:
+            try:
+                validator(new_value)
+            except TraitValidationError as e:
+                e.trait = self
+                errors.append(e)
+            except Exception as e:
+                errors.append(e)
+                break
+        return errors
 
     ############
     # Observable pattern for Nature class & instance
@@ -165,14 +183,12 @@ class Trait(object):
         # per-Nature-class listeners
         if self._class_listeners:
             for listener in self._class_listeners:
-                # TODO do we need to pass the instance?
-                listener(old_value, new_value, instance)
+                listener(instance, old_value, new_value)
         # per-Nature-instance listeners
         key = self._listener_key_pattern % self._label
         if key in instance.__dict__:
             for listener in instance.__dict__.get(key, ()):
-                # TODO do we need to pass the instance?
-                listener(old_value, new_value, instance)
+                listener(instance, old_value, new_value)
 
     def add_class_listener(self, listener):
         """
@@ -181,7 +197,7 @@ class Trait(object):
 
         Params:
             listener -- a function or method of
-                    (old_value, new_value, Trait) -> None
+                    (Trait, old_value, new_value) -> None
                 signature that is going to be called whenever the trait changes
                 its value. It is supposed to serve as a listener of the trait
                 value. The listeners are supported on per-Nature-class basis.

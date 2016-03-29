@@ -4,6 +4,8 @@
 traitlets==4.0.0
 PyYAML==3.11
 JsonWeb==0.8.2
+typing==3.5.0.1
+singledispatch==3.4.0.3
 
 # dev env
 ipython==4.0.2
