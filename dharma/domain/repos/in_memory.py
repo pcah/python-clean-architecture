@@ -1,23 +1,15 @@
 # -*- coding: utf-8 -*-
-import abc
-import six
-
 from dharma.data.traits import Mapping, Sequence, Type
 from dharma.utils.inspect import get_all_subclasses
 from dharma.utils.collections import get_duplicates
 
 
 # noinspection PyProtectedMember
-@six.add_metaclass(abc.ABCMeta)
 class InMemoryRepository(object):
     """
     Repository implementation which holds the objects in memory.
     All instances of a repository for given `klass` will behave as Borgs:
     all share the same registry for instances of the klass.
-
-    Method `load` is abstract and should be overridden with the proper
-    implementation of the loading process. The method is expected to use
-    `set` or `batch_set` methods to update the register of the repository.
 
     InMemoryRepository respects inheritance of the `klass`, so if there is
     created repository for the superclass of the `klass`, during loading it
@@ -112,6 +104,9 @@ class InMemoryRepository(object):
     def set(self, obj):
         assert isinstance(obj, self.klass)
         self._register[id(obj)] = obj
+        for super_repo in self._klass_super_repos:
+            # TODO this doesn't concern duplicates of ids in super_repo
+            super_repo._register[id(obj)] = obj
 
     def batch_set(self, objs, unique=False):
         assert not get_duplicates(obj.id for obj in objs)
@@ -125,15 +120,9 @@ class InMemoryRepository(object):
                 "existing: {}"
             ).format(self, tuple(common))
         self._register.update(update)
-
-    @abc.abstractmethod
-    def load(self):
-        """
-        Abstract method to implement loading of the subjects to
-        the repository. It should use `set` or `batch_set` to update
-        own register.
-        """
-        raise NotImplemented
+        for super_repo in self._klass_super_repos:
+            # TODO this doesn't concern duplicates of ids in super_repo
+            super_repo._register.update(update)
 
     def clear(self):
         """
