@@ -5,7 +5,7 @@ from dharma.data.exceptions import (  # noqa
     TraitInstantiationError,
     TraitValidationError,
 )
-from dharma.utils import is_argspec_valid, OrderedSet, Sentinel
+from dharma.utils import get_func_name, is_argspec_valid, OrderedSet, Sentinel
 from .validation import construct_validators
 
 
@@ -121,9 +121,7 @@ class Trait(object):
         new_value = self.preprocess_value(new_value)
         if new_value != old_value:
             # logic fires only in the case when the value changes
-            validation_errors = self.validate(new_value)
-            if validation_errors:
-                raise TraitValidationError(*validation_errors)
+            self.validate(instance, new_value)
             # the new value is assumed to be valid
             self._set_value(instance, new_value)
             # notify listeners about the change done
@@ -150,18 +148,24 @@ class Trait(object):
         """
         return value
 
-    def validate(self, new_value):
-        errors = []
+    def validate(self, instance, new_value):
+        """
+        Fires all validators using new_value as an argument
+        Params:
+            instance -- instance of the Nature
+            new_value -- a value which is supposed to be set on the trait
+        Raises:
+            TraitValidationError -- error with dictionary of errors from
+                validators.
+        """
+        errors = {}
         for validator in self.validators:
             try:
-                validator(new_value)
-            except TraitValidationError as e:
-                e.trait = self
-                errors.append(e)
+                validator(instance, new_value)
             except Exception as e:
-                errors.append(e)
-                break
-        return errors
+                errors[get_func_name(validator)] = e
+        if errors:
+            raise TraitValidationError(errors=errors, trait=self)
 
     ############
     # Observable pattern for Nature class & instance

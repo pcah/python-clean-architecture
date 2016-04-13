@@ -1,37 +1,27 @@
 # -*- coding: utf-8 -*-
+from mock import Mock
 import pytest
 
-from dharma.data.traits import Int, Text
-from dharma.data.exceptions import TraitValidationError
-from dharma.utils import frozendict
-from dharma.utils.tests.factories import build_datasets
+from dharma.utils.tests.factories import nature_class_factory
 
 
-class PositiveValidation(object):
+@pytest.fixture
+def nature_instance_with_validator():
+    mock = Mock()
 
-    data = {
-        (Int,): [1],  # Int
-        (Int, (42,)): [1],  # Int with default value
-        (Int, (), frozendict()): [1, 1.0]  # Int with casting
-    }
+    def validator(instance, new_value):
+        mock(instance, new_value)
 
-    datasets = build_datasets(data)
-
-    @pytest.mark.parametrize("entity, value", datasets)
-    def test_positive_validation(self, entity, value):
-        setattr(entity, 'trait', value)
+    nature_class = nature_class_factory(
+        trait_name='a_trait', nature_name='ANature',
+        kwargs={'validators': [validator]}
+    )
+    nature_class.mock = mock
+    return nature_class()
 
 
-class NegativeValidation(object):
-
-    data = {
-        (Int,): [1, 1.0],
-        (Text,): ['a', u'unicode'],
-    }
-
-    datasets = build_datasets(data)
-
-    @pytest.mark.parametrize("entity, value", datasets)
-    def test_negative_validation(self, entity, value):
-        with pytest.raises(TraitValidationError):
-            setattr(entity, 'trait', value)
+def test_validation_is_fired(nature_instance_with_validator):
+    instance = nature_instance_with_validator
+    value = 'value to validate'
+    instance.a_trait = value
+    instance.mock.assert_called_once_with(instance, value)
