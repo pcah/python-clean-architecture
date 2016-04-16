@@ -37,7 +37,7 @@ class Trait(object):
     _listener_key_pattern = '%s instance listeners'
 
     def __init__(self, genus=None, default=undefined_value, validators=None,
-                 class_listeners=None, volatile=False):
+                 class_listeners=None):
         """
         Params:
             genus -- type of the trait, that is used by validation mechanism;
@@ -53,8 +53,6 @@ class Trait(object):
                 implements observable pattern, including on Trait instance per
                 the Nature-implementing class. With this argument you can
                 declare the listeners during Trait declaration.
-            volatile -- the trait should not be treated as persistent.
-                Default: False.
         """
         # the label (name of the trait on the Nature) is to be injected from
         # the Nature scope
@@ -65,7 +63,6 @@ class Trait(object):
         if validators:
             self.validators.extend(validators)
         self.default = default
-        self.volatile = volatile
         # ordered set of change listeners per-Nature-class
         self._class_listeners = OrderedSet(class_listeners) \
             if class_listeners else OrderedSet()
