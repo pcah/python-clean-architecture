@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 import six
 
-from dharma.data.exceptions import (  # noqa
-    TraitInstantiationError,
-    TraitValidationError,
-)
+from dharma.data.exceptions import TraitValidationError
 from dharma.utils import get_func_name, is_argspec_valid, OrderedSet, Sentinel
 from .validation import construct_validators
 
@@ -37,7 +34,7 @@ class Trait(object):
     _listener_key_pattern = '%s instance listeners'
 
     def __init__(self, genus=None, default=undefined_value, validators=None,
-                 class_listeners=None):
+                 class_listeners=None, preprocessor=None):
         """
         Params:
             genus -- type of the trait, that is used by validation mechanism;
@@ -53,6 +50,12 @@ class Trait(object):
                 implements observable pattern, including on Trait instance per
                 the Nature-implementing class. With this argument you can
                 declare the listeners during Trait declaration.
+            preprocessor -- a callable of signature:
+                    (value) -> value
+                which prepares what's going-to-be new value before
+                the assignment and the validity checks. It's usable when you
+                want to cast the value, instantiate a class to be a value or
+                something similar.
         """
         # the label (name of the trait on the Nature) is to be injected from
         # the Nature scope
@@ -67,6 +70,7 @@ class Trait(object):
         # ordered set of change listeners per-Nature-class
         self._class_listeners = OrderedSet(class_listeners) \
             if class_listeners else OrderedSet()
+        self.preprocessor = preprocessor
 
     @property
     def label(self):
@@ -115,7 +119,8 @@ class Trait(object):
         assert isinstance(self._label, six.string_types), _LABEL_ERROR_MSG
 
         old_value = self._get_value(instance)
-        new_value = self.preprocess_value(new_value)
+        if self.preprocessor:
+            new_value = self.preprocessor(new_value)
         if new_value != old_value:
             # logic fires only in the case when the value changes
             self.validate(instance, new_value)
@@ -130,20 +135,6 @@ class Trait(object):
     ############
     # Validation
     ############
-
-    def preprocess_value(self, value):
-        """
-        A hook for preparing assigned value BEFORE value is checked whether it
-        is to be changed. Useful if your assigning process has to change
-        the value in some way, ie. instantiates the class of the value or
-        casts the value.
-
-        Params:
-            value -- raw value to reprocess.
-        Returns:
-            Preprocessed value.
-        """
-        return value
 
     def validate(self, instance, new_value):
         """
