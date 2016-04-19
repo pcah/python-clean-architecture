@@ -59,9 +59,10 @@ class Trait(object):
         self._label = None
         # validation
         self.genus = genus
-        self.validators = construct_validators(genus) if genus else []
+        self.validators = construct_validators(genus) if genus else \
+            OrderedSet()
         if validators:
-            self.validators.extend(validators)
+            self.validators.update(validators)
         self.default = default
         # ordered set of change listeners per-Nature-class
         self._class_listeners = OrderedSet(class_listeners) \
@@ -74,7 +75,6 @@ class Trait(object):
         the Nature that owns this trait. The value of self._label is
         injected during Nature metaclass execution.
         """
-        assert isinstance(self._label, six.string_types), _LABEL_ERROR_MSG
         return self._label
 
     def _get_value(self, instance):

@@ -3,14 +3,14 @@ from dharma.data import Nature, Trait
 from dharma.data.exceptions import TraitInstantiationError
 
 
-def nature_class_factory(trait_class=None, args=None, kwargs=None,
-                         trait_name=None, nature_name=None):
+def nature_class_factory(args=None, kwargs=None, trait_name=None,
+                         nature_name=None):
     """Builds a nature class with a single trait of specified type and name."""
     # construct the trait
     args = args or ()
     kwargs = kwargs or {}
     try:
-        trait = Trait(trait_class, *args, **kwargs)
+        trait = Trait(*args, **kwargs)
     except TypeError as e:
         new_e = TraitInstantiationError(
             "Trait class got bad arguments: " + str(e))
