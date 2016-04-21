@@ -2,6 +2,7 @@
 from mock import Mock
 # import pytest
 
+from dharma.data.traits import undefined_value
 from dharma.utils.tests.factories import nature_class_factory
 
 
@@ -9,8 +10,8 @@ def test_validation_is_fired():
     "Tests if validators passed with `validators` arguemnt are fired"
     mock = Mock()
 
-    def validator(instance, new_value):
-        mock(instance, new_value)
+    def validator(instance, old_value, new_value):
+        mock(instance, old_value, new_value)
 
     nature_class = nature_class_factory(
         trait_name='a_trait', nature_name='ANature',
@@ -18,9 +19,9 @@ def test_validation_is_fired():
     )
     instance = nature_class()
 
-    value = 'value to validate'
-    instance.a_trait = value
-    mock.assert_called_once_with(instance, value)
+    new_value = 'value to validate'
+    instance.a_trait = new_value
+    mock.assert_called_once_with(instance, undefined_value, new_value)
 
 
 def test_construct_validators(mocker):
@@ -46,6 +47,7 @@ def test_validators_from_genus(mocker):
             kwargs={'genus': genus}
         )
         instance = nature_class()
-        value = 'value to validate'
-        instance.a_trait = value
-        validator_mock.assert_called_once_with(instance, value)
+        new_value = 'value to validate'
+        instance.a_trait = new_value
+        validator_mock.assert_called_once_with(
+            instance, undefined_value, new_value)
