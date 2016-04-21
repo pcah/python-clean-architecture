@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 from mock import Mock
-# import pytest
+import pytest
 
+from dharma.data.exceptions import (
+    TraitPreprocessorError,
+    TraitValidationError,
+)
 from dharma.utils.tests.factories import nature_class_factory
 
 
@@ -20,3 +24,31 @@ def test_preprocessor():
     instance.a_trait = value
     preprocessor_mock.assert_called_once_with(value)
     assert instance.a_trait == sentinel
+
+
+def test_preprocessor_raises_generic_error():
+    "Tests if assigning unpreprocessorable value raises TraitPreprocessorError"
+    nature_class = nature_class_factory(
+        trait_name='a_trait', nature_name='ANature',
+        kwargs={'preprocessor': int}
+    )
+    instance = nature_class()
+
+    value = 'value to preprocess'
+    with pytest.raises(TraitPreprocessorError):
+        instance.a_trait = value
+
+
+def test_preprocessor_raises_validation_error():
+    "Tests if assigning unpreprocessorable value raises TraitValidationError"
+    mock = Mock(side_effect=TraitValidationError)
+
+    nature_class = nature_class_factory(
+        trait_name='a_trait', nature_name='ANature',
+        kwargs={'preprocessor': mock}
+    )
+    instance = nature_class()
+
+    value = 'value to preprocess'
+    with pytest.raises(TraitValidationError):
+        instance.a_trait = value

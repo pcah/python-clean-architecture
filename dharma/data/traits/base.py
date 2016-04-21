@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import six
 
-from dharma.data.exceptions import TraitValidationError
+from dharma.data.exceptions import (
+    TraitPreprocessorError,
+    TraitValidationError,
+)
 from dharma.utils import get_func_name, is_argspec_valid, OrderedSet, Sentinel
 from .validation import construct_validators
 
@@ -14,6 +17,10 @@ _LABEL_ERROR_MSG = (
     "Trait sanity test: trait label hasn't been properly set on"
     " initialization. Either you are using Trait outside of Nature scope or "
     "Nature initialization hasn't been finished yet.")
+_INSTANCE_ERROR_MSG = (
+    "Trait sanity test: trait hasn't been properly used. Assigning to trait "
+    "should happen only on an instance of the Nature."
+)
 _INVALID_SIGN_MSG = (
     "Trait sanity test: function passed to the listener seems to have invalid "
     "signature. Check method docstring for details.")
@@ -116,12 +123,11 @@ class Trait(object):
         Iff value has changed, __set__ validates the value, updates itself and
         notifies all change listeners.
         """
-        assert instance  # TODO error message
+        assert instance, _INSTANCE_ERROR_MSG
         assert isinstance(self._label, six.string_types), _LABEL_ERROR_MSG
 
         old_value = self._get_value(instance)
-        if self.preprocessor:
-            new_value = self.preprocessor(new_value)
+        new_value = self._preprocess_value(new_value)
         if new_value != old_value:
             # logic fires only in the case when the value changes
             self.validate(instance, old_value, new_value)
@@ -143,11 +149,39 @@ class Trait(object):
     # Validation
     ############
 
+    def _preprocess_value(self, value):
+        """
+        A hook for preparing assigned value BEFORE value is checked whether it
+        is to be changed. Useful if your assigning process has to change
+        the value in some way, ie. instantiates the class of the value or
+        casts the value.
+
+        Params:
+            value -- raw value to reprocess.
+        Returns:
+            Preprocessed value.
+        """
+        if self.preprocessor:
+            try:
+                return self.preprocessor(value)
+            except TraitValidationError:
+                # if it's already a dharma.data.traits error, reraise
+                raise
+            except Exception as e:
+                # if it's a generic error, wrap inside a child of
+                # TraitValidationError
+                raise TraitPreprocessorError(context=e, trait=self)
+        return value
+
     def validate(self, instance, old_value, new_value):
         """
-        Fires all validators using new_value as an argument
+        Fires all validators using instance, old_value and new_value as
+        arguments. Gathers errors inside TraitValidationSummaryError as a
+        dict.
+
         Params:
             instance -- instance of the Nature
+            old_value -- a value which already is on the trait
             new_value -- a value which is supposed to be set on the trait
         Raises:
             TraitValidationError -- error with dictionary of errors from
