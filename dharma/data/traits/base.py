@@ -35,6 +35,7 @@ class Trait(object):
 
     def __init__(self, genus=None, default=undefined_value, validators=None,
                  class_listeners=None, preprocessor=None):
+
         """
         Params:
             genus -- type of the trait, that is used by validation mechanism;
@@ -89,7 +90,7 @@ class Trait(object):
 
     def _set_value(self, instance, value):
         """
-        Technical method for setting the value from the instance `__dict__`.
+        Technical method for setting the value at the instance `__dict__`.
         """
         instance.__dict__[self._label] = value
 
@@ -123,20 +124,26 @@ class Trait(object):
             new_value = self.preprocessor(new_value)
         if new_value != old_value:
             # logic fires only in the case when the value changes
-            self.validate(instance, new_value)
+            self.validate(instance, old_value, new_value)
             # the new value is assumed to be valid
             self._set_value(instance, new_value)
             # notify listeners about the change done
-            self._notify(instance, old_value)
+            self._notify(instance, old_value, new_value)
 
     def __delete__(self, instance):
-        self._set_value(instance, undefined_value)
+        """
+        Sets default (defaultly, undefined_value) as the value of the trait.
+
+        NB: if the trait hasn't been set at all, there's no value, there is
+        only a `self.default` attribute.
+        """
+        self._set_value(instance, self.default)
 
     ############
     # Validation
     ############
 
-    def validate(self, instance, new_value):
+    def validate(self, instance, old_value, new_value):
         """
         Fires all validators using new_value as an argument
         Params:
@@ -149,7 +156,7 @@ class Trait(object):
         errors = {}
         for validator in self.validators:
             try:
-                validator(instance, new_value)
+                validator(instance, old_value, new_value)
             except Exception as e:
                 errors[get_func_name(validator)] = e
         if errors:
@@ -159,19 +166,20 @@ class Trait(object):
     # Observable pattern for Nature class & instance
     ############
 
-    def _notify(self, instance, old_value):
+    def _notify(self, instance, old_value, new_value):
         """
         Fires notifications to per-class and per-instance listeners. Old value
         is passed as argument, new value is just the current value (we are at
         the point right after the assignment).
 
         Params:
+            instance -- instance of the Nature owning the trait.
             old_value -- trait value before assignment.
+            new_value -- current value of the trait.
 
         Returns:
             None.
         """
-        new_value = self._get_value(instance)
         # per-Nature-class listeners
         if self._class_listeners:
             for listener in self._class_listeners:
@@ -206,7 +214,7 @@ class Trait(object):
 
         Params:
             listener -- a function or method of
-                    (old_value, new_value, Trait) -> None
+                    (Trait, old_value, new_value) -> None
                 signature that is going to be called whenever the trait changes
                 its value. It is supposed to serve as a listener of the trait
                 value. The listeners are supported on per-Nature-class basis.
@@ -235,7 +243,7 @@ class Trait(object):
         Params:
             instance - the Nature instance that the listener is connected to
             listener - a function or method of
-                    (old_value, new_value, Trait) -> None
+                    (Trait, old_value, new_value) -> None
                 signature that is going to be called whenever the trait changes
                 its value. It is supposed to serve as a listener of the trait
                 value. The listeners are supported on per-Nature-instance
