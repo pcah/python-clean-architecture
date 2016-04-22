@@ -79,7 +79,7 @@ class InMemoryRepository(object):
         cls._ALL_REPOS.clear()
 
     def __repr__(self):
-        return "<{}: {}; id: {}>".format(
+        return "<{0}: {1}; id: {2}>".format(
             self.__class__.__name__, self.klass.__name__, id(self))
 
     def get_by_id(self, id):
@@ -90,7 +90,7 @@ class InMemoryRepository(object):
         try:
             return self._register[id]
         except KeyError:
-            raise self.NotFound("Id '{}' in {} hasn't been found".format(
+            raise self.NotFound("Id '{0}' in {1} hasn't been found".format(
                 id, self))
 
     def get_by_id_or_none(self, id):
@@ -111,7 +111,7 @@ class InMemoryRepository(object):
     def batch_set(self, objs, unique=False):
         assert not get_duplicates(obj.id for obj in objs)
         assert all(isinstance(obj, self.klass) for obj in objs)
-        update = {o.id: o for o in objs}
+        update = dict((o.id, o) for o in objs)
         if unique:
             # objects should be uniquely
             common = set(update.keys()) & set(self._register.keys())
