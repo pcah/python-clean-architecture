@@ -28,7 +28,7 @@ def test_construct_validators(mocker):
     "Tests if genus is used to build validators"
     genus = object()
     with mocker.patch('dharma.data.traits.base.construct_validators'):
-        nature_class = nature_class_factory(
+        nature_class_factory(
             trait_name='a_trait', nature_name='ANature',
             kwargs={'genus': genus}
         )
