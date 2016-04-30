@@ -6,6 +6,7 @@ Look at docstrings of Nature, NatureMeta and Dharma classes.
 
 import six
 
+from data.exceptions import TraitRequiredError, TraitValidationError
 from dharma.utils import frozendict
 from .base import Trait
 
@@ -20,7 +21,7 @@ class Dharma(object):
     def __init__(self, nature, traits, dharma=None, **kwargs):
         """
         Params:
-            nature - Nature instance owning this Dharma instance
+            nature - Nature class owning this Dharma instance
             traits - iterable of all traits of the nature
             dharma - "meta"-class interpreted as a definition for the Dharma.
                 It is supposed to have attributes that Dharma interprets as
@@ -29,14 +30,47 @@ class Dharma(object):
         self._nature = nature
         self._kwargs = kwargs
         self._traits = frozendict(traits)
+        self._required = frozendict(
+            (label, trait) for label, trait in traits.items()
+            if trait.required
+        )
         if dharma:
             # process the definition of the dharma
             pass  # TODO
 
     @property
     def traits(self):
-        """Returns all traits of the Nature"""
+        """Lists all traits of the nature"""
         return self._traits
+
+    @property
+    def required(self):
+        """Lists required traits of the nature"""
+        return self._required
+
+    def validate(self, instance):
+        """
+        Check for non-empty values at required traits, validates each one of
+        them if
+        and fires cross-trait validation.
+
+        Params:
+            instance -- the Nature instance.
+
+        Raises:
+            TraitValidationError which summarizes validation problems.
+        """
+        errors = {}
+        for trait_name, trait in self._traits.items():
+            if trait.required and trait.is_empty(instance):
+                errors[trait_name] = TraitRequiredError(trait=trait)
+                continue
+            try:
+                trait.validate(instance)
+            except TraitValidationError as e:
+                errors[trait_name] = e.errors if e.errors else e
+        if errors:
+            raise TraitValidationError(errors=errors)
 
     def __getitem__(self, item):
         """Returns the trait of specified name"""
@@ -83,4 +117,8 @@ class Nature(six.with_metaclass(NatureMeta, object)):
         # inject instance to the trait
         for trait in cls.dharma.traits.values():
             trait._instance = instance
+        # TODO copy class' Dharma object as an instance Dharma with injected
+        # instance
         return instance
+
+    # TODO __init__ kwargs to initialize traits

@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 
 
+class DharmaError(Exception):
+    """Base error class for all errors from Dharma module"""
+
+
 class TraitError(Exception):
+    """Base error class for all Trait-related errors"""
     def __init__(self, trait=None, *args, **kwargs):
         super(TraitError, self).__init__(*args, **kwargs)
         self.trait = trait
@@ -13,7 +18,7 @@ class TraitError(Exception):
 
 
 class TraitInstantiationError(TraitError):
-    pass
+    """Error class for errors related to the instantiation of a trait"""
 
 
 class TraitValidationError(TraitError):
@@ -46,3 +51,11 @@ class TraitPreprocessorError(TraitValidationError):
         super(TraitPreprocessorError, self).__init__(
             errors={'_preprocess_value': context}, *args, **kwargs)
         self.__context__ = context
+
+
+class TraitRequiredError(TraitValidationError):
+    """
+    Error class describing unfulfilled required attribute. This means that
+    during Nature's validation process the trait.is_empty == True while
+    trait.required == True.
+    """
