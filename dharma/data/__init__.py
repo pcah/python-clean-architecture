@@ -1,3 +1,2 @@
-# encoding: utf-8
-from .entities import Entity  # noqa
+# -*- coding: utf-8 -*-
 from .traits import Nature, Trait  # noqa

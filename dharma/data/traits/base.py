@@ -27,7 +27,7 @@ _INVALID_SIGN_MSG = (
 
 # sentinel object for expressing that a value of a trait hasn't been set
 # NB: None object might be a valid value set on a trait
-undefined_value = Sentinel('undefined_value', 'dharma.data.traits')
+undefined_value = Sentinel(module='dharma.data.traits', name='undefined_value')
 
 
 class Trait(object):
@@ -40,8 +40,9 @@ class Trait(object):
     # sure we are not colliding with any proper attribute name
     _listener_key_pattern = '%s instance listeners'
 
-    def __init__(self, genus=None, default=undefined_value, validators=None,
-                 class_listeners=None, preprocessor=None):
+    def __init__(self, genus=None, default=undefined_value, required=False,
+                 empty_values=None, validators=None, class_listeners=None,
+                 preprocessor=None):
 
         """
         Params:
@@ -54,6 +55,12 @@ class Trait(object):
             default -- default value of the Trait. It is not validated (you
                 are supposed to know what you are doing).
                 Default: sentinel object "dharma.data.traits.undefined_value"
+            required -- boolean that decides whether empty value on the trait
+                should be concidered a validation error during Nature
+                validation process.
+            empty_values -- collection of values which should be concidered as
+                empty and thus cause raising a validation error iff
+                required is set to True.
             class_listeners -- iterable of per-Nature-class listeners. Trait
                 implements observable pattern, including on Trait instance per
                 the Nature-implementing class. With this argument you can
@@ -70,11 +77,13 @@ class Trait(object):
         self._label = None
         # validation
         self.genus = genus
+        self.default = default
+        self.required = required
+        self.empty_values = empty_values or (None,)
         self.validators = construct_validators(genus) if genus else \
             OrderedSet()
         if validators:
             self.validators.update(validators)
-        self.default = default
         # ordered set of change listeners per-Nature-class
         self._class_listeners = OrderedSet(class_listeners) \
             if class_listeners else OrderedSet()
@@ -130,7 +139,7 @@ class Trait(object):
         new_value = self._preprocess_value(new_value)
         if new_value != old_value:
             # logic fires only in the case when the value changes
-            self.validate(instance, old_value, new_value)
+            self.validate(instance, new_value)
             # the new value is assumed to be valid
             self._set_value(instance, new_value)
             # notify listeners about the change done
@@ -173,20 +182,27 @@ class Trait(object):
                 raise TraitPreprocessorError(context=e, trait=self)
         return value
 
-    def validate(self, instance, old_value, new_value):
+    def validate(self, instance, new_value=None):
         """
         Fires all validators using instance, old_value and new_value as
         arguments. Gathers errors inside TraitValidationSummaryError as a
         dict.
 
+        The `validate` method may be called with a to-be-assigned value as
+        the `new_value` in purpose of validating it pre-assignment;
+        or without a new_value which means that the current value is
+        validated.
+
         Params:
             instance -- instance of the Nature
-            old_value -- a value which already is on the trait
-            new_value -- a value which is supposed to be set on the trait
+            new_value -- a value which is supposed to be set on the trait;
+                the default value is the current value of the trait
         Raises:
             TraitValidationError -- error with dictionary of errors from
                 validators.
         """
+        old_value = self._get_value(instance)
+        new_value = new_value or old_value
         errors = {}
         for validator in self.validators:
             try:
@@ -195,6 +211,23 @@ class Trait(object):
                 errors[get_func_name(validator)] = e
         if errors:
             raise TraitValidationError(errors=errors, trait=self)
+
+    def is_empty(self, instance):
+        """
+        Checks if value is not one of the values considered as empty, defined
+        by `empty_values` attribute.
+
+        Notice that "empty value" is something different than
+        "undefined value". The latter one is purely technical and means no
+        value has ever been asigned or the value has been deleted. The former
+        one means that validation of a value should fail iff trait is
+        defined as required. Such values might include:
+            `None`, empty string, 0, etc.
+
+        None is considered as empty value by default.
+        """
+        value = self._get_value(instance)
+        return value is undefined_value or value in self.empty_values
 
     ############
     # Observable pattern for Nature class & instance

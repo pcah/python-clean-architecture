@@ -1,13 +1,10 @@
-class Sentinel(object):
-    """
-    Sentinel class for constants with useful reprs.
-    Based on sentinel class from traits package from IPython team.
-    """
-    def __init__(self, name, module, docstring=None):
-        self.name = name
-        self.module = module
-        if docstring:
-            self.__doc__ = docstring
+"""
+Sentinel class for immutables with useful reprs.
+"""
+from collections import namedtuple
+from operator import itemgetter
 
-    def __repr__(self):
-        return '{module}.{name}'.format(module=self.module, name=self.name)
+Sentinel = namedtuple("Sentinel", ["module", "name"])
+# shadowing attributes as unmodifiable
+Sentinel.module = property(itemgetter(0))
+Sentinel.name = property(itemgetter(1))
