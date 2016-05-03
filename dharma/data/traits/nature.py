@@ -6,8 +6,8 @@ Look at docstrings of Nature, NatureMeta and Dharma classes.
 
 import six
 
-from data.exceptions import TraitRequiredError, TraitValidationError
-from dharma.utils import frozendict
+from dharma.data.exceptions import TraitRequiredError, TraitValidationError
+from dharma.utils import frozendict, get_func_name
 from .base import Trait
 
 
@@ -18,25 +18,37 @@ class Dharma(object):
     Meta of Django Model/ModelForm.
     """
 
-    def __init__(self, nature, traits, dharma=None, **kwargs):
+    def __init__(self, nature, traits, dharma=None):
         """
         Params:
             nature - Nature class owning this Dharma instance
             traits - iterable of all traits of the nature
             dharma - "meta"-class interpreted as a definition for the Dharma.
-                It is supposed to have attributes that Dharma interprets as
-                its parameters.
+                    It is supposed to have attributes that Dharma interprets as
+                    its parameters:
+                cross_validators - a dictionary of signature
+                        validation_function: list_of_trait_names
+                    consisting of cross-validation functions which arguments
+                    are consistent with the list of trait names given as dict
+                    values.
         """
-        self._nature = nature
-        self._kwargs = kwargs
+        self.nature = nature
         self._traits = frozendict(traits)
         self._required = frozendict(
             (label, trait) for label, trait in traits.items()
             if trait.required
         )
+        self.cross_validators = {}
         if dharma:
             # process the definition of the dharma
-            pass  # TODO
+            if hasattr(dharma, 'cross_validators'):
+                for validator, trait_names in dharma.cross_validators.items():
+                    assert set(self._traits) <= trait_names, (
+                        "Dharma cross-validator '{}' has been described to "
+                        "use trait name(s) that are not defined on the Nature"
+                        "; Nature traits: {}; validator arguments: {}"
+                    ).format(validator, self._traits, trait_names)
+                self.cross_validators = dharma.cross_validators
 
     @property
     def traits(self):
@@ -61,14 +73,29 @@ class Dharma(object):
             TraitValidationError which summarizes validation problems.
         """
         errors = {}
+
         for trait_name, trait in self._traits.items():
+            # required check
             if trait.required and trait.is_empty(instance):
                 errors[trait_name] = TraitRequiredError(trait=trait)
                 continue
+            # fire Trait.validate
             try:
                 trait.validate(instance)
             except TraitValidationError as e:
                 errors[trait_name] = e.errors if e.errors else e
+        # cross-validation
+        for validator, trait_names in self.cross_validators.items():
+            trait_values = dict(
+                (name, getattr(instance, name)) for name in trait_names
+            )
+            try:
+                validator(**trait_values)
+            except Exception as e:
+                name = get_func_name(validator)
+                assert name not in errors
+                errors[name] = e
+        # and finally raise summary of errors
         if errors:
             raise TraitValidationError(errors=errors)
 
@@ -98,7 +125,7 @@ class NatureMeta(type):
                 # injecting label & instance to the traits
                 attr._label = name
                 attr._nature = cls
-        cls.dharma = Dharma(nature=cls, dharma=dharma, traits=traits)
+        cls.dharma = Dharma(nature=cls, traits=traits, dharma=dharma)
         return cls
 
 
