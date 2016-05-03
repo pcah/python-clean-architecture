@@ -208,7 +208,9 @@ class Trait(object):
             try:
                 validator(instance, old_value, new_value)
             except Exception as e:
-                errors[get_func_name(validator)] = e
+                name = get_func_name(validator)
+                assert name not in errors
+                errors[name] = e
         if errors:
             raise TraitValidationError(errors=errors, trait=self)
 

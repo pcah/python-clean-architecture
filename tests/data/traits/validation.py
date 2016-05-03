@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 from mock import Mock
 import pytest
-from data.exceptions import TraitValidationError
 
-from dharma.data.exceptions import TraitRequiredError
+from dharma.data.exceptions import TraitRequiredError, TraitValidationError
 from dharma.data.traits import undefined_value
 from dharma.utils.tests.factories import nature_class_factory
 
@@ -85,8 +84,9 @@ def test_nature_validation_checks_required_undefined(
     "Test if nature validation raises an TraitRequiredError while undefined"
     instance = nature_instance_with_validator
     instance.dharma['a_trait'].required = True
-    with pytest.raises(TraitRequiredError):
+    with pytest.raises(TraitValidationError) as e_info:
         instance.dharma.validate(instance)
+    assert isinstance(e_info.value.errors['a_trait'], TraitRequiredError)
 
 
 def test_nature_validation_checks_required_empty(
@@ -97,5 +97,4 @@ def test_nature_validation_checks_required_empty(
     instance.a_trait = None
     with pytest.raises(TraitValidationError) as e_info:
         instance.dharma.validate(instance)
-    e_info.value.errors['a_trait']
     assert isinstance(e_info.value.errors['a_trait'], TraitRequiredError)
