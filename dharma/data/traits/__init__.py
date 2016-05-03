@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .base import undefined_value, Trait  # noqa
+from .trait import undefined_value, Trait  # noqa
 from .nature import Nature  # noqa
 
 

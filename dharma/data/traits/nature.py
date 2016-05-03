@@ -8,7 +8,7 @@ import six
 
 from dharma.data.exceptions import TraitRequiredError, TraitValidationError
 from dharma.utils import frozendict, get_func_name
-from .base import Trait
+from .trait import Trait
 
 
 class Dharma(object):

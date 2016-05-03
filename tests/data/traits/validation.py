@@ -34,12 +34,12 @@ def test_validation_is_fired(nature_instance_with_validator):
 def test_construct_validators(mocker):
     "Tests if genus is used to build validators"
     genus = object()
-    with mocker.patch('dharma.data.traits.base.construct_validators'):
+    with mocker.patch('dharma.data.traits.trait.construct_validators'):
         nature_class_factory(
             trait_name='a_trait', nature_name='ANature',
             kwargs={'genus': genus}
         )
-        from dharma.data.traits.base import construct_validators
+        from dharma.data.traits.trait import construct_validators
         construct_validators.assert_called_once_with(genus)
 
 
@@ -47,7 +47,7 @@ def test_validators_from_genus(mocker):
     "Tests if validators, built with construct_validators, are fired"
     genus = object()
     validator_mock = mocker.MagicMock()
-    with mocker.patch('dharma.data.traits.base.construct_validators',
+    with mocker.patch('dharma.data.traits.trait.construct_validators',
                       return_value=[validator_mock]):
         nature_class = nature_class_factory(
             trait_name='a_trait', nature_name='ANature',
