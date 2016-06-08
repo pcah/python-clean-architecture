@@ -5,7 +5,7 @@ class DharmaError(Exception):
     """Base error class for all errors from Dharma module"""
 
 
-class TraitError(Exception):
+class TraitError(DharmaError):
     """Base error class for all Trait-related errors"""
     def __init__(self, trait=None, *args, **kwargs):
         super(TraitError, self).__init__(*args, **kwargs)
