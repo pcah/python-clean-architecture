@@ -50,27 +50,27 @@ def sub_repo():
 @pytest.fixture
 def sub_repo_loaded(sub_repo):
     """Repository for class Sub, loaded with some objects"""
-    sub_repo.batch_set(sub_list)
+    sub_repo.batch_save(sub_list)
     return sub_repo
 
 
 @pytest.fixture
 def super_repo_loaded(super_repo):
     """Repository for class Super, loaded with some objects"""
-    super_repo.batch_set(super_list)
+    super_repo.batch_save(super_list)
     return super_repo
 
 
 def test_get_by_id(super_repo_loaded):
     """Object is gettable by its id"""
-    obj = super_repo_loaded.get_by_id('super')
+    obj = super_repo_loaded.get('super')
     assert obj.id == 'super'
 
 
 def test_get_by_not_found(super_repo_loaded):
     """Getting unexisting object raises NotFound"""
     with pytest.raises(super_repo_loaded.NotFound):
-        super_repo_loaded.get_by_id('fake_super')
+        super_repo_loaded.get('fake_super')
 
 
 def test_finding_super_repos(clear_all_repos):

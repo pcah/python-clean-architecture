@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
-from dharma.data.traits import Mapping, Sequence, Type
 from dharma.utils.inspect import get_all_subclasses
-from dharma.utils.collections import get_duplicates
+from dharma.utils.sentinel import Sentinel
+
+from .base import BaseRepository
+
+
+unknown_value = Sentinel(module='dharma.domain.repos', name='unknown_value')
 
 
 # noinspection PyProtectedMember
-class InMemoryRepository(object):
+class InMemoryRepository(BaseRepository):
     """
     Repository implementation which holds the objects in memory.
     All instances of a repository for given `klass` will behave as Borgs:
@@ -16,21 +20,16 @@ class InMemoryRepository(object):
     will have all the `klass` objects registered as well.
     """
 
-    klass = Type()
-    _register = Mapping()
-    _klass_super_repos = Sequence()
+    _register = {}
+    _klass_super_repos = []
 
     _ALL_REPOS = {}
 
-    class NotFound(Exception):
+    class NotFound(BaseRepository.NotFound):
         pass
 
-    def __init__(self, klass):
-        """
-        :param klass: the class of target instances.
-        """
-        super(InMemoryRepository, self).__init__()
-        self.klass = klass
+    def __init__(self, klass=None, factory=None):
+        super(InMemoryRepository, self).__init__(klass=klass, factory=factory)
         self._register = {}
         repositories = self.__class__._ALL_REPOS
         id_ = id(klass)
@@ -49,7 +48,7 @@ class InMemoryRepository(object):
                 # ... register this repo at the sub-repos as a super-repo...
                 subrepo._klass_super_repos.append(self)
                 # ... and accept their instances as own
-                self.batch_set(subrepo.get_all(), unique=True)
+                self.batch_save(subrepo.get_all(), unique=True)
             repositories[id_] = self  # set self as the Borg leader
 
     @classmethod
@@ -82,9 +81,9 @@ class InMemoryRepository(object):
         return "<{0}: {1}; id: {2}>".format(
             self.__class__.__name__, self.klass.__name__, id(self))
 
-    def get_by_id(self, id):
+    def get(self, id):
         """
-        Returns object of given id.
+        :returns: object of given id.
         :raises: NotFound iff object of given id is not present.
         """
         try:
@@ -93,7 +92,7 @@ class InMemoryRepository(object):
             raise self.NotFound("Id '{0}' in {1} hasn't been found".format(
                 id, self))
 
-    def get_by_id_or_none(self, id):
+    def get_or_none(self, id):
         """Returns object of given id or None."""
         return self._register.get(id)
 
@@ -101,28 +100,59 @@ class InMemoryRepository(object):
         """Returns dictview with all the objects."""
         return self._register.values()
 
-    def set(self, obj):
-        assert isinstance(obj, self.klass)
+    def exists(self, id):
+        """Returns whether id exists in the repo."""
+        return id in self._register
+
+    def filter(self, **kwargs):
+        """
+        Filters out objects in the register by the values in kwargs.
+
+        :param **kwargs: dictionary of attributes which should be conformed
+         by all of the objects returned
+        :returns: list of objects conforming specified kwargs
+        """
+        super(InMemoryRepository, self).filter(**kwargs)
+        result = self._register.values()
+        for key, value in kwargs.items():
+            result = [
+                obj for obj in result
+                if getattr(obj, key, unknown_value) == value
+            ]
+            if not result:
+                return result
+        return result
+
+    def save(self, obj):
+        """
+        Sets the object into the repository.
+
+        :param obj: an object to be put into the repository.
+        :returns: the object
+        """
+        super(InMemoryRepository, self).save(obj)
         self._register[id(obj)] = obj
         for super_repo in self._klass_super_repos:
             # TODO this doesn't concern duplicates of ids in super_repo
             super_repo._register[id(obj)] = obj
+        return obj
 
-    def batch_set(self, objs, unique=False):
-        assert not get_duplicates(obj.id for obj in objs)
-        assert all(isinstance(obj, self.klass) for obj in objs)
-        update = dict((o.id, o) for o in objs)
-        if unique:
-            # objects should be uniquely
-            common = set(update.keys()) & set(self._register.keys())
-            assert not common, (
-                "Duplicate item(s) detected in {}. Object ids already "
-                "existing: {}"
-            ).format(self, tuple(common))
+    def batch_save(self, objs, unique=False):
+        """
+        Sets collection of objects into the repository.
+
+        :param objs: Iterable of objects intended for the repo.
+        :param unique: Boolean that turns on validation of unique id's before
+         putting into the repo.
+        :returns: sequence of (id, obj) 2-tuples
+        """
+        update = super(InMemoryRepository, self).batch_save(
+            objs, unique=unique)
         self._register.update(update)
         for super_repo in self._klass_super_repos:
             # TODO this doesn't concern duplicates of ids in super_repo
             super_repo._register.update(update)
+        return update
 
     def clear(self):
         """
@@ -132,3 +162,13 @@ class InMemoryRepository(object):
         """
         # TODO remove the content of _register from super repos.
         self._register.clear()
+
+    def remove(self, obj):
+        """Removes given object from the repo."""
+        self._register.pop(obj.id)
+
+    def pop(self, id):
+        """
+        Removes an object specified by given id from the repo and returns it.
+        """
+        return self._register.pop(id)
