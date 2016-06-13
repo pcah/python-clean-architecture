@@ -101,3 +101,96 @@ def test_nonexistance_of_superclass_entities_in_sub_repo(
     """Instances of superclass can't be found in repos of its subclasses"""
     assert list(sub_repo.get_all()) == []
     assert set(super_repo_loaded.get_all()) == set(super_list)
+
+
+def test_create_klass(mocker):
+    """Repo `create` uses `klass` as a factory"""
+    m = mocker.Mock()
+
+    class A(object):
+        def __init__(self, *args, **kwargs):
+            m(*args, **kwargs)
+
+    repo = InMemoryRepository(A)
+    obj = repo.create('arg_value', kwarg_name='kwarg_value')
+    assert obj
+    m.assert_called_once_with('arg_value', kwarg_name='kwarg_value')
+
+
+def test_create_factory(mocker):
+    """Repo `create` uses `factory` as a factory"""
+    class A(object):
+        pass
+
+    a = A()
+    m = mocker.Mock(return_value=a)
+    repo = InMemoryRepository(A, factory=m)
+    obj = repo.create('arg_value', kwarg_name='kwarg_value')
+    assert obj == a
+    m.assert_called_once_with('arg_value', kwarg_name='kwarg_value')
+
+
+def test_save(super_repo):
+    """Object saved is stored in the repo"""
+    obj = super_list[0]
+    super_repo.save(obj)
+    assert super_repo._register[obj.id] == obj
+
+
+def test_create_and_save():
+    """Repo `create_and_save`"""
+    some_id = 'some id'
+    class A(object):
+        def __init__(self, id=some_id):
+            self.id = id
+
+    repo = InMemoryRepository(A)
+    obj = repo.create_and_save(id=some_id)
+    assert obj.id == some_id
+    assert repo._register[some_id] == obj
+
+
+def test_pop_exists(super_repo_loaded):
+    """Repo pops an existing object"""
+    id_ = super_list[0].id
+    obj = super_repo_loaded.pop(id_)
+    assert obj.id == id_
+
+
+def test_filter_exist():
+    """Repo returns filtered items"""
+    # TODO
+
+
+def test_filter_not_exist():
+    """Repo returns nothing when elements are filtered out"""
+    # TODO
+
+
+def test_count_exist():
+    """Repo counts filtered items"""
+    # TODO
+
+
+def test_count_not_exist():
+    """Repo counts 0 items when items are filtered out"""
+    # TODO
+
+
+def test_pop_not_exists(super_repo_loaded):
+    """Repo raises NotFound on popping not existing id"""
+    with pytest.raises(super_repo_loaded.NotFound):
+        super_repo_loaded.pop('not existing')
+
+
+def test_remove_exists(super_repo_loaded):
+    """Repo removes given object"""
+    obj = super_list[0]
+    super_repo_loaded.remove(obj)
+    assert obj.id not in super_repo_loaded._register
+
+
+def test_remove_not_exists(super_repo_loaded):
+    """Repo raises NotFound on removing not existing id"""
+    with pytest.raises(super_repo_loaded.NotFound):
+        super_repo_loaded.remove(Super(id='not existing'))

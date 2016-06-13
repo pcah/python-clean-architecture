@@ -8,7 +8,7 @@ typing==3.5.0.1
 singledispatch==3.4.0.3
 
 # dev env
-ipython==4.0.2
+ipython==4.2.0
 # pdbpp==0.8.3
 flake8==2.5.1
 git+git://github.com/mverteuil/pytest-ipdb.git

@@ -5,6 +5,7 @@
 # build & test
 *.egg-info
 .tox
+.coverage
 
 # IDEs
 *.swp

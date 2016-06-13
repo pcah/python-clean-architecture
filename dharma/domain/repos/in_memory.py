@@ -7,6 +7,8 @@ from .base import BaseRepository
 
 unknown_value = Sentinel(module='dharma.domain.repos', name='unknown_value')
 
+_NOT_FOUND_MSG = "Id '{0}' in {1} hasn't been found"
+
 
 # noinspection PyProtectedMember
 class InMemoryRepository(BaseRepository):
@@ -89,8 +91,7 @@ class InMemoryRepository(BaseRepository):
         try:
             return self._register[id]
         except KeyError:
-            raise self.NotFound("Id '{0}' in {1} hasn't been found".format(
-                id, self))
+            raise self.NotFound(_NOT_FOUND_MSG.format(id, self))
 
     def get_or_none(self, id):
         """Returns object of given id or None."""
@@ -104,9 +105,16 @@ class InMemoryRepository(BaseRepository):
         """Returns whether id exists in the repo."""
         return id in self._register
 
+    def count(self, **kwargs):
+        if not kwargs:
+            return len(self._register)
+        filtered = self.filter(**kwargs)
+        return len(filtered)
+
     def filter(self, **kwargs):
         """
-        Filters out objects in the register by the values in kwargs.
+        Filters out objects in the repository by equality on values
+        in the kwargs.
 
         :param **kwargs: dictionary of attributes which should be conformed
          by all of the objects returned
@@ -121,7 +129,7 @@ class InMemoryRepository(BaseRepository):
             ]
             if not result:
                 return result
-        return result
+        return list(result)
 
     def save(self, obj):
         """
@@ -131,7 +139,7 @@ class InMemoryRepository(BaseRepository):
         :returns: the object
         """
         super(InMemoryRepository, self).save(obj)
-        self._register[id(obj)] = obj
+        self._register[obj.id] = obj
         for super_repo in self._klass_super_repos:
             # TODO this doesn't concern duplicates of ids in super_repo
             super_repo._register[id(obj)] = obj
@@ -165,10 +173,16 @@ class InMemoryRepository(BaseRepository):
 
     def remove(self, obj):
         """Removes given object from the repo."""
-        self._register.pop(obj.id)
+        try:
+            self._register.pop(obj.id)
+        except KeyError:
+            raise self.NotFound(_NOT_FOUND_MSG.format(id, self))
 
     def pop(self, id):
         """
         Removes an object specified by given id from the repo and returns it.
         """
-        return self._register.pop(id)
+        try:
+            return self._register.pop(id)
+        except KeyError:
+            raise self.NotFound(_NOT_FOUND_MSG.format(id, self))
