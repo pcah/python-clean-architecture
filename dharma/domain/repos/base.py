@@ -22,23 +22,36 @@ class BaseRepository(object):
         self.factory = factory
 
     def create(self, *args, **kwargs):
+        """
+        Creates an object compatible with this repository. Uses repo's factory
+        or the klass iff factory not present.
+
+        NB: Does not save the object to the repository. Use `create_and_save`
+        method for that.
+
+        :params *args, **kwargs: arguments for calling the factory.
+        :returns: the object created.
+        """
         factory = self.factory or self.klass
         return factory(*args, **kwargs)
 
     def create_and_save(self, *args, **kwargs):
+        """
+        Creates an object compatible with this repository and saves it. Uses
+        repo's factory or the klass iff factory not present.
+
+        :params *args, **kwargs: arguments for calling the factory.
+        :returns: the object created.
+        """
         obj = self.create(*args, **kwargs)
         self.save(obj)
         return obj
 
-    def batch_create_and_save(self, arguments):
-        factory = self.factory or self.klass
-        objs = [factory(args) for args in arguments]
-        self.batch_save(objs)
-        return objs
-
     @abc.abstractmethod
     def get(self, id):
         """
+        Returns object of given id or raises a class-specific error.
+
         :returns: object of given id.
         :raises: cls.NotFound iff object of given id is not present.
         """
@@ -64,6 +77,17 @@ class BaseRepository(object):
             "Id's should be unique. If you want to get by id, use `get` "
             "method"
         )
+
+    @abc.abstractmethod
+    def count(self, **kwargs):
+        """
+        Counts objects in the repo.
+
+        :param **kwargs: kwargs that will be used to filter objects in repo
+         (the same way `filter` does).
+        :returns: number of objects after filtering the repo by the kwargs.
+        """
+        pass
 
     @abc.abstractmethod
     def save(self, obj):
