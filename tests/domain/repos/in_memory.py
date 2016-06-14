@@ -18,7 +18,9 @@ class Sub(Middle):
 
 
 sub_list = [Sub(id='sub1'), Sub(id='sub2')]
-super_list = [Super(id='super')]
+super_id = 'super'
+super_obj = Super(id=super_id)
+super_list = [super_obj]
 
 
 @pytest.fixture
@@ -61,16 +63,32 @@ def super_repo_loaded(super_repo):
     return super_repo
 
 
-def test_get_by_id(super_repo_loaded):
+def test_get(super_repo_loaded):
     """Object is gettable by its id"""
-    obj = super_repo_loaded.get('super')
-    assert obj.id == 'super'
+    obj = super_repo_loaded.get(super_id)
+    assert obj.id == super_id
 
 
-def test_get_by_not_found(super_repo_loaded):
+def test_get_not_found(super_repo_loaded):
     """Getting unexisting object raises NotFound"""
     with pytest.raises(super_repo_loaded.NotFound):
-        super_repo_loaded.get('fake_super')
+        super_repo_loaded.get('not existing')
+
+
+def test_get_or_none(super_repo_loaded):
+    """Object is gettable by its id"""
+    obj = super_repo_loaded.get_or_none(super_id)
+    assert obj.id == super_id
+
+
+def test_get_or_none_not_found(super_repo_loaded):
+    """Getting unexisting object raises NotFound"""
+    assert super_repo_loaded.get_or_none('not existing') is None
+
+
+def test_borg(super_repo):
+    other_super_repo = InMemoryRepository(Super)
+    assert super_repo._register == other_super_repo._register
 
 
 def test_finding_super_repos(clear_all_repos):
@@ -132,14 +150,14 @@ def test_create_factory(mocker):
 
 def test_save(super_repo):
     """Object saved is stored in the repo"""
-    obj = super_list[0]
-    super_repo.save(obj)
-    assert super_repo._register[obj.id] == obj
+    super_repo.save(super_obj)
+    assert super_repo._register[super_id] == super_obj
 
 
 def test_create_and_save():
     """Repo `create_and_save`"""
     some_id = 'some id'
+
     class A(object):
         def __init__(self, id=some_id):
             self.id = id
@@ -152,9 +170,18 @@ def test_create_and_save():
 
 def test_pop_exists(super_repo_loaded):
     """Repo pops an existing object"""
-    id_ = super_list[0].id
-    obj = super_repo_loaded.pop(id_)
-    assert obj.id == id_
+    obj = super_repo_loaded.pop(super_id)
+    assert obj.id == super_id
+
+
+def test_exists(super_repo_loaded):
+    """Repo checks whether object exists"""
+    assert super_repo_loaded.exists(super_id)
+
+
+def test_not_exists(super_repo_loaded):
+    """Repo checks whether object exists"""
+    assert not super_repo_loaded.exists('not existing')
 
 
 def test_filter_exist():
@@ -185,9 +212,8 @@ def test_pop_not_exists(super_repo_loaded):
 
 def test_remove_exists(super_repo_loaded):
     """Repo removes given object"""
-    obj = super_list[0]
-    super_repo_loaded.remove(obj)
-    assert obj.id not in super_repo_loaded._register
+    super_repo_loaded.remove(super_obj)
+    assert super_id not in super_repo_loaded._register
 
 
 def test_remove_not_exists(super_repo_loaded):
