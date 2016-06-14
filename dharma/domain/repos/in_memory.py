@@ -142,7 +142,7 @@ class InMemoryRepository(BaseRepository):
         self._register[obj.id] = obj
         for super_repo in self._klass_super_repos:
             # TODO this doesn't concern duplicates of ids in super_repo
-            super_repo._register[id(obj)] = obj
+            super_repo._register[obj.id] = obj
         return obj
 
     def batch_save(self, objs, unique=False):

@@ -87,7 +87,6 @@ class BaseRepository(object):
          (the same way `filter` does).
         :returns: number of objects after filtering the repo by the kwargs.
         """
-        pass
 
     @abc.abstractmethod
     def save(self, obj):
