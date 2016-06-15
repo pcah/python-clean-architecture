@@ -5,22 +5,30 @@ from dharma.domain.repos.in_memory import InMemoryRepository
 
 
 class Super(object):
+    """This class is intended for super_repo"""
+    attr_1 = 'attr_1'
+
     def __init__(self, id):
         self.id = id
+        self.attr_2 = 'attr_2_super'
 
 
 class Middle(Super):
+    """This class has no repo."""
     pass
 
 
 class Sub(Middle):
-    pass
+    """This class is intended for sub_repo"""
+    def __init__(self, id):
+        super(Sub, self).__init__(id)
+        self.attr_2 = 'attr_2_sub'
 
 
-sub_list = [Sub(id='sub1'), Sub(id='sub2')]
+sub_list = (Sub(id='sub1'), Sub(id='sub2'))
 super_id = 'super'
 super_obj = Super(id=super_id)
-super_list = [super_obj]
+super_list = (super_obj,)
 
 
 @pytest.fixture
@@ -184,24 +192,30 @@ def test_not_exists(super_repo_loaded):
     assert not super_repo_loaded.exists('not existing')
 
 
-def test_filter_exist():
+def test_filter_exist(super_repo_loaded, sub_repo_loaded):
     """Repo returns filtered items"""
-    # TODO
+    assert set(super_repo_loaded.filter(attr_2='attr_2_super')) \
+        == set(super_list)
+    assert set(super_repo_loaded.
+               filter(attr_1='attr_1', attr_2='attr_2_sub')) == set(sub_list)
+    assert set(super_repo_loaded.filter()) == set(super_list + sub_list)
 
 
-def test_filter_not_exist():
+def test_filter_not_exist(super_repo_loaded, sub_repo_loaded):
     """Repo returns nothing when elements are filtered out"""
-    # TODO
+    assert set(super_repo_loaded.filter(foo='bar')) == set()
 
 
-def test_count_exist():
+def test_count_exist(super_repo_loaded, sub_repo_loaded):
     """Repo counts filtered items"""
-    # TODO
+    assert super_repo_loaded.count(attr_2='attr_2_super') == 1
+    assert super_repo_loaded.count(attr_1='attr_1', attr_2='attr_2_sub') == 2
+    assert super_repo_loaded.count() == 3
 
 
-def test_count_not_exist():
+def test_count_not_exist(super_repo_loaded, sub_repo_loaded):
     """Repo counts 0 items when items are filtered out"""
-    # TODO
+    assert super_repo_loaded.count(foo='bar') == 0
 
 
 def test_pop_not_exists(super_repo_loaded):
