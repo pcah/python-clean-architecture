@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+from importlib import import_module
 import os
+import six
 import sys
 
 
@@ -34,3 +36,27 @@ def import_all_names(_file, _name):
                 import warnings
                 warnings.warn(msg)
             setattr(parent_module, name, obj)
+
+
+# noinspection PyUnboundLocalVariable
+def import_dotted_path(dotted_path):
+    """
+    Import a dotted module path and return the attribute/class designated by the
+    last name in the path. Raise ImportError if the import failed.
+
+    Code taken from: django.utils.module_loading,import_string v 1.9
+    """
+    try:
+        module_path, class_name = dotted_path.rsplit('.', 1)
+    except ValueError:
+        msg = "%s doesn't look like a module path" % dotted_path
+        six.reraise(ImportError, ImportError(msg), sys.exc_info()[2])
+
+    module = import_module(module_path)
+
+    try:
+        return getattr(module, class_name)
+    except AttributeError:
+        msg = 'Module "%s" does not define a "%s" attribute/class' % (
+            module_path, class_name)
+        six.reraise(ImportError, ImportError(msg), sys.exc_info()[2])
