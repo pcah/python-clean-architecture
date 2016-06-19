@@ -2,7 +2,7 @@
 from mock import Mock
 import pytest
 
-from dharma.data.exceptions import (
+from dharma.exceptions import (
     TraitPreprocessorError,
     TraitValidationError,
 )

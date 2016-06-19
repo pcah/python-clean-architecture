@@ -2,7 +2,7 @@
 from mock import Mock
 import pytest
 
-from dharma.data.exceptions import TraitRequiredError, TraitValidationError
+from dharma.exceptions import TraitRequiredError, TraitValidationError
 from dharma.data.traits import undefined_value
 from dharma.utils.tests.factories import nature_class_factory
 

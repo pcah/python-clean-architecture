@@ -1,7 +1,7 @@
 import abc
 import six
 
-from dharma.data.exceptions import DharmaError
+from dharma.exceptions import DharmaError
 from dharma.utils.collections import get_duplicates
 
 
