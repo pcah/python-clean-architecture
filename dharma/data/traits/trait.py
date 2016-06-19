@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import six
 
-from dharma.data.exceptions import (
+from dharma.exceptions import (
     TraitPreprocessorError,
     TraitValidationError,
 )

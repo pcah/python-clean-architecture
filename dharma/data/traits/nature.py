@@ -6,7 +6,7 @@ Look at docstrings of Nature, NatureMeta and Dharma classes.
 
 import six
 
-from dharma.data.exceptions import TraitRequiredError, TraitValidationError
+from dharma.exceptions import TraitRequiredError, TraitValidationError
 from dharma.utils import frozendict, get_func_name
 from .trait import Trait
 
