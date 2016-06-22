@@ -4,19 +4,16 @@ from collections import MutableSet
 import copy
 
 
-def get_duplicates(iterable):
-    """
-    Returns set of duplicated items from iterable. Item is duplicated if it
-    appears at least two times.
-    """
-    seen = set()
-    seen2 = set()
-    for item in iterable:
-        if item in seen:
-            seen2.add(item)
-        else:
-            seen.add(item)
-    return seen2
+def freeze(obj):
+    """Returns immuttable copy of the `obj`"""
+    if isinstance(obj, dict):
+        return frozendict((k, freeze(v)) for k, v in obj.items())
+    elif isinstance(obj, list):
+        return tuple(freeze(el) for el in obj)
+    elif isinstance(obj, set):
+        return frozenset(obj)
+    else:
+        return obj
 
 
 # noinspection PyPep8Naming
@@ -86,13 +83,20 @@ def is_iterable(obj):
     We check for the `__iter__` attribute so that this can cover types that
     don't have to be known by this module, such as NumPy arrays.
     Strings, however, should be considered as atomic values to look up, not
-    iterables. The same goes for tuples, since they are immutable and therefore
-    valid entries.
+    iterables.
     We don't need to check for the Python 2 `unicode` type, because it doesn't
     have an `__iter__` attribute anyway.
     """
-    return hasattr(obj, '__iter__') and not isinstance(obj, str) and \
-        not isinstance(obj, tuple)
+    return hasattr(obj, '__iter__') and not isinstance(obj, str)
+
+
+def is_iterable_and_not_tuple(obj):
+    """
+    As in `is_iterable` with one addition:
+    the same goes for tuples, since they are immutable and therefore
+    are valid entries for indexes.
+    """
+    return is_iterable(obj) and not isinstance(obj, tuple)
 
 
 class OrderedSet(MutableSet):
@@ -130,7 +134,7 @@ class OrderedSet(MutableSet):
                 return OrderedSet(result)
             else:
                 return result
-        elif is_iterable(index):
+        elif is_iterable_and_not_tuple(index):
             return OrderedSet([self.items[i] for i in index])
         else:
             raise TypeError(
@@ -194,7 +198,7 @@ class OrderedSet(MutableSet):
         `key` can be an iterable of entries that is not a string, in which case
         this returns a list of indices.
         """
-        if is_iterable(key):
+        if is_iterable_and_not_tuple(key):
             return [self.index(subkey) for subkey in key]
         return self.map[key]
 
@@ -254,3 +258,18 @@ class OrderedSet(MutableSet):
             return False
         else:
             return set(self) == other_as_set
+
+
+def get_duplicates(iterable):
+    """
+    Returns set of duplicated items from iterable. Item is duplicated if it
+    appears at least two times.
+    """
+    seen = set()
+    seen2 = set()
+    for item in iterable:
+        if item in seen:
+            seen2.add(item)
+        else:
+            seen.add(item)
+    return seen2

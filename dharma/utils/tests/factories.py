@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from dharma.data import Nature, Trait
-from dharma.data.exceptions import TraitInstantiationError
+from dharma.exceptions import TraitInstantiationError
 
 
 def nature_class_factory(args=None, kwargs=None, trait_name=None,

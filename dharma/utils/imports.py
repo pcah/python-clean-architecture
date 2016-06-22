@@ -62,5 +62,5 @@ def import_dotted_path(dotted_path):
         six.reraise(ImportError, ImportError(msg), sys.exc_info()[2])
 
 
-def to_dotted_path(object):
+def get_dotted_path(object):
     pass
