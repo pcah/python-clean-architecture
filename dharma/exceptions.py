@@ -24,7 +24,7 @@ class DharmaError(Exception):
 
 class DharmaConfigError(DharmaError):
     """An error was encountered during configuration of Dharma"""
-    DEFAULT_AREA = 'CFG'
+    DEFAULT_AREA = 'CONF'
 
 
 class TraitError(DharmaError):
@@ -50,7 +50,7 @@ class TraitValidationError(TraitError):
     It can be also used to summarize multiple single validation errors using
     errors argument.
     """
-    DEFAULT_AREA = 'VLD'
+    DEFAULT_AREA = 'VALID'
     PRINTED_ATTRS = TraitError.PRINTED_ATTRS + ('errors',)
 
     def __init__(self, errors=None, *args, **kwargs):
@@ -82,3 +82,22 @@ class TraitRequiredError(TraitValidationError):
     trait.required == True.
     """
     DEFAULT_CODE = 'TRAIT-REQUIRED'
+
+
+class RepoError(DharmaError):
+    """
+    Base class for errors concerning repositories and DB handling.
+    """
+    DEFAULT_AREA = 'REPO'
+
+
+class RepoUpdateNotUniqueError(RepoError):
+    """
+    Error class thrown iff content of the update to a repo is not unique, ie.
+    it contains duplicate entries to a single entity.
+    """
+    DEFAULT_CODE = 'REPO-UPDATE-NOT-UNIQUE'
+
+    def __init__(self, common, *args, **kwargs):
+        super(RepoUpdateNotUniqueError, self).__init__(*args, **kwargs)
+        self.common = common
