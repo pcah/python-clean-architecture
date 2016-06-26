@@ -11,11 +11,16 @@ True
 >>> q({'val': 1})
 False
 """
+from enum import Enum
 import re
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+)
 
 from dharma.utils.collections import freeze, is_iterable
 from dharma.utils.compare import eq
-from enum import Enum
 
 
 class Operation(Enum):
@@ -41,7 +46,18 @@ class Operation(Enum):
     ALL = 'all'
 
 
-def resolve_path(test, path):
+def resolve_path(
+        test: Callable[[Any], bool],
+        path: Iterable[str]
+        ) -> Callable[[Any], bool]:
+    """
+    Args:
+        test:
+        path:
+
+    Returns:
+
+    """
     def resolve_path_curried(value):
         try:
             for part in path:
@@ -50,6 +66,7 @@ def resolve_path(test, path):
             return False
         else:
             return test(value)
+    return resolve_path_curried
 
 
 class Predicate(object):
@@ -321,4 +338,5 @@ class Var(object):
 
 def where(key):
     """Ad hoc Var constructor."""
-    return Var()[key]
+    key = key.split('.')
+    return Var(key)

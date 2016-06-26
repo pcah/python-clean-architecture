@@ -163,7 +163,7 @@ class BaseRepository(Generic[T]):
         return obj
 
     @abc.abstractmethod
-    def batch_update(self, objs: Iterable[T]) -> Dict(int, T):
+    def batch_update(self, objs: Iterable[T]) -> Dict[int, T]:
         """
         Updates objects gathered in the collection. Specific behaviour
         should be implemented in subclasses.
