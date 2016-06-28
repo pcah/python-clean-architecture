@@ -50,7 +50,7 @@ class InMemoryRepository(BaseRepository):
                 # ... register this repo at the sub-repos as a super-repo...
                 subrepo._klass_super_repos.append(self)
                 # ... and accept their instances as own
-                self.batch_save(subrepo.get_all(), unique=True)
+                self.batch_insert(subrepo.get_all())
             repositories[id_] = self  # set self as the Borg leader
 
     @classmethod
@@ -105,13 +105,13 @@ class InMemoryRepository(BaseRepository):
         """Returns whether id exists in the repo."""
         return id in self._register
 
-    def count(self, **kwargs):
-        if not kwargs:
+    def count(self, predicate=None):
+        if not predicate:
             return len(self._register)
-        filtered = self.filter(**kwargs)
+        filtered = self.filter(predicate)
         return len(filtered)
 
-    def filter(self, **kwargs):
+    def filter(self, predicate=None):
         """
         Filters out objects in the repository by equality on values
         in the kwargs.
@@ -120,56 +120,57 @@ class InMemoryRepository(BaseRepository):
          by all of the objects returned
         :returns: list of objects conforming specified kwargs
         """
-        super(InMemoryRepository, self).filter(**kwargs)
-        result = self._register.values()
-        for key, value in kwargs.items():
-            result = [
-                obj for obj in result
-                if getattr(obj, key, unknown_value) == value
-            ]
-            if not result:
-                return result
-        return list(result)
+        super(InMemoryRepository, self).filter(predicate)
+        if not predicate:
+            return list(self._register.values())
+        return [obj for obj in self._register.values() if predicate(obj)]
 
-    def save(self, obj):
+    def insert(self, obj):
         """
-        Sets the object into the repository.
+        Inserts the object into the repository.
 
         :param obj: an object to be put into the repository.
         :returns: the object
         """
-        super(InMemoryRepository, self).save(obj)
-        self._register[obj.id] = obj
+        super(InMemoryRepository, self).insert(obj)
+        self._register[self._get_id(obj)] = obj
         for super_repo in self._klass_super_repos:
             # TODO this doesn't concern duplicates of ids in super_repo
             super_repo._register[obj.id] = obj
         return obj
 
-    def batch_save(self, objs, unique=False):
+    def batch_insert(self, objs):
         """
-        Sets collection of objects into the repository.
+        Inserts collection of objects into the repository.
 
         :param objs: Iterable of objects intended for the repo.
-        :param unique: Boolean that turns on validation of unique id's before
-         putting into the repo.
-        :returns: sequence of (id, obj) 2-tuples
+        :returns: The payload: a dict of {id: obj}
         """
-        update = super(InMemoryRepository, self).batch_save(
-            objs, unique=unique)
-        self._register.update(update)
-        for super_repo in self._klass_super_repos:
-            # TODO this doesn't concern duplicates of ids in super_repo
-            super_repo._register.update(update)
-        return update
+        super(InMemoryRepository, self).batch_insert(objs)
+        for obj in objs:
+            self.insert(obj)
 
-    def clear(self):
+    def update(self, obj):
         """
-        Clears content of the register of the instances. The registry is
-        shared among all the repositories of the `klass`, so `clear` purges
-        all the repositories.
+        Updates the object in the repository.
+
+        :param obj: an object to be put into the repository.
+        :returns: the object
         """
-        # TODO remove the content of _register from super repos.
-        self._register.clear()
+        super(InMemoryRepository, self).update(obj)
+        self._register[self._get_id(obj)] = obj
+        return obj
+
+    def batch_update(self, objs):
+        """
+        Updates objects gathered in the collection.
+
+        :param objs: Iterable of objects intended to be updated.
+        :returns: The payload: a dict of {id: obj}
+        """
+        payload = super(InMemoryRepository, self).batch_update(objs)
+        self._register.update(payload)
+        return payload
 
     def remove(self, obj):
         """Removes given object from the repo."""

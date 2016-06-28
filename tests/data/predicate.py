@@ -22,7 +22,6 @@ def test_sql_like_usage():
     data = {'name': 'John', 'age': {'year': 2000}}
 
     predicate1 = where('name') == 'John'
-    pytest.set_trace()
     predicate2 = where('age.year') == 2000
     assert predicate1(data)
     assert predicate2(data)
