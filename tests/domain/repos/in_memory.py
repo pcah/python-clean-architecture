@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
+from dharma.data.formulae import where
 from dharma.domain.repos.in_memory import InMemoryRepository
 
 
@@ -60,15 +61,30 @@ def sub_repo():
 @pytest.fixture
 def sub_repo_loaded(sub_repo):
     """Repository for class Sub, loaded with some objects"""
-    sub_repo.batch_save(sub_list)
+    sub_repo.batch_insert(sub_list)
     return sub_repo
 
 
 @pytest.fixture
 def super_repo_loaded(super_repo):
     """Repository for class Super, loaded with some objects"""
-    super_repo.batch_save(super_list)
+    super_repo.batch_insert(super_list)
     return super_repo
+
+
+@pytest.fixture(scope='session')
+def predicate_attr_2_super():
+    return where('attr_2') == 'attr_2_super'
+
+
+@pytest.fixture(scope='session')
+def predicate_attr_2_sub():
+    return (where('attr_1') == 'attr_1') & (where('attr_2') == 'attr_2_sub')
+
+
+@pytest.fixture(scope='session')
+def predicate_foo_bar():
+    return where('foo') == 'bar'
 
 
 def test_get(super_repo_loaded):
@@ -156,14 +172,14 @@ def test_create_factory(mocker):
     m.assert_called_once_with('arg_value', kwarg_name='kwarg_value')
 
 
-def test_save(super_repo):
-    """Object saved is stored in the repo"""
-    super_repo.save(super_obj)
+def test_insert(super_repo):
+    """Object inserted is stored in the repo"""
+    super_repo.insert(super_obj)
     assert super_repo._register[super_id] == super_obj
 
 
-def test_create_and_save():
-    """Repo `create_and_save`"""
+def test_create_and_insert():
+    """Repo `create_and_insert`"""
     some_id = 'some id'
 
     class A(object):
@@ -171,7 +187,7 @@ def test_create_and_save():
             self.id = id
 
     repo = InMemoryRepository(A)
-    obj = repo.create_and_save(id=some_id)
+    obj = repo.create_and_insert(id=some_id)
     assert obj.id == some_id
     assert repo._register[some_id] == obj
 
@@ -192,30 +208,34 @@ def test_not_exists(super_repo_loaded):
     assert not super_repo_loaded.exists('not existing')
 
 
-def test_filter_exist(super_repo_loaded, sub_repo_loaded):
+def test_filter_exist(super_repo_loaded, sub_repo_loaded,
+                      predicate_attr_2_sub, predicate_attr_2_super):
     """Repo returns filtered items"""
-    assert set(super_repo_loaded.filter(attr_2='attr_2_super')) \
+    assert set(super_repo_loaded.filter(predicate_attr_2_super)) \
         == set(super_list)
-    assert set(super_repo_loaded.
-               filter(attr_1='attr_1', attr_2='attr_2_sub')) == set(sub_list)
+    assert set(super_repo_loaded.filter(predicate_attr_2_sub)) \
+        == set(sub_list)
     assert set(super_repo_loaded.filter()) == set(super_list + sub_list)
 
 
-def test_filter_not_exist(super_repo_loaded, sub_repo_loaded):
+def test_filter_not_exist(super_repo_loaded, sub_repo_loaded,
+                          predicate_foo_bar):
     """Repo returns nothing when elements are filtered out"""
-    assert set(super_repo_loaded.filter(foo='bar')) == set()
+    assert set(super_repo_loaded.filter(predicate_foo_bar)) == set()
 
 
-def test_count_exist(super_repo_loaded, sub_repo_loaded):
+def test_count_exist(super_repo_loaded, sub_repo_loaded,
+                     predicate_attr_2_sub, predicate_attr_2_super):
     """Repo counts filtered items"""
-    assert super_repo_loaded.count(attr_2='attr_2_super') == 1
-    assert super_repo_loaded.count(attr_1='attr_1', attr_2='attr_2_sub') == 2
+    assert super_repo_loaded.count(predicate_attr_2_super) == 1
+    assert super_repo_loaded.count(predicate_attr_2_sub) == 2
     assert super_repo_loaded.count() == 3
 
 
-def test_count_not_exist(super_repo_loaded, sub_repo_loaded):
+def test_count_not_exist(super_repo_loaded, sub_repo_loaded,
+                         predicate_foo_bar):
     """Repo counts 0 items when items are filtered out"""
-    assert super_repo_loaded.count(foo='bar') == 0
+    assert super_repo_loaded.count(predicate_foo_bar) == 0
 
 
 def test_pop_not_exists(super_repo_loaded):

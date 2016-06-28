@@ -59,13 +59,15 @@ def resolve_path(
 
     """
     def resolve_path_curried(value):
-        try:
-            for part in path:
-                value = value[part]
-        except (KeyError, TypeError):
-            return False
-        else:
-            return test(value)
+        for part in path:
+            try:
+                value = getattr(value, part)
+            except AttributeError:
+                try:
+                    value = value[part]
+                except (KeyError, TypeError):
+                    return False
+        return test(value)
     return resolve_path_curried
 
 
@@ -94,16 +96,16 @@ class Predicate(object):
     # --- Associativity of Predicates
 
     def __and__(self, other):
-        # We use a frozenset for the definitions as the AND operation is commutative
-        # (a | b == b | a)
+        # We use a frozenset for the definitions as the AND operation is
+        # commutative: (a | b == b | a)
         return Predicate(
             lambda value: self(value) and other(value),
             (Operation.AND, frozenset([self.definition, other.definition]))
-    )
+        )
 
     def __or__(self, other):
-        # We use a frozenset for the definitions as the OR operation is commutative
-        # (a & b == b & a)
+        # We use a frozenset for the definitions as the OR operation is
+        # commutative: (a & b == b & a)
         return Predicate(
             lambda value: self(value) or other(value),
             (Operation.OR, frozenset([self.definition, other.definition]))

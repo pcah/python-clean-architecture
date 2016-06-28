@@ -100,18 +100,19 @@ class BaseRepository(Generic[T]):
         """Returns whether id exists in the repo."""
 
     @abc.abstractmethod
-    def filter(self, predicate: Predicate) -> List[T]:
+    def filter(self, predicate: Predicate = None) -> List[T]:
         """
         Filters out objects in the register by the values in kwargs.
 
-        :param predicate: Predicate: predicate specifing conditions that items
-         should met.
+        :param predicate: Predicate: (optional) predicate specifing conditions
+         that items should met. Iff no predicate is given, all objects should
+         be returned.
         :returns: list of objects conforming given predicate.
         """
-        assert id not in predicate.get_vars(), (
-            "Id's should be unique. If you want to get by id, use `get` "
-            "method"
-        )
+        # assert id not in predicate.get_vars(), (
+        #     "Id's should be unique. If you want to get by id, use `get` "
+        #     "method"
+        # )
 
     @abc.abstractmethod
     def count(self, predicate: Optional[Predicate]) -> int:
@@ -119,7 +120,8 @@ class BaseRepository(Generic[T]):
         Counts objects in the repo.
 
         :param predicate: Predicate: predicate specifing conditions that items
-         should met.
+         should met. Iff no predicate is given, all objects should
+         be counted.
         :returns: number of objects conforming given predicate.
         """
 
