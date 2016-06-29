@@ -1,6 +1,29 @@
 import six
+from typing import (  # noqa
+    Any,
+    Callable,
+    Iterable,
+)
 
 from dharma.utils.exceptions import catch_warning
+
+
+def resolve_path(
+        test,  # type: Callable[[Any], bool]
+        path,  # type: Iterable[str]
+):  # type: (...) -> Callable[..., bool]
+    def resolve_path_curried(value):
+        for part in path:
+            try:
+                value = getattr(value, part)
+            except AttributeError:
+                try:
+                    value = value[part]
+                except (KeyError, TypeError):
+                    return False
+        return test(value)
+
+    return resolve_path_curried
 
 
 if six.PY2:  # pragma: no cover

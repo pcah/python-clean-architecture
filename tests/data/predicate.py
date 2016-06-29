@@ -11,9 +11,9 @@ def test_no_path():
 def test_orm_like_usage():
     data = {'name': 'John', 'age': {'year': 2000}}
 
-    User = Var()
-    predicate1 = User.name == 'John'
-    predicate2 = User.age.year == 2000
+    user = Var()
+    predicate1 = user.name == 'John'
+    predicate2 = user.age.year == 2000
     assert predicate1(data)
     assert predicate2(data)
 
@@ -301,7 +301,6 @@ def test_hash():
 
     assert (Var().key1 == 2) in s
     assert (Var().key1.key2.key3.exists()) in s
-    assert (Var()['key1.key2'].key3.exists()) not in s
 
     # Commutative property of & and |
     assert (Var().key1.exists() & Var().key2.exists()) in s
