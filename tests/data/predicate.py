@@ -1,6 +1,6 @@
 import pytest
 
-from dharma.data.formulae.predicate import Var, where
+from dharma.data.formulae.predicate import var, where, Var
 
 
 def test_no_path():
@@ -8,23 +8,30 @@ def test_no_path():
         Var() == 2
 
 
-def test_orm_like_usage():
-    data = {'name': 'John', 'age': {'year': 2000}}
-
-    user = Var()
-    predicate1 = user.name == 'John'
-    predicate2 = user.age.year == 2000
-    assert predicate1(data)
-    assert predicate2(data)
+def test_orm_usage(example_dict):
+    d = Var()
+    predicate1 = d.foo == 1
+    predicate2 = d.bar.baz == {'a': 1}
+    assert predicate1(example_dict)
+    assert predicate2(example_dict)
 
 
-def test_sql_like_usage():
-    data = {'name': 'John', 'age': {'year': 2000}}
+def test_where_usage(example_dict):
+    predicate1 = where('foo') == 1
+    predicate2 = where('bar.baz') == {'a': 1}
+    assert predicate1.var_name is None
+    assert predicate2.var_name is None
+    assert predicate1(example_dict)
+    assert predicate2(example_dict)
 
-    predicate1 = where('name') == 'John'
-    predicate2 = where('age.year') == 2000
-    assert predicate1(data)
-    assert predicate2(data)
+
+def test_var_usage(example_dict):
+    predicate1 = var('foo') == 1
+    predicate2 = var('bar.baz') == {'a': 1}
+    assert predicate1.var_name == 'foo'
+    assert predicate2.var_name == 'baz'
+    assert predicate1(example_dict)
+    assert predicate2(example_dict)
 
 
 def test_eq():
@@ -285,7 +292,7 @@ def test_has():
     assert not predicate({'key1': {'x': {'y': 'abc'}}})
     assert hash(predicate)
 
-    # Test special methods: custom test
+    # Test special methods: custom tests
     predicate = Var().key1.int.test(lambda x: x == 3)
     assert predicate({'key1': {'int': 3}})
     assert hash(predicate)
@@ -307,3 +314,10 @@ def test_hash():
     assert (Var().key2.exists() & Var().key1.exists()) in s
     assert (Var().key1.exists() | Var().key2.exists()) in s
     assert (Var().key2.exists() | Var().key1.exists()) in s
+
+
+def test_two_variable_predicate(example_dict):
+    predicate1 = var('foo') == var('bar.baz.a')
+    predicate2 = var('foo') == var('bar.baz')
+    assert predicate1(example_dict)
+    assert not predicate2(example_dict)

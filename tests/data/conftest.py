@@ -25,3 +25,27 @@ def nature_instance_with_listener(nature_instance):
     nature_instance.dharma['a_trait'].add_instance_listener(
         nature_instance, a_listener)
     return nature_instance
+
+
+@pytest.fixture(scope='session')
+def example_dict():
+    return {
+        'foo': 1,
+        'bar': {
+            'baz': {'a': 1},
+        }
+    }
+
+
+@pytest.fixture(scope='session')
+def example_object():
+
+    class A(object):
+        pass
+
+    obj = A()
+    bar = A()
+    obj.foo = 1
+    bar.baz = {'a': 1}
+    obj.bar = bar
+    return obj

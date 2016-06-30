@@ -5,14 +5,33 @@ from typing import (  # noqa
     Iterable,
 )
 
+from dharma.exceptions import PathNotFoundError
 from dharma.utils.exceptions import catch_warning
 
 
-def resolve_path(
-        test,  # type: Callable[[Any], bool]
-        path,  # type: Iterable[str]
-):  # type: (...) -> Callable[..., bool]
+def resolve_path(path):
+    # type: (Iterable[str]) -> Callable[..., Any]
+    # raises: PathNotFoundError
     def resolve_path_curried(value):
+        for part in path:
+            try:
+                value = value[part]
+            except (KeyError, TypeError):
+                try:
+                    value = getattr(value, part)
+                except AttributeError:
+                    raise PathNotFoundError(path, part, value)
+        return value
+
+    return resolve_path_curried
+
+
+def test_path(
+    test,  # type: Callable[[Any, Any], bool]
+    path,  # type: Iterable[str]
+):  # type: (...) -> Callable[..., bool]
+    def test_path_curried(value):
+        orig_value = value
         for part in path:
             try:
                 value = getattr(value, part)
@@ -21,9 +40,9 @@ def resolve_path(
                     value = value[part]
                 except (KeyError, TypeError):
                     return False
-        return test(value)
+        return test(value, orig_value)
 
-    return resolve_path_curried
+    return test_path_curried
 
 
 if six.PY2:  # pragma: no cover
