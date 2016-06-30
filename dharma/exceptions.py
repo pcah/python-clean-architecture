@@ -11,13 +11,14 @@ class DharmaError(Exception):
         'code'
     )
 
-    def __init__(self, area=None, code=None):
+    def __init__(self, area=None, code=None, *args):
         self.area = area or self.DEFAULT_AREA
         self.code = code or self.DEFAULT_CODE
+        super(DharmaError, self).__init__(*args)
 
     def __str__(self):
         return super(Exception, self).__repr__() + "; ".join(
-            "{name}: value".format(attr, getattr(self, attr) or 'None')
+            "{}: {}".format(attr, getattr(self, attr) or 'None')
             for attr in self.PRINTED_ATTRS
         )
 
@@ -82,6 +83,12 @@ class TraitRequiredError(TraitValidationError):
     trait.required == True.
     """
     DEFAULT_CODE = 'TRAIT-REQUIRED'
+
+
+class PathNotFoundError(DharmaError):
+    DEFAULT_AREA = 'INT'
+    DEFAULT_CODE = 'PREDICATE-PATH-NOT-FOUND'
+    PRINTED_ATTRS = DharmaError.PRINTED_ATTRS + ('args',)
 
 
 class RepoError(DharmaError):

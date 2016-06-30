@@ -5,10 +5,10 @@ queries:
 >>> ((where('f1') == 5) & (where('f2') != 2)) | where('s').matches(r'^\w+$')
 (('f1' == 5) and ('f2' != 2)) or ('s' ~= ^\w+$ )
 Predicates are executed by using the ``__call__``:
->>> q = where('val') == 5
->>> q({'val': 5})
+>>> predicate = where('val') == 5
+>>> predicate({'val': 5})
 True
->>> q({'val': 1})
+>>> predicate({'val': 1})
 False
 """
 from enum import Enum
@@ -23,7 +23,7 @@ from typing import (  # flake8: noqa
 )
 
 from dharma.utils.collections import freeze, is_iterable
-from dharma.utils.operator import eq, resolve_path
+from dharma.utils.operator import eq, resolve_path, test_path
 
 
 class Operation(Enum):
@@ -131,8 +131,12 @@ class Var(object):
     2) SQL-like usage:
     >>> find(where('name') == True)
 
-    Note that ``where(...)`` is a shorthand for ``Var()[...]``, ie. creates
+    Note that:
+    * ``where(...)`` is a shorthand for ``Var()[...]``, ie. creates
     an anonymous variable with specified query path.
+    * ``var(foo.bar.name)`` is a shorthand for ``Var('name')['foo.bar.name']``
+    ie. creates a variable with specified query path, named as the last part
+    of the dotted Python path.
 
     Queries are executed by calling the Predicate object. They expect to get
     the element to test as the first argument and return ``True`` or ``False``
@@ -179,7 +183,7 @@ class Var(object):
         return Var(self._name, self._path + tuple(item.split('.')))
 
     def _build_predicate(self, test, operation, args):
-        # type: (Callable, Operation, Iterable) -> Predicate
+        # type: (Callable[[Any, Any], Any], Operation, Iterable) -> Predicate
         """
         Generate a Predicate object based on a test function.
 
@@ -190,7 +194,7 @@ class Var(object):
         if not self._path:
             raise ValueError('Var has no path')
         return Predicate(
-            resolve_path(test, self._path),
+            test_path(test, self._path),
             operation,
             args,
             self._name
@@ -200,12 +204,16 @@ class Var(object):
         # type: (Any) -> Predicate
         """
         Test the value for equality.
-        >>> Var('f1') == 42
+        >>> var('f1') == 42
 
-        :param rhs: The value to compare against
+        :param rhs: The value to compare against. It can either be a plain
+         value or a Var instance which points to another field on the value
+         that will be used during evaluation.
+        :returns: A predicate of this comparison.
         """
+        rhs_curried = _curry_rhs(rhs)
         return self._build_predicate(
-            lambda value: eq(value, rhs),
+            lambda lhs, value: eq(lhs, rhs_curried(value)),
             Operation.EQ,
             (self._path, freeze(rhs))
         )
@@ -214,12 +222,17 @@ class Var(object):
         # type: (Any) -> Predicate
         """
         Test the value for inequality.
-        >>> Var('f1') != 42
+        >>> var('f1') != 42
+        >>> var('f1') != var('f2')
 
-        :param rhs: The value to compare against
+        :param rhs: The value to compare against. It can either be a plain
+         value or a Var instance which points to another field on the value
+         that will be used during evaluations.
+        :returns: A predicate of this comparison.
         """
+        rhs_curried = _curry_rhs(rhs)
         return self._build_predicate(
-            lambda value: value != rhs,
+            lambda lhs, value: lhs != rhs_curried(value),
             Operation.NE,
             (self._path, freeze(rhs))
         )
@@ -228,12 +241,16 @@ class Var(object):
         # type: (Any) -> Predicate
         """
         Test the value for being lower than another value.
-        >>> Var('f1') < 42
+        >>> var('f1') < 42
 
-        :param rhs: The value to compare against
+        :param rhs: The value to compare against. It can either be a plain
+         value or a Var instance which points to another field on the value
+         that will be used during evaluations.
+        :returns: A predicate of this comparison.
         """
+        rhs_curried = _curry_rhs(rhs)
         return self._build_predicate(
-            lambda value: value < rhs,
+            lambda lhs, value: lhs < rhs_curried(value),
             Operation.LT,
             (self._path, rhs)
         )
@@ -244,10 +261,14 @@ class Var(object):
         Test the value for being lower than or equal to another value.
         >>> where('f1') <= 42
 
-        :param rhs: The value to compare against
+        :param rhs: The value to compare against. It can either be a plain
+         value or a Var instance which points to another field on the value
+         that will be used during evaluations.
+        :returns: A predicate of this comparison.
         """
+        rhs_curried = _curry_rhs(rhs)
         return self._build_predicate(
-            lambda value: value <= rhs,
+            lambda lhs, value: lhs <= rhs_curried(value),
             Operation.LE,
             (self._path, rhs)
         )
@@ -256,12 +277,16 @@ class Var(object):
         # type: (Any) -> Predicate
         """
         Test the value for being greater than another value.
-        >>> Var('f1') > 42
+        >>> var('f1') > 42
 
-        :param rhs: The value to compare against
+        :param rhs: The value to compare against. It can either be a plain
+         value or a Var instance which points to another field on the value
+         that will be used during evaluations.
+        :returns: A predicate of this comparison.
         """
+        rhs_curried = _curry_rhs(rhs)
         return self._build_predicate(
-            lambda value: value > rhs,
+            lambda lhs, value: lhs > rhs_curried(value),
             Operation.GT,
             (self._path, rhs)
         )
@@ -270,12 +295,16 @@ class Var(object):
         # type: (Any) -> Predicate
         """
         Test the value for being greater than or equal to another value.
-        >>> Var('f1') >= 42
+        >>> var('f1') >= 42
 
-        :param rhs: The value to compare against
+        :param rhs: The value to compare against. It can either be a plain
+         value or a Var instance which points to another field on the value
+         that will be used during evaluations.
+        :returns: A predicate of this comparison.
         """
+        rhs_curried = _curry_rhs(rhs)
         return self._build_predicate(
-            lambda value: value >= rhs,
+            lambda lhs, value: lhs >= rhs_curried(value),
             Operation.GE,
             (self._path, rhs)
         )
@@ -284,10 +313,10 @@ class Var(object):
         # type: () -> Predicate
         """
         Test for a dict/object where a provided key exists.
-        >>> Var('f1').exists()
+        >>> var('f1').exists()
         """
         return self._build_predicate(
-            lambda _: True,
+            lambda _, __: True,
             Operation.EXISTS,
             (self._path,)
         )
@@ -296,12 +325,12 @@ class Var(object):
         # type: (str) -> Predicate
         """
         Run a regex test against a dict value (whole string has to match).
-        >>> Var('f1').matches(r'^\w+$')
+        >>> var('f1').matches(r'^\w+$')
 
         :param regex: The regular expression to use for matching
         """
         return self._build_predicate(
-            lambda value: re.match(regex, value),
+            lambda lhs, value: bool(re.match(regex, lhs)),
             Operation.MATCHES,
             (self._path, regex)
         )
@@ -311,24 +340,24 @@ class Var(object):
         """
         Run a regex test against the value (only substring string has to
         match).
-        >>> Var('f1').search(r'^\w+$')
+        >>> var('f1').search(r'^\w+$')
 
         :param regex: The regular expression to use for matching
         """
         return self._build_predicate(
-            lambda value: re.search(regex, value),
+            lambda lhs, value: bool(re.search(regex, lhs)),
             Operation.SEARCH,
             (self._path, regex)
         )
 
     def test(self, func, *args, **kwargs):
-        # type: (Callable, *Any, **Any) -> Predicate
+        # type: (Callable[..., bool], *Any, **Any) -> Predicate
         """
         Run a user-defined test function against the value.
         >>> def test_func(val):
         ...     return val == 42
         ...
-        >>> Var('f1').test(test_func)
+        >>> var('f1').test(test_func)
 
         :param func: The function to call, passing the dict as the first
             argument
@@ -336,7 +365,7 @@ class Var(object):
             to the test function
         """
         return self._build_predicate(
-            lambda value: func(value, *args, **kwargs),
+            lambda lhs, value: func(lhs, *args, **kwargs),
             Operation.TEST,
             (self._path, func, args, freeze(kwargs))
         )
@@ -346,10 +375,10 @@ class Var(object):
         """
         Checks if a condition is met by any element in a list,
         where a condition can also be a sequence (e.g. list).
-        >>> Var('f1').any(Var('f2') == 1)
+        >>> var('f1').any(var('f2').exists())
         Matches::
             {'f1': [{'f2': 1}, {'f2': 0}]}
-        >>> Var('f1').any([1, 2, 3])
+        >>> var('f1').any([1, 2, 3])
         # Match f1 that contains any element from [1, 2, 3]
         Matches::
             {'f1': [1, 2]}
@@ -368,7 +397,7 @@ class Var(object):
                 return is_iterable(value) and any(e in cond for e in value)
 
         return self._build_predicate(
-            lambda value: _cmp(value),
+            lambda lhs, value: _cmp(lhs),
             Operation.ANY,
             (self._path, freeze(cond))
         )
@@ -378,10 +407,10 @@ class Var(object):
         """
         Checks if a condition is met by any element in a list,
         where a condition can also be a sequence (e.g. list).
-        >>> Var('f1').all(Var('f2') == 1)
+        >>> var('f1').all(var('f2').exists())
         Matches::
             {'f1': [{'f2': 1}, {'f2': 1}]}
-        >>> Var('f1').all([1, 2, 3])
+        >>> var('f1').all([1, 2, 3])
         # Match f1 that contains any element from [1, 2, 3]
         Matches::
             {'f1': [1, 2, 3, 4, 5]}
@@ -398,17 +427,44 @@ class Var(object):
                 return is_iterable(value) and all(e in value for e in cond)
 
         return self._build_predicate(
-            lambda value: _cmp(value),
+            lambda lhs, value: _cmp(lhs),
             Operation.ALL,
             (self._path, freeze(cond))
         )
 
 
-def where(key):
+# noinspection PyProtectedMember
+def _curry_rhs(rhs):
+    # type: (Any) -> Callable[[Any], Any]
+    """
+    Late evaluation of a RHS of an operation.
+
+    :param rhs: Right-hand side of an operation.
+    :returns: If RHS is a Var instance, it will return a method for
+     an extraction of a value when the value is evaluated. Otherwise, it
+     returns a constant function of RHS.
+    """
+    if isinstance(rhs, Var):
+        return resolve_path(rhs._path)
+    return lambda value: rhs
+
+
+def var(path):
+    # type: (str) -> Var
+    """
+    Ad hoc Var constructor. The Var is named as the last element of the path.
+
+    :param path: A Python dotted path.
+    """
+    name = path.rsplit('.', 1)[-1]
+    return Var(name)[path]
+
+
+def where(path):
     # type: (str) -> Var
     """
     Ad hoc anonymous Var constructor.
 
-    :param key: A Python dotted path.
+    :param path: A Python dotted path.
     """
-    return Var()[key]
+    return Var()[path]
