@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import Callable, Generic, Optional, TypeVar
 
-from dharma.compatibilities.db import tinydb
+from dharma.compat.db import tinydb
 from dharma.exceptions import DharmaConfigError
 from dharma.utils.imports import to_dotted_path
 from .base import BaseRepository
