@@ -1,2 +1,2 @@
 # -*- coding: utf-8 -*-
-from .predicate import where, Predicate, Var  # noqa
+from .predicate import var, where, Predicate, Var  # noqa

@@ -37,6 +37,8 @@ class Operation(Enum):
 
     # db-like ops
     EXISTS = 'exists'
+    TRUTH = 'truth'
+    IN = 'in'
     MATCHES = 'matches'
     SEARCH = 'search'
     TEST = 'test'
@@ -313,12 +315,42 @@ class Var(object):
         # type: () -> Predicate
         """
         Test for a dict/object where a provided key exists.
+        and its value is not None.
         >>> var('f1').exists()
         """
         return self._build_predicate(
-            lambda _, __: True,
+            lambda lhs, __: lhs is not None,
             Operation.EXISTS,
             (self._path,)
+        )
+
+    def truth(self):
+        # type: () -> Predicate
+        """
+        Test for a dict/object where a provided key exists
+        and its value is truth (in the sense of Python bool).
+        >>> var('f1').truth()
+        """
+        return self._build_predicate(
+            lambda lhs, __: bool(lhs),
+            Operation.TRUTH,
+            (self._path,)
+        )
+
+    def in_(self, rhs):
+        # type: (Iterable[Any]) -> Predicate
+        """
+        Test for a dict/object where a provided key exists.
+        >>> var('f1').in_([1, 2, 'foo'])
+        Matches:
+            {'f1': 1}
+            {'f1': 'foo'}
+        """
+        rhs_curried = _curry_rhs(rhs)
+        return self._build_predicate(
+            lambda lhs, value: lhs in rhs_curried(value),
+            Operation.IN,
+            (self._path, rhs)
         )
 
     def matches(self, regex):
@@ -330,7 +362,7 @@ class Var(object):
         :param regex: The regular expression to use for matching
         """
         return self._build_predicate(
-            lambda lhs, value: bool(re.match(regex, lhs)),
+            lambda lhs, __: bool(re.match(regex, lhs)),
             Operation.MATCHES,
             (self._path, regex)
         )
@@ -345,7 +377,7 @@ class Var(object):
         :param regex: The regular expression to use for matching
         """
         return self._build_predicate(
-            lambda lhs, value: bool(re.search(regex, lhs)),
+            lambda lhs, __: bool(re.search(regex, lhs)),
             Operation.SEARCH,
             (self._path, regex)
         )
@@ -365,7 +397,7 @@ class Var(object):
             to the test function
         """
         return self._build_predicate(
-            lambda lhs, value: func(lhs, *args, **kwargs),
+            lambda lhs, __: func(lhs, *args, **kwargs),
             Operation.TEST,
             (self._path, func, args, freeze(kwargs))
         )
@@ -397,7 +429,7 @@ class Var(object):
                 return is_iterable(value) and any(e in cond for e in value)
 
         return self._build_predicate(
-            lambda lhs, value: _cmp(lhs),
+            lambda lhs, __: _cmp(lhs),
             Operation.ANY,
             (self._path, freeze(cond))
         )
@@ -427,7 +459,7 @@ class Var(object):
                 return is_iterable(value) and all(e in value for e in cond)
 
         return self._build_predicate(
-            lambda lhs, value: _cmp(lhs),
+            lambda lhs, __: _cmp(lhs),
             Operation.ALL,
             (self._path, freeze(cond))
         )
