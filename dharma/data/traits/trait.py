@@ -80,10 +80,9 @@ class Trait(object):
         self.default = default
         self.required = required
         self.empty_values = empty_values or (None,)
-        self.validators = construct_validators(genus) if genus else \
-            OrderedSet()
+        self.validators = construct_validators(genus) if genus else ()
         if validators:
-            self.validators.update(validators)
+            self.validators.extend(validators)
         # ordered set of change listeners per-Nature-class
         self._class_listeners = OrderedSet(class_listeners) \
             if class_listeners else OrderedSet()
