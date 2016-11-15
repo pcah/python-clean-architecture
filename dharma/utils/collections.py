@@ -2,6 +2,9 @@
 from __future__ import absolute_import
 from collections import MutableSet
 import copy
+import six
+
+from typing import Any, NewType  # noqa
 
 
 def freeze(obj):
@@ -66,8 +69,8 @@ class frozendict(dict):
         try:
             return self._cached_hash
         except AttributeError:
-            h = self._cached_hash = hash(frozenset(self.items()))
-            return h
+            self._cached_hash = hash(frozenset(self.items()))
+            return self._cached_hash
 
     def __repr__(self):
         return "frozendict(%s)" % dict.__repr__(self)
@@ -273,3 +276,117 @@ def get_duplicates(iterable):
         else:
             seen.add(item)
     return seen2
+
+
+Key = NewType('Key', six.text_type)
+
+
+class Bunch(dict):
+    """
+    Dict-like object which gives attribute access to its components.
+
+    An example:
+    >>> bunch = Bunch(foo='bar')
+    >>> assert bunch.foo == 'bar'
+    >>> bunch.foo = {'bar': ['baz']}
+    >>> assert bunch['foo'] = {'bar': ['baz']}
+
+    Additionaly, it offers 'get' method wich can take composite keys:
+    >>> assert bunch.get('foo.bar.0') == 'baz'
+    >>> assert bunch.get('foo.baz', 42) == 42
+    """
+
+    def __getattr__(self, key):
+        # type: (Key) -> Any
+        """
+        Gets key if it exists, otherwise throws AttributeError.
+        NB __getattr__ is only called if key is not found in normal places.
+
+        :param Key key:
+        :rtype: Any
+        :raises: AttributeError
+        """
+        try:
+            return self[key]
+        except KeyError:
+            raise AttributeError(key)
+
+    def __setattr__(self, key, value):
+        # type: (Key, Any) -> None
+        """
+        Sets value under the specified key. Translates TypeError
+        (ie. unhashable keys) to AttributeError.
+
+        :param Key key:
+        :param Any value:
+        :raises: AttributeError
+        """
+        try:
+            self[key] = value
+        except (KeyError, TypeError):
+            raise AttributeError(key)
+
+    def __delattr__(self, key):
+        # type: (Key) -> None
+        """
+        Deletes attribute k if it exists, otherwise deletes key k. A KeyError
+        raised by deleting the key--such as when the key is missing--will
+        propagate as an AttributeError instead.
+
+        :param Key key:
+        :rtype: Any
+        :raises: AttributeError
+        """
+        try:
+            del self[key]
+        except KeyError:
+            raise AttributeError(key)
+
+    def get(self, key, default=None):
+        # type: (Key, Any) -> Any
+        """
+        Dict-like 'get' method which can resolve inner structure of keys.
+        A string-typed key may be composed of series of keys (for maps)
+        or indexes (for sequences), concatenated with dots.
+        The method cat take a default value, just as dict.get does.
+
+        An example:
+        >>> bunch = Bunch(foo={'bar': ['value']})
+        >>> assert bunch.get('foo.bar.0') == 'value'
+        >>> assert bunch.get('foo.baz', 42) == 42
+
+        :param Key key:
+        :param Any default:
+        :rtype: Any
+        """
+        if not (hasattr(key, 'split') and '.' in key):
+            return super(Bunch, self).get(key, default)
+        value = self
+        for part in key.split('.'):
+            try:
+                # attribute access
+                value = getattr(value, part)
+            except AttributeError:
+                try:
+                    # key access
+                    value = value[part]
+                except KeyError:
+                    return default
+                except TypeError:
+                    # index access
+                    try:
+                        value = value[int(part)]
+                    except (TypeError, ValueError, IndexError):
+                        return default
+        return value
+
+    def __repr__(self):
+        """
+        Invertible string-form of a Bunch.
+        """
+        keys = list(self.keys())
+        keys.sort()
+        return '%s(%s)' % (
+            self.__class__.__name__,
+            ', '.join(['%s=%r' % (key, self[key]) for key in keys])
+        )
