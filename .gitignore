@@ -1,6 +1,7 @@
 # Python
 *.py[cod]
 .cache
+.pytest_cache
 
 # build & test
 *.egg-info

@@ -7,11 +7,11 @@ from setuptools.command.test import test as TestCommand
 NAME = 'dharma'
 VERSION = (0, 0, 1, 'dev')
 INSTALL_REQUIRES = (
-    'traitlets>=4.0.0',
+    'traitlets>=4.3.2',
     'six',
 )
 TEST_REQUIRE = (
-    'pytest>=2.8',
+    'pytest>=3.6.3',
 )
 
 
