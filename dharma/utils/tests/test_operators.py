@@ -2,13 +2,11 @@
 import pytest
 
 from dharma.exceptions import PathNotFoundError
-from dharma.utils.operator import (
+from dharma.utils.operators import (
     eq,
     resolve_path,
-    test_path as _test_path,  # avoids identifying as a test by pytest
+    test_path as operator_test_path,  # avoids identifying as a test by pytest
 )
-
-from conftest import example_dict, example_object  # noqa
 
 
 @pytest.mark.parametrize('lhs, rhs', [
@@ -41,7 +39,6 @@ def test_resolve_path_dict_negative(example_dict, path):
         resolve_path_curried(example_dict)
 
 
-# noinspection PyArgumentList
 @pytest.mark.parametrize('path, expected', [
     (('foo',), 1),
     (('bar', 'baz'), {'a': 1}),
@@ -78,11 +75,10 @@ def test_resolve_path_object_negative(example_object, path):
 def test_test_path_dict(example_dict, path, expected):
     # this is the same as `bool`, but let's be explicite about intentions
     test = lambda lhs, value: bool(lhs)
-    resolve_path_curried = _test_path(test, path)
+    resolve_path_curried = operator_test_path(test, path)
     assert resolve_path_curried(example_dict) == expected
 
 
-# noinspection PyArgumentList
 @pytest.mark.parametrize('path, expected', [
     (('foo',), True),
     (('bar', 'baz'), True),
@@ -97,7 +93,7 @@ def test_test_path_dict(example_dict, path, expected):
     "more_complex",
 ])
 def test_test_path_object(example_object, path, expected):
-    # this is the same as `bool`, but let's be explicite about intentions
+    # this is the same as `bool`, but let's be explicit about intentions
     test = lambda lhs, value: bool(lhs)
-    resolve_path_curried = _test_path(test, path)
+    resolve_path_curried = operator_test_path(test, path)
     assert resolve_path_curried(example_object) == expected

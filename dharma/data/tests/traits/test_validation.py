@@ -4,7 +4,7 @@ import pytest
 
 from dharma.exceptions import TraitRequiredError, TraitValidationError
 from dharma.data.traits import undefined_value
-from dharma.utils.tests.factories import nature_class_factory
+from dharma.utils.testing.factories import nature_class_factory
 
 
 @pytest.fixture

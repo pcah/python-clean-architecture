@@ -5,7 +5,8 @@ queries:
 >>> ((where('f1') == 5) & (where('f2') != 2)) | where('s').matches(r'^\w+$')
 (('f1' == 5) and ('f2' != 2)) or ('s' ~= ^\w+$ )
 Predicates are executed by using the ``__call__``:
->>> predicate = where('val') == 5
+>>> from dharma.data.formulae import Predicate, where
+>>> predicate = where('val') == 5  # type: Predicate
 >>> predicate({'val': 5})
 True
 >>> predicate({'val': 1})
@@ -23,7 +24,7 @@ from typing import (  # flake8: noqa
 )
 
 from dharma.utils.collections import freeze, is_iterable
-from dharma.utils.operator import eq, resolve_path, test_path
+from dharma.utils.operators import eq, resolve_path, test_path
 
 
 class Operation(Enum):
@@ -86,7 +87,7 @@ class Predicate(object):
         if not isinstance(other, Predicate):
             return False
         return self.operator, self.args, self.var_name == \
-               other.operator, other.args, other.var_name
+            other.operator, other.args, other.var_name
 
     # --- Associativity of Predicates
 
@@ -200,7 +201,7 @@ class Var(object):
             self._name
         )
 
-    def __eq__(self, rhs):  # type: ignore noqa
+    def __eq__(self, rhs):
         # type: (Any) -> Predicate
         """
         Test the value for equality.
@@ -218,7 +219,7 @@ class Var(object):
             (self._path, freeze(rhs))
         )
 
-    def __ne__(self, rhs):  # type: ignore noqa
+    def __ne__(self, rhs):
         # type: (Any) -> Predicate
         """
         Test the value for inequality.
@@ -361,8 +362,9 @@ class Var(object):
 
         :param func: The function to call, passing the dict as the first
             argument
-        :param *args: :param **kwargs: Additional arguments to pass
-            to the test function
+        :param args:
+        :param kwargs:
+            Additional arguments to pass to the test function
         """
         return self._build_predicate(
             lambda lhs, value: func(lhs, *args, **kwargs),

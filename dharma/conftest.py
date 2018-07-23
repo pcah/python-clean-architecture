@@ -2,7 +2,7 @@
 from mock import Mock
 import pytest
 
-from dharma.utils.tests.factories import nature_class_factory
+from dharma.utils.testing.factories import nature_class_factory
 
 
 @pytest.fixture

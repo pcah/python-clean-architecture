@@ -6,7 +6,7 @@ from dharma.exceptions import (
     TraitPreprocessorError,
     TraitValidationError,
 )
-from dharma.utils.tests.factories import nature_class_factory
+from dharma.utils.testing.factories import nature_class_factory
 
 
 def test_preprocessor():
