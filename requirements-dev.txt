@@ -1,0 +1,6 @@
+-r ./requirements-test.txt
+
+# dev env
+ipython==6.2.1
+pdbpp==0.9.2
+flake8==3.5.0

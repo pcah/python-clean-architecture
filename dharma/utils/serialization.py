@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-import pathlib
 import typing as t
 
 from ruamel import yaml
+
+from .os import read_from_file
 
 
 class CustomLoader(yaml.Loader):
@@ -26,15 +27,12 @@ class CustomLoader(yaml.Loader):
     def construct_yaml_object(self, node: t.Any, cls: t.Any) -> t.Any:
         state = self.construct_mapping(node, deep=True)
         data = cls.__new__(cls, **state)
-        data.__setstate__(state)
+        if hasattr(data, '__setstate__'):
+            data.__setstate__(state)
         yield data
 
     def fetch_comment(self, comment):
-        pass
-
-
-def _read_from_file(filepath: str, encoding: str = None):
-    return pathlib.Path(filepath).read_text(encoding=encoding)
+        raise NotImplementedError
 
 
 def construct_include(loader: CustomLoader, node: yaml.Node) -> t.Any:
@@ -42,7 +40,7 @@ def construct_include(loader: CustomLoader, node: yaml.Node) -> t.Any:
 
     filepath = os.path.abspath(os.path.join(loader.root, loader.construct_scalar(node)))
     extension = os.path.splitext(filepath)[1].lstrip('.').lower()
-    contents = _read_from_file(filepath)
+    contents = read_from_file(filepath)
 
     if extension in ('yaml', 'yml'):
         return yaml.load(contents, CustomLoader)
@@ -65,8 +63,8 @@ def load(stream: t.Union[t.IO, str]) -> t.Any:
     return yaml.load(stream, Loader=CustomLoader)
 
 
-def load_from_filepath(filepath: t.Union[str, pathlib.Path]) -> t.Any:
+def load_from_filepath(filepath: t.Union[str, 'pathlib.Path']) -> t.Any:
     """
     See: `load` function. This function differs only with that it expects filepath as an argument.
     """
-    return load(_read_from_file(filepath))
+    return load(read_from_file(filepath))
