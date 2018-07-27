@@ -40,7 +40,7 @@ class BaseRepository(Generic[T]):
 
     def _get_id(self, obj: T) -> int:
         """
-        Technical method, retriving id from an `obj`. Override if needed.
+        Technical method, retrieving id from an `obj`. Override if needed.
 
         NB: Id is assumed to be `int`. I'm in favour of purely surrogate
         DB keys.
@@ -49,7 +49,7 @@ class BaseRepository(Generic[T]):
 
     def _set_id(self, obj: T, id: int) -> None:
         """
-        Technical method, retriving id from an `obj`. Override if needed.
+        Technical method, retrieving id from an `obj`. Override if needed.
 
         NB: Id is assumed to be `int`. I'm in favour of purely surrogate
         DB keys.

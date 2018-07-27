@@ -37,23 +37,14 @@ class CustomLoader(yaml.Loader):
 
 def construct_include(loader: CustomLoader, node: yaml.Node) -> t.Any:
     """Include file referenced at node."""
-
     filepath = os.path.abspath(os.path.join(loader.root, loader.construct_scalar(node)))
-    extension = os.path.splitext(filepath)[1].lstrip('.').lower()
-    contents = read_from_file(filepath)
-
-    if extension in ('yaml', 'yml'):
-        return yaml.load(contents, CustomLoader)
-    elif extension in ('json', ):
-        return json.loads(contents)
-    else:
-        return contents
+    return load_from_filepath(filepath)
 
 
 yaml.add_constructor('!include', construct_include, CustomLoader)
 
 
-def load(stream: t.Union[t.IO, str]) -> t.Any:
+def load(stream: t.Union[str, t.IO]) -> t.Any:
     """
     Own YAML-deserialization based on:
         * ruamel.yaml (some additional bugfixes vs regular PyYaml module)
@@ -67,4 +58,12 @@ def load_from_filepath(filepath: t.Union[str, 'pathlib.Path']) -> t.Any:
     """
     See: `load` function. This function differs only with that it expects filepath as an argument.
     """
-    return load(read_from_file(filepath))
+    extension = os.path.splitext(filepath)[1].lstrip('.').lower()
+    contents = read_from_file(filepath)
+
+    if extension in ('yaml', 'yml'):
+        return load(contents)
+    elif extension in ('json',):
+        return json.loads(contents)
+    else:
+        return contents

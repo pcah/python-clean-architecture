@@ -70,10 +70,10 @@ def test_load_from_file():
 
     with mock.patch('dharma.utils.serialization.read_from_file') as mocked_read_from_file:
         mocked_read_from_file.return_value = contents
-        result = serialization.load_from_filepath('path/to/a/file')
+        result = serialization.load_from_filepath('path/to/a/file.yaml')
 
     assert result == {'foo': 'bar'}
-    mocked_read_from_file.assert_called_with('path/to/a/file')
+    mocked_read_from_file.assert_called_with('path/to/a/file.yaml')
 
 
 def test_construct_object():

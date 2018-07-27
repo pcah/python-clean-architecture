@@ -3,7 +3,7 @@ from typing import Callable, Generic, Optional, TypeVar
 
 from dharma.compat.db import tinydb
 from dharma.exceptions import DharmaConfigError
-from dharma.utils.imports import to_dotted_path
+from dharma.utils.imports import get_dotted_path
 from .base import BaseRepository
 
 
@@ -19,7 +19,7 @@ class TinyDbRepository(BaseRepository, Generic[T]):
         if not tinydb:
             raise DharmaConfigError
         super(TinyDbRepository, self).__init__(klass=klass, factory=factory)
-        self._table_name = to_dotted_path(klass)
+        self._table_name = get_dotted_path(klass)
         self.engine = tinydb.TinyDB(**engine_config)
         self._table = self.engine.table(self._table_name)
 

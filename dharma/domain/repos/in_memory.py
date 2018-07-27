@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+import typing as t
+
+from dharma.data.formulae import Predicate
 from dharma.utils.inspect import get_all_subclasses
 from dharma.utils.sentinel import Sentinel
 
-from .base import BaseRepository
+from .base import BaseRepository, T
 
 
 unknown_value = Sentinel(module='dharma.domain.repos', name='unknown_value')
@@ -11,7 +14,7 @@ _NOT_FOUND_MSG = "Id '{0}' in {1} hasn't been found"
 
 
 # noinspection PyProtectedMember
-class InMemoryRepository(BaseRepository):
+class InMemoryRepository(BaseRepository, t.Generic[T]):
     """
     Repository implementation which holds the objects in memory.
     All instances of a repository for given `klass` will behave as Borgs:
@@ -111,16 +114,15 @@ class InMemoryRepository(BaseRepository):
         filtered = self.filter(predicate)
         return len(filtered)
 
-    def filter(self, predicate=None):
+    def filter(self, predicate: Predicate = None) -> t.List[T]:
         """
-        Filters out objects in the repository by equality on values
-        in the kwargs.
+        Filters out objects in the register by the values in kwargs.
 
-        :param **kwargs: dictionary of attributes which should be conformed
-         by all of the objects returned
-        :returns: list of objects conforming specified kwargs
+        :param predicate: Predicate: (optional) predicate specifing conditions
+         that items should met. Iff no predicate is given, all objects should
+         be returned.
+        :returns: list of objects conforming given predicate.
         """
-        super(InMemoryRepository, self).filter(predicate)
         if not predicate:
             return list(self._register.values())
         return [obj for obj in self._register.values() if predicate(obj)]
