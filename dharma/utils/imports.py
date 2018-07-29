@@ -62,5 +62,8 @@ def import_dotted_path(dotted_path):
         six.reraise(ImportError, ImportError(msg), sys.exc_info()[2])
 
 
-def get_dotted_path(object):
-    pass
+def get_dotted_path(klass) -> str:
+    if not hasattr(klass, '__fullqualname__'):
+        klass.__fullqualname__ = klass.__qualname__ if klass.__module__ is None else \
+            klass.__module__ + "." + klass.__qualname__
+    return klass.__fullqualname__

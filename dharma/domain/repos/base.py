@@ -1,24 +1,18 @@
 import abc
-from typing import (
-    Callable,
-    Dict,
-    Generic,
-    Iterable,
-    List,
-    Optional,
-    Type,
-    TypeVar,
-)
+import typing as t
+from operator import attrgetter
 
 from dharma.data.formulae.predicate import Predicate
 from dharma.exceptions import RepoError, RepoUpdateNotUniqueError
 from dharma.utils.collections import get_duplicates
 
 
-T = TypeVar('T')
+Id = t.NewType('Id', int)
+T = t.TypeVar('T')
 
 
-class BaseRepository(Generic[T]):
+class BaseRepository(t.Generic[T]):
+
     class NotFound(RepoError):
         """
         Error describing that an item hasn't been found on `get` call.
@@ -26,35 +20,20 @@ class BaseRepository(Generic[T]):
         DEFAULT_CODE = 'NOT-FOUND'
 
     def __init__(self,
-                 klass: Type[T] = None,  # flake8: noqa
-                 factory: Callable[..., T] = None  # flake8: noqa
+                 klass: t.Type[T],  # flake8: noqa
+                 factory: t.Callable[..., T] = None,  # flake8: noqa
+                 get_id: t.Callable[[T], int] = None,
                  ) -> None:
         """
-        :param klass: (optional) the class of target instances. Class
-         `object` will be used iff not specified.
+        :param klass: the class of target instances.
         :param factory: (optional) factory, a callable used to create objects
          of the klass. If specified, it will be called instead of klass.
+        :param get_id: (optional) a function to get ID of the `klass` instance
+         If not provided, a default of `attrgetter('id')` will be used.
         """
-        self.klass = klass or object
-        self.factory = factory
-
-    def _get_id(self, obj: T) -> int:
-        """
-        Technical method, retrieving id from an `obj`. Override if needed.
-
-        NB: Id is assumed to be `int`. I'm in favour of purely surrogate
-        DB keys.
-        """
-        return obj.id
-
-    def _set_id(self, obj: T, id: int) -> None:
-        """
-        Technical method, retrieving id from an `obj`. Override if needed.
-
-        NB: Id is assumed to be `int`. I'm in favour of purely surrogate
-        DB keys.
-        """
-        obj.id = id
+        self._klass = klass
+        self._factory = factory
+        self._get_id = get_id or attrgetter('id')
 
     def create(self, *args, **kwargs) -> T:
         """
@@ -67,7 +46,7 @@ class BaseRepository(Generic[T]):
         :params *args, **kwargs: arguments for calling the factory.
         :returns: the object created.
         """
-        factory = self.factory or self.klass
+        factory = self._factory or self._klass
         return factory(*args, **kwargs)
 
     def create_and_insert(self, *args, **kwargs) -> T:
@@ -83,7 +62,7 @@ class BaseRepository(Generic[T]):
         return obj
 
     @abc.abstractmethod
-    def get(self, id: int) -> T:
+    def get(self, id_: Id) -> T:
         """
         Returns object of given id or raises a class-specific error.
 
@@ -92,19 +71,23 @@ class BaseRepository(Generic[T]):
         """
 
     @abc.abstractmethod
-    def get_or_none(self, id: int) -> Optional[T]:
+    def get_or_none(self, id_: Id) -> t.Optional[T]:
         """Returns object of given id or None."""
 
     @abc.abstractmethod
-    def exists(self, id: int) -> bool:
+    def get_all(self) -> t.Iterable[T]:
+        """Returns a list with all the objects."""
+
+    @abc.abstractmethod
+    def exists(self, id_: Id) -> bool:
         """Returns whether id exists in the repo."""
 
     @abc.abstractmethod
-    def filter(self, predicate: Predicate = None) -> List[T]:
+    def filter(self, predicate: Predicate) -> t.List[T]:
         """
         Filters out objects in the register by the values in kwargs.
 
-        :param predicate: Predicate: (optional) predicate specifing conditions
+        :param predicate: (optional) predicate specifying conditions
          that items should met. Iff no predicate is given, all objects should
          be returned.
         :returns: list of objects conforming given predicate.
@@ -115,73 +98,72 @@ class BaseRepository(Generic[T]):
         # )
 
     @abc.abstractmethod
-    def count(self, predicate: Optional[Predicate]) -> int:
+    def count(self, predicate: t.Optional[Predicate]) -> int:
         """
         Counts objects in the repo.
 
-        :param predicate: Predicate: predicate specifing conditions that items
+        :param predicate: Predicate: predicate specifying conditions that items
          should met. Iff no predicate is given, all objects should
          be counted.
         :returns: number of objects conforming given predicate.
         """
 
     @abc.abstractmethod
-    def insert(self, obj: T) -> T:
+    def insert(self, obj: T) -> bool:
         """
         Inserts the object into the repository. Specific behaviour
         should be implemented in subclasses.
 
         :param obj: an object to be put into the repository.
-        :returns: the object
+        :returns: whether insert operation was successful
         """
-        assert isinstance(obj, self.klass)
+        assert isinstance(obj, self._klass)
         assert not self.exists(self._get_id(obj))
-        return obj
+        return True
 
     @abc.abstractmethod
-    def batch_insert(self, objs: Iterable[T]) -> List[T]:
+    def batch_insert(self, objs: t.Iterable[T]) -> t.Dict[Id, bool]:
         """
         Inserts collection of objects into the repository. Specific behaviour
         should be implemented in subclasses.
 
         :param objs: Iterable of objects intended for the repo.
-        :returns: The payload: a dict of {id: obj}
+        :returns: a dict of {id: was_insert_successful}
         """
         payload = list(objs)
-        assert all(isinstance(obj, self.klass) for obj in payload)
-        return payload
+        assert all(isinstance(obj, self._klass) for obj in payload)
+        return {None: True}
 
     @abc.abstractmethod
-    def update(self, obj: T) -> T:
+    def update(self, obj: T) -> bool:
         """
         Updates the object in the repository. Specific behaviour
         should be implemented in subclasses.
 
         :param obj: an object to be put into the repository.
-        :returns: the object
+        :returns: whether update operation was successful
         """
-        assert isinstance(obj, self.klass)
+        assert isinstance(obj, self._klass)
         assert self.exists(self._get_id(obj))
-        return obj
+        return True
 
     @abc.abstractmethod
-    def batch_update(self, objs: Iterable[T]) -> Dict[int, T]:
+    def batch_update(self, objs: t.Iterable[T]) -> t.Dict[Id, bool]:
         """
         Updates objects gathered in the collection. Specific behaviour
         should be implemented in subclasses.
 
         :param objs: Iterable of objects intended to be updated.
-        :returns: The payload: a dict of {id: obj}
+        :returns: a dict of {id: was_update_successful}
         """
         payload = tuple(objs)
         assert not get_duplicates(self._get_id(obj) for obj in payload)
-        assert all(isinstance(obj, self.klass) for obj in payload)
-        payload = {self._get_id(obj): obj for obj in payload}
+        assert all(isinstance(obj, self._klass) for obj in payload)
         # objects should be updated uniquely
         common = get_duplicates(self._get_id(obj) for obj in objs)
         if common:
             raise RepoUpdateNotUniqueError(common)
-        return payload
+        return {self._get_id(obj): True for obj in payload}
 
     @abc.abstractmethod
     def remove(self, obj: T) -> bool:
@@ -190,19 +172,19 @@ class BaseRepository(Generic[T]):
         False otherwise.
         """
 
-    def batch_remove(self, objs: Iterable[T]) -> List[bool]:
+    def batch_remove(self, objs: t.Iterable[T]) -> t.Dict[Id, bool]:
         """Removes a collection of objects from the repo."""
-        return List(self.remove(obj) for obj in objs)
+        return {self._get_id(obj): self.remove(obj) for obj in objs}
 
     @abc.abstractmethod
-    def pop(self, id: int) -> Optional[T]:
+    def pop(self, id_: Id) -> t.Optional[T]:
         """
         Removes an object specified by given id from the repo and returns it.
         Returns None iff not found.
         """
 
-    def batch_pop(self, ids: Iterable[int]) -> List[T]:
+    def batch_pop(self, ids: t.Iterable[Id]) -> t.Dict[Id, T]:
         """
         Removes an object specified by given id from the repo and returns it.
         """
-        return [self.pop(id_) for id_ in ids]
+        return {id: self.pop(id_) for id_ in ids}
