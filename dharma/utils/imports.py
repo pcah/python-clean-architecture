@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-from importlib import import_module
 import os
 import six
 import sys
+import typing as t
+from importlib import import_module
+from functools import lru_cache
 
 
 def import_all_names(_file, _name):
@@ -39,7 +41,7 @@ def import_all_names(_file, _name):
 
 
 # noinspection PyUnboundLocalVariable
-def import_dotted_path(dotted_path):
+def import_dotted_path(dotted_path: str) -> t.Type:
     """
     Import a dotted module path and return the attribute/class designated by
     the last name in the path. Raise ImportError if the import failed.
@@ -62,8 +64,7 @@ def import_dotted_path(dotted_path):
         six.reraise(ImportError, ImportError(msg), sys.exc_info()[2])
 
 
-def get_dotted_path(klass) -> str:
-    if not hasattr(klass, '__fullqualname__'):
-        klass.__fullqualname__ = klass.__qualname__ if klass.__module__ is None else \
-            klass.__module__ + "." + klass.__qualname__
-    return klass.__fullqualname__
+@lru_cache(maxsize=None)
+def get_dotted_path(klass: t.Type) -> str:
+    return klass.__qualname__ if klass.__module__ is None else \
+        klass.__module__ + "." + klass.__qualname__

@@ -11,16 +11,21 @@ class DharmaError(Exception):
         'code'
     )
 
-    def __init__(self, area=None, code=None, *args):
+    def __init__(self, code=None, area=None):
         self.area = area or self.DEFAULT_AREA
         self.code = code or self.DEFAULT_CODE
-        super(DharmaError, self).__init__(*args)
+        super(DharmaError, self).__init__()
 
     def __str__(self):
-        return super(Exception, self).__repr__() + "; ".join(
-            "{}: {}".format(attr, getattr(self, attr) or 'None')
+        return "{}({})".format(self._get_class_name(), ", ".join(
+            "{}='{}'".format(attr, getattr(self, attr) or 'None')
             for attr in self.PRINTED_ATTRS
-        )
+        ))
+
+    __repr__ = __str__
+
+    def _get_class_name(self):
+        return self.__class__.__name__
 
 
 class DharmaConfigError(DharmaError):

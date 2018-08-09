@@ -24,7 +24,7 @@ from typing import (  # flake8: noqa
 )
 
 from dharma.utils.collections import freeze, is_iterable
-from dharma.utils.operators import eq, resolve_path, test_path
+from dharma.utils.operators import eq, resolve_path, check_path
 
 
 class Operation(Enum):
@@ -195,7 +195,7 @@ class Var(object):
         if not self._path:
             raise ValueError('Var has no path')
         return Predicate(
-            test_path(test, self._path),
+            check_path(test, self._path),
             operation,
             args,
             self._name

@@ -1,16 +1,11 @@
 import six
-from typing import (  # noqa
-    Any,
-    Callable,
-    Iterable,
-)
+import typing as t
 
 from dharma.exceptions import PathNotFoundError
 from dharma.utils.exceptions import catch_warning
 
 
-def resolve_path(path):
-    # type: (Iterable[str]) -> Callable[..., Any]
+def resolve_path(path: t.Iterable[str]) -> t.Callable[..., t.Any]:
     # raises: PathNotFoundError
     def resolve_path_curried(value):
         for part in path:
@@ -20,17 +15,17 @@ def resolve_path(path):
                 try:
                     value = getattr(value, part)
                 except AttributeError:
-                    raise PathNotFoundError(path, part, value)
+                    raise PathNotFoundError
         return value
 
     return resolve_path_curried
 
 
-def test_path(
-    test,  # type: Callable[[Any, Any], bool]
-    path,  # type: Iterable[str]
-):  # type: (...) -> Callable[..., bool]
-    def test_path_curried(value):
+def check_path(
+    test: t.Callable[[t.Any, t.Any], bool],
+    path: t.Iterable[str]
+) -> t.Callable[..., bool]:
+    def check_path_curried(value):
         orig_value = value
         for part in path:
             try:
@@ -42,7 +37,7 @@ def test_path(
                     return False
         return test(value, orig_value)
 
-    return test_path_curried
+    return check_path_curried
 
 
 if six.PY2:  # pragma: no cover
@@ -69,3 +64,23 @@ else:  # pragma: no cover
     def eq(value, rhs):
         """Plain ol' __eq__ compare."""
         return value == rhs
+
+
+def error_catcher(
+        error_class: t.Union[t.Type[Exception], t.Tuple[Exception]],
+        func: t.Callable[..., t.Any],
+        *args,
+        **kwargs
+):
+    """
+    Catches expected type(s) of errors from a callable.
+
+    :param error_class: a class of errors or a tuple of classes to be caught
+    :param func: a callable that is expected to raise (one of) `error_class` errors
+    :return: a boolean that shows iff error was caught
+    """
+    try:
+        func(*args, **kwargs)
+        return True
+    except error_class:
+        return False

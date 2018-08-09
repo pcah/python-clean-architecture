@@ -9,8 +9,8 @@ class Super(object):
     """This class is intended for super_repo"""
     attr_1 = 'attr_1'
 
-    def __init__(self, id):
-        self.id = id
+    def __init__(self, id_):
+        self.id = id_
         self.attr_2 = 'attr_2_super'
 
 
@@ -21,24 +21,25 @@ class Middle(Super):
 
 class Sub(Middle):
     """This class is intended for sub_repo"""
-    def __init__(self, id):
-        super(Sub, self).__init__(id)
+    def __init__(self, id_):
+        super(Sub, self).__init__(id_)
         self.attr_2 = 'attr_2_sub'
 
 
-sub_list = (Sub(id='sub1'), Sub(id='sub2'))
+sub_list = (Sub(id_='sub1'), Sub(id_='sub2'))
 super_id = 'super'
-super_obj = Super(id=super_id)
+super_obj = Super(id_=super_id)
 super_list = (super_obj,)
 
 
 @pytest.fixture
-def clear_all_repos(request):
+def clear_all_repos():
     """Clears register of all created ConfigRepository instances"""
-    request.addfinalizer(lambda: InMemoryRepository._clear_all_repos())
+    yield
+    InMemoryRepository._clear_all_repos()
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def super_repo():
     """
     Repository for class Super. Clears register of all created
@@ -48,7 +49,7 @@ def super_repo():
     InMemoryRepository._clear_all_repos()
 
 
-@pytest.yield_fixture
+@pytest.fixture
 def sub_repo():
     """
     Repository for class Sub. Clears register of all created
@@ -112,37 +113,41 @@ def test_get_or_none_not_found(super_repo_loaded):
 
 def test_borg(super_repo):
     other_super_repo = InMemoryRepository(Super)
-    assert super_repo._register == other_super_repo._register
+    assert super_repo.all() == other_super_repo.all()
 
 
-def test_finding_super_repos(clear_all_repos):
+@pytest.mark.usefixtures("clear_all_repos")
+def test_finding_super_repos():
     """InMemoryRepository finds repos of superclasses correctly"""
-    super_repo = InMemoryRepository(Super)
+    InMemoryRepository(Super)
     sub_repo = InMemoryRepository(Sub)
-    assert sub_repo._klass_super_repos == [super_repo]
+    sub_repo_super_klasses = sub_repo._SUPER_KLASSES_WITH_REPO[sub_repo._klass_qualname]
+    assert sub_repo_super_klasses == ['test_in_memory.Super']
 
 
-def test_finding_sub_repos(clear_all_repos):
+@pytest.mark.usefixtures("clear_all_repos")
+def test_finding_sub_repos():
     """InMemoryRepository finds repos of subclasses correctly
     NB: notice opposite order of repo creation.
     """
     sub_repo = InMemoryRepository(Sub)
-    super_repo = InMemoryRepository(Super)
-    assert sub_repo._klass_super_repos == [super_repo]
+    InMemoryRepository(Super)
+    sub_repo_super_klasses = sub_repo._SUPER_KLASSES_WITH_REPO[sub_repo._klass_qualname]
+    assert sub_repo_super_klasses == ['test_in_memory.Super']
 
 
 def test_existance_of_subclass_objs_in_super_repo(
         super_repo, sub_repo_loaded):
     """Instances of subclass are found in repos of its superclasses"""
-    assert set(sub_repo_loaded.get_all()) == set(sub_list)
-    assert set(super_repo.get_all()) == set(sub_list)
+    assert set(sub_repo_loaded.all()) == set(sub_list)
+    assert set(super_repo.all()) == set(sub_list)
 
 
 def test_nonexistance_of_superclass_entities_in_sub_repo(
         sub_repo, super_repo_loaded):
     """Instances of superclass can't be found in repos of its subclasses"""
-    assert list(sub_repo.get_all()) == []
-    assert set(super_repo_loaded.get_all()) == set(super_list)
+    assert list(sub_repo.all()) == []
+    assert set(super_repo_loaded.all()) == set(super_list)
 
 
 def test_create_klass(mocker):
@@ -175,7 +180,7 @@ def test_create_factory(mocker):
 def test_insert(super_repo):
     """Object inserted is stored in the repo"""
     super_repo.insert(super_obj)
-    assert super_repo._register[super_id] == super_obj
+    assert super_repo.get(super_id) is super_obj
 
 
 def test_create_and_insert():
@@ -183,13 +188,13 @@ def test_create_and_insert():
     some_id = 'some id'
 
     class A(object):
-        def __init__(self, id=some_id):
-            self.id = id
+        def __init__(self, id_=some_id):
+            self.id = id_
 
     repo = InMemoryRepository(A)
-    obj = repo.create_and_insert(id=some_id)
+    obj = repo.create_and_insert(id_=some_id)
     assert obj.id == some_id
-    assert repo._register[some_id] == obj
+    assert repo.get(some_id) is obj
 
 
 def test_pop_exists(super_repo_loaded):
@@ -208,32 +213,29 @@ def test_not_exists(super_repo_loaded):
     assert not super_repo_loaded.exists('not existing')
 
 
-def test_filter_exist(super_repo_loaded, sub_repo_loaded,
-                      predicate_attr_2_sub, predicate_attr_2_super):
+@pytest.mark.usefixtures("sub_repo_loaded")
+def test_filter_exist(super_repo_loaded, predicate_attr_2_sub, predicate_attr_2_super):
     """Repo returns filtered items"""
-    assert set(super_repo_loaded.filter(predicate_attr_2_super)) \
-        == set(super_list)
-    assert set(super_repo_loaded.filter(predicate_attr_2_sub)) \
-        == set(sub_list)
-    assert set(super_repo_loaded.filter()) == set(super_list + sub_list)
+    assert set(super_repo_loaded.filter(predicate_attr_2_super)) == set(super_list)
+    assert set(super_repo_loaded.filter(predicate_attr_2_sub)) == set(sub_list)
 
 
-def test_filter_not_exist(super_repo_loaded, sub_repo_loaded,
-                          predicate_foo_bar):
+@pytest.mark.usefixtures("sub_repo_loaded")
+def test_filter_not_exist(super_repo_loaded, predicate_foo_bar):
     """Repo returns nothing when elements are filtered out"""
     assert set(super_repo_loaded.filter(predicate_foo_bar)) == set()
 
 
-def test_count_exist(super_repo_loaded, sub_repo_loaded,
-                     predicate_attr_2_sub, predicate_attr_2_super):
+@pytest.mark.usefixtures("sub_repo_loaded")
+def test_count_exist(super_repo_loaded, predicate_attr_2_sub, predicate_attr_2_super):
     """Repo counts filtered items"""
     assert super_repo_loaded.count(predicate_attr_2_super) == 1
     assert super_repo_loaded.count(predicate_attr_2_sub) == 2
     assert super_repo_loaded.count() == 3
 
 
-def test_count_not_exist(super_repo_loaded, sub_repo_loaded,
-                         predicate_foo_bar):
+@pytest.mark.usefixtures("sub_repo_loaded")
+def test_count_not_exist(super_repo_loaded, predicate_foo_bar):
     """Repo counts 0 items when items are filtered out"""
     assert super_repo_loaded.count(predicate_foo_bar) == 0
 
@@ -247,10 +249,10 @@ def test_pop_not_exists(super_repo_loaded):
 def test_remove_exists(super_repo_loaded):
     """Repo removes given object"""
     super_repo_loaded.remove(super_obj)
-    assert super_id not in super_repo_loaded._register
+    assert super_repo_loaded.get_or_none(id_=super_obj.id) is None
 
 
 def test_remove_not_exists(super_repo_loaded):
     """Repo raises NotFound on removing not existing id"""
     with pytest.raises(super_repo_loaded.NotFound):
-        super_repo_loaded.remove(Super(id='not existing'))
+        super_repo_loaded.remove(Super(id_='not existing'))

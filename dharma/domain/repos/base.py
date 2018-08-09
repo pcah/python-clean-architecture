@@ -5,7 +5,7 @@ from operator import attrgetter
 from dharma.data.formulae.predicate import Predicate
 from dharma.exceptions import RepoError, RepoUpdateNotUniqueError
 from dharma.utils.collections import get_duplicates
-
+from dharma.utils.operators import error_catcher
 
 Id = t.NewType('Id', int)
 T = t.TypeVar('T')
@@ -20,8 +20,8 @@ class BaseRepository(t.Generic[T]):
         DEFAULT_CODE = 'NOT-FOUND'
 
     def __init__(self,
-                 klass: t.Type[T],  # flake8: noqa
-                 factory: t.Callable[..., T] = None,  # flake8: noqa
+                 klass: t.Type[T],
+                 factory: t.Callable[..., T] = None,
                  get_id: t.Callable[[T], int] = None,
                  ) -> None:
         """
@@ -75,7 +75,7 @@ class BaseRepository(t.Generic[T]):
         """Returns object of given id or None."""
 
     @abc.abstractmethod
-    def get_all(self) -> t.Iterable[T]:
+    def all(self) -> t.Iterable[T]:
         """Returns a list with all the objects."""
 
     @abc.abstractmethod
@@ -87,9 +87,8 @@ class BaseRepository(t.Generic[T]):
         """
         Filters out objects in the register by the values in kwargs.
 
-        :param predicate: (optional) predicate specifying conditions
-         that items should met. Iff no predicate is given, all objects should
-         be returned.
+        :param predicate: predicate specifying conditions that items should
+         met. Iff no predicate is given, all objects should be returned.
         :returns: list of objects conforming given predicate.
         """
         # assert id not in predicate.get_vars(), (
@@ -121,18 +120,18 @@ class BaseRepository(t.Generic[T]):
         assert not self.exists(self._get_id(obj))
         return True
 
-    @abc.abstractmethod
     def batch_insert(self, objs: t.Iterable[T]) -> t.Dict[Id, bool]:
         """
-        Inserts collection of objects into the repository. Specific behaviour
-        should be implemented in subclasses.
+        Inserts collection of objects into the repository.
 
         :param objs: Iterable of objects intended for the repo.
         :returns: a dict of {id: was_insert_successful}
         """
-        payload = list(objs)
-        assert all(isinstance(obj, self._klass) for obj in payload)
-        return {None: True}
+        error_classes = (AssertionError, self.NotFound)
+        return {
+            self._get_id(obj): error_catcher(error_classes, self.insert, obj)
+            for obj in objs
+        }
 
     @abc.abstractmethod
     def update(self, obj: T) -> bool:
@@ -147,44 +146,51 @@ class BaseRepository(t.Generic[T]):
         assert self.exists(self._get_id(obj))
         return True
 
-    @abc.abstractmethod
     def batch_update(self, objs: t.Iterable[T]) -> t.Dict[Id, bool]:
         """
-        Updates objects gathered in the collection. Specific behaviour
-        should be implemented in subclasses.
+        Updates objects gathered in the collection.
 
         :param objs: Iterable of objects intended to be updated.
         :returns: a dict of {id: was_update_successful}
         """
-        payload = tuple(objs)
-        assert not get_duplicates(self._get_id(obj) for obj in payload)
-        assert all(isinstance(obj, self._klass) for obj in payload)
+        assert not get_duplicates(self._get_id(obj) for obj in objs)
+        assert all(isinstance(obj, self._klass) for obj in objs)
         # objects should be updated uniquely
         common = get_duplicates(self._get_id(obj) for obj in objs)
         if common:
             raise RepoUpdateNotUniqueError(common)
-        return {self._get_id(obj): True for obj in payload}
+
+        error_classes = (AssertionError, self.NotFound)
+        return {
+            self._get_id(obj): error_catcher(error_classes, self.update, obj)
+            for obj in objs
+        }
 
     @abc.abstractmethod
     def remove(self, obj: T) -> bool:
         """
-        Removes given object from the repo. Returns True iff done,
-        False otherwise.
+        Removes given object from the repo. Specific behaviour
+        should be implemented in subclasses.
         """
 
     def batch_remove(self, objs: t.Iterable[T]) -> t.Dict[Id, bool]:
         """Removes a collection of objects from the repo."""
-        return {self._get_id(obj): self.remove(obj) for obj in objs}
+        error_classes = (AssertionError, self.NotFound)
+        return {
+            self._get_id(obj): error_catcher(error_classes, self.remove, obj)
+            for obj in objs
+        }
 
     @abc.abstractmethod
     def pop(self, id_: Id) -> t.Optional[T]:
         """
         Removes an object specified by given id from the repo and returns it.
-        Returns None iff not found.
+        Returns None iff not found. Specific behaviour should be implemented
+        in subclasses.
         """
 
     def batch_pop(self, ids: t.Iterable[Id]) -> t.Dict[Id, T]:
         """
         Removes an object specified by given id from the repo and returns it.
         """
-        return {id: self.pop(id_) for id_ in ids}
+        return {id_: self.pop(id_) for id_ in ids}

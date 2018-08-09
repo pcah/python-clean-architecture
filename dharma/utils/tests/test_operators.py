@@ -5,7 +5,7 @@ from dharma.exceptions import PathNotFoundError
 from dharma.utils.operators import (
     eq,
     resolve_path,
-    test_path as operator_test_path,  # avoids identifying as a test by pytest
+    check_path as operator_test_path,  # avoids identifying as a test by pytest
 )
 
 
