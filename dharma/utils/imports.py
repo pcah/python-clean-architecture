@@ -49,19 +49,22 @@ def import_dotted_path(dotted_path: str) -> t.Type:
     Code taken from: django.utils.module_loading,import_string v 1.9
     """
     try:
-        module_path, class_name = dotted_path.rsplit('.', 1)
-    except ValueError:
-        msg = "%s doesn't look like a module path" % dotted_path
-        six.reraise(ImportError, ImportError(msg), sys.exc_info()[2])
+        module_path, qual_name = dotted_path.rsplit(':', 1) \
+            if ':' in dotted_path else dotted_path.rsplit('.', 1)
+    except ValueError as e:
+        msg = "'%s' doesn't look like a module path" % dotted_path
+        raise ImportError(msg) from e
 
-    module = import_module(module_path)
+    obj = import_module(module_path)
 
     try:
-        return getattr(module, class_name)
-    except AttributeError:
-        msg = 'Module "%s" does not define a "%s" attribute/class' % (
-            module_path, class_name)
-        six.reraise(ImportError, ImportError(msg), sys.exc_info()[2])
+        for chunk in qual_name.split('.'):
+            obj = getattr(obj, chunk)
+    except AttributeError as e:
+        msg = "Module '%s' does not define a '%s' attribute/class" % (
+            module_path, qual_name)
+        raise ImportError(msg) from e
+    return obj
 
 
 @lru_cache(maxsize=None)
