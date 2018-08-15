@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from collections import MutableSet
+from functools import singledispatch
 import copy
 import six
-
-from typing import Any, NewType  # noqa
+import typing as t
 
 
 def freeze(obj):
@@ -278,7 +278,7 @@ def get_duplicates(iterable):
     return seen2
 
 
-Key = NewType('Key', six.text_type)
+Key = t.NewType('Key', six.text_type)
 
 
 class Bunch(dict):
@@ -296,8 +296,7 @@ class Bunch(dict):
     >>> assert bunch.get('foo.baz', 42) == 42
     """
 
-    def __getattr__(self, key):
-        # type: (Key) -> Any
+    def __getattr__(self, key: Key) -> t.Any:
         """
         Gets key if it exists, otherwise throws AttributeError.
         NB __getattr__ is only called if key is not found in normal places.
@@ -311,8 +310,7 @@ class Bunch(dict):
         except KeyError:
             raise AttributeError(key)
 
-    def __setattr__(self, key, value):
-        # type: (Key, Any) -> None
+    def __setattr__(self, key: Key, value: t.Any):
         """
         Sets value under the specified key. Translates TypeError
         (ie. unhashable keys) to AttributeError.
@@ -326,8 +324,7 @@ class Bunch(dict):
         except (KeyError, TypeError):
             raise AttributeError(key)
 
-    def __delattr__(self, key):
-        # type: (Key) -> None
+    def __delattr__(self, key: Key):
         """
         Deletes attribute k if it exists, otherwise deletes key k. A KeyError
         raised by deleting the key--such as when the key is missing--will
@@ -342,8 +339,7 @@ class Bunch(dict):
         except KeyError:
             raise AttributeError(key)
 
-    def get(self, key, default=None):
-        # type: (Key, Any) -> Any
+    def get(self, key: Key, default: t.Any = None):
         """
         Dict-like 'get' method which can resolve inner structure of keys.
         A string-typed key may be composed of series of keys (for maps)
@@ -390,3 +386,22 @@ class Bunch(dict):
             self.__class__.__name__,
             ', '.join(['%s=%r' % (key, self[key]) for key in keys])
         )
+
+
+@singledispatch
+def iterate_over_values(collection):
+    yield collection
+
+
+@iterate_over_values.register(list)
+@iterate_over_values.register(tuple)
+def _(collection):
+    for value in collection:
+        yield from iterate_over_values(value)
+
+
+@iterate_over_values.register(dict)
+@iterate_over_values.register(t.Mapping)
+def _(collection):
+    for key in sorted(collection):
+        yield from iterate_over_values(collection[key])
