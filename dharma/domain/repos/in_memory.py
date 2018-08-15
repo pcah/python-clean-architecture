@@ -3,8 +3,10 @@ import typing as t
 from collections import defaultdict
 
 from dharma.data.formulae import Predicate
+from dharma.utils.collections import iterate_over_values
 from dharma.utils.imports import get_dotted_path
 from dharma.utils.operators import error_catcher
+from dharma.utils.serialization import load_from_filepath
 
 from .base import BaseRepository, Id, T
 
@@ -61,6 +63,16 @@ class InMemoryRepository(BaseRepository, t.Generic[T]):
         """
         cls._REGISTERS[get_dotted_path(klass)] = {}
         return klass
+
+    @classmethod
+    def load_from_filepath(cls, filepath):
+        result = load_from_filepath(filepath)
+        repos = {}
+        for obj in iterate_over_values(result):
+            klass = obj.__class__
+            if klass not in repos:
+                repos[klass] = cls(klass)
+            repos[klass].insert(obj)
 
     def _find_super_repos(self, klass):
         if self._klass_qualname in self._SUPER_KLASSES_WITH_REPO:

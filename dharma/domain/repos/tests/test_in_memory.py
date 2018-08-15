@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+import mock
 import pytest
 
 from dharma.data.formulae import where
 from dharma.domain.repos.in_memory import InMemoryRepository
+from dharma.utils import serialization
 
 
 class Super(object):
@@ -256,3 +258,26 @@ def test_remove_not_exists(super_repo_loaded):
     """Repo raises NotFound on removing not existing id"""
     with pytest.raises(super_repo_loaded.NotFound):
         super_repo_loaded.remove(Super(id_='not existing'))
+
+
+class FooClass(serialization.yaml.YAMLObject):
+
+    yaml_tag = 'foo'
+    yaml_constructor = serialization.CustomLoader
+
+    @property
+    def id(self):
+        return (42, 'foo')
+
+
+def test_load_from_filepath():
+    contents = (
+        "---\n"
+        "foo: !<foo> {}\n"
+    )
+    with mock.patch('dharma.utils.serialization.read_from_file') as mocked_read_from_file:
+        mocked_read_from_file.return_value = contents
+        InMemoryRepository.load_from_filepath('foo.yaml')
+
+    foo_object = serialization.load(contents)['foo']
+    assert isinstance(foo_object, FooClass)

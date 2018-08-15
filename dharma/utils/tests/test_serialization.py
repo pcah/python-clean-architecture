@@ -94,7 +94,9 @@ def test_construct_object():
 
 
 def test_construct_namedtuple():
-    """Original Loader has a problem """
+    """Original Loader has a problem of building an object which state is set
+    by __new__, instead of __init__.
+    """
     from collections import namedtuple
 
     class FooClass(serialization.yaml.YAMLObject, namedtuple('Foo', "x, y")):
