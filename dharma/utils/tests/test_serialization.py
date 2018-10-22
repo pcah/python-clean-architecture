@@ -35,30 +35,34 @@ def test_load_dict_with_list_as_key():
     }
 
 
-@pytest.mark.parametrize("file_extension, file_contents, expected_contents", [
-    ('yaml', (
+@pytest.mark.parametrize("main_contents, inner_contents", [
+    ((  # test include
         "---\n"
+        "foo: [spam, eggs]\n"
+        "included: !include inner.yaml"
+    ), (
+        "---\n"
+        "bar:\n"
         "- spam\n"
         "- eggs\n"
-    ), ['spam', 'eggs']),
-    ('json', '["spam", "eggs"]', ['spam', 'eggs']),
-    ('JSON', '["spam", "eggs"]', ['spam', 'eggs']),
-    ('txt', "['spam', 'eggs']", "['spam', 'eggs']"),
-])
-def test_load_with_include(file_extension, file_contents, expected_contents):
-    main_contents = (
+    )),
+    ((  # test include with anchors between inner & main files
         "---\n"
-        "foo: bar\n"
-        "included: !include inner.{}".format(file_extension)
-    )
-
+        "foo: &anchor [spam, eggs]\n"
+        "included: !include inner.yaml"
+     ), (
+        "---\n"
+        "bar: *anchor\n"
+    )),
+])
+def test_load_with_include(main_contents, inner_contents):
     with mock.patch('dharma.utils.serialization.read_from_file') as mocked_read_from_file:
-        mocked_read_from_file.return_value = file_contents
+        mocked_read_from_file.return_value = inner_contents
         result = serialization.load(main_contents)
 
     assert result == {
-        'foo': 'bar',
-        'included': expected_contents,
+        'foo': ['spam', 'eggs'],
+        'included': {'bar': ['spam', 'eggs']},
     }
 
 

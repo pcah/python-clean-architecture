@@ -401,7 +401,6 @@ def _(collection):
 
 
 @iterate_over_values.register(dict)
-@iterate_over_values.register(t.Mapping)
 def _(collection):
     for key in sorted(collection):
         yield from iterate_over_values(collection[key])
