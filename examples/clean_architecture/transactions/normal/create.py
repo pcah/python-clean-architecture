@@ -9,7 +9,9 @@ class UseCase:
 
 
 class Resource:
-    pass
+
+    def __getattr__(self, action='init'):
+        return getattr(self.use_case, action)
 
 
 class ValidationError:
@@ -17,16 +19,19 @@ class ValidationError:
 
 
 # concrete use case architecture
-class CreateNormalResource(Resource):
-    """
-    Former Flow. No persistent attributes nor states as both are pieces of use-cases.
-    """
-    @property
-    def use_case(self):
-        return CreateNormal()
+import dataclasses
+import typing as t
 
-    def __getattr__(self, action='init'):
-        return getattr(self.use_case, action)
+
+RecipientId = t.NewType('RecipientId', str)
+AccountId = t.NewType('AccountId', str)
+AccountNrb = t.NewType('AccountNrb', str)
+
+
+@dataclasses.dataclass
+class CreateNormalInputData:
+    recipient_id: RecipientId
+    account: AccountNrb
 
 
 class CreateNormal(UseCase):
@@ -39,3 +44,10 @@ class CreateNormal(UseCase):
         if not initial_accounts:
             raise ValidationError
         self.iss_repo.store(id_, 'initial_accounts', initial_accounts)
+
+
+class CreateNormalResource(Resource):
+    """
+    Former Flow. No persistent attributes nor states as both are pieces of use-cases.
+    """
+    use_case = CreateNormal()

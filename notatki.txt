@@ -1,2 +1,0 @@
-* Serwisy: aplikacyjny (!) i domenowy mają wstrzyknięte repozytoria obiektów domenowych
-** więc DjangoRepository < Model może mieć odniesienie do Entity
