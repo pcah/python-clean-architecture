@@ -26,7 +26,7 @@ The Clean Architecture [[1]](#ref-1) by Uncle Bob.
 
 The first rule of the Clean Architecture we will formulate is:
 > Thou shall not mix responsibilities between layers of the application.
-Enforce clean separation between domain, application and their environment 
+Keep a clean separation between domain, application and their environment 
 (web frameworks, database connectors, session stores, aso).
  
 ### What's and why's
@@ -38,19 +38,23 @@ in the environment of Python application frameworks.
 [TODO]
 
 ```python
-class User(Entity):
-    login = string(required=True, min_len=6, max_len=16, chars=ascii_letters)
-    first_name = string()
-    last_name = string()
-    password = string(
-        required=True, min_len=6, max_len=32, chars=validation.CHARS,
-        validators=[
-            validation.validate_different_characters,
-            validation.validate_special_chars
-    ]   )  # encrypted
+class InitialSignupForm(forms.Form):
+    email = forms.EmailField()
+    password = forms.CharField(max_length=255, widget=forms.PasswordInput)
+    password_repeat = forms.CharField(max_length=255, widget=forms.PasswordInput)
 
-    last_login = datetime(required=True)
-    ip = ip4(required=True)
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        if User.objects.filter(email=email).exists():
+            raise ValidationError("Email already exists")
+        return email
+
+    def clean(self):
+        form_data = self.cleaned_data
+        if form_data['password'] != form_data['password_repeat']:
+            self._errors["password"] = ["Password do not match"] # Will raise a error message
+            del form_data['password']
+        return form_data
 ```
 
 ##### Django ModelForms
