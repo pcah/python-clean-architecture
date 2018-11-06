@@ -1,9 +1,7 @@
 Inspirations:
-* Django ORM
-* Clean design patterns of application by Bob Martin (Architecture the Lost Years: http://www.youtube.com/watch?v=WpkDN78P884)
-* Traits by Enthought, Inc.
+* Clean design patterns of application by Rober "Uncle Bob" Martin ([Architecture the Lost Years](http://www.youtube.com/watch?v=WpkDN78P884))
 * Domain Driven Development by Martin Fowler & Eric Evans
-* boundary interfaces: flask.reqparse http://flask-restful.readthedocs.org/en/latest/reqparse.html#other-locations
+* validation as boundary interfaces: [marshmallow](https://marshmallow.readthedocs.io/en/3.0/) or [cerberus](http://docs.python-cerberus.org/en/stable/)
 
 Spheres of consideration:
 * Clean design and ease of lightweight testing the key fragments of code on the first place.
