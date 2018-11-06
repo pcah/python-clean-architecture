@@ -1,5 +1,6 @@
 Table of Contents:
-0. [Architecture blob as a problem](notes/01_-_architecture_blob_as_a_problem.md)
-0. [Data and validation - how it could be done](notes/02_-_entities_how_it_could_be_done.md)
+1. [Big ball of mud as a problem](notes/010_big_ball_of_mud_as_a_problem.md)
+1.1. [Django views and forms](notes/011_django_views_and_forms.md)
+2. [Data and validation - how it could be done](notes/020_data_and_validation_-_how_it_could_be_done.md)
 
 * [Notes for future](notes/future.md)

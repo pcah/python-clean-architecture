@@ -5,13 +5,25 @@ from ..services import AccountService
 
 # some framework definitions
 class UseCase:
-    pass
+    """
+    This is knowledge part of the application. Its methods represent
+    application-specific actions that can be taken or queries to ask.
+    """
 
 
 class Resource:
+    """
+    This is HTTP-specific part of the application. It responses to all
+    the `GET`s and `POST`s and knows how to HTML/JSON. It may be CRUD-like
+    or respect the Command-Query Responsibility Segregation.
+    """
+    use_case: UseCase
 
-    def __getattr__(self, action='init'):
-        return getattr(self.use_case, action)
+    def get(self, request):
+        pass
+
+    def post(self, request):
+        pass
 
 
 class ValidationError:
@@ -25,13 +37,13 @@ import typing as t
 
 RecipientId = t.NewType('RecipientId', str)
 AccountId = t.NewType('AccountId', str)
-AccountNrb = t.NewType('AccountNrb', str)
+AccountNbr = t.NewType('AccountNbr', str)
 
 
 @dataclasses.dataclass
 class CreateNormalInputData:
     recipient_id: RecipientId
-    account: AccountNrb
+    account: AccountNbr
 
 
 class CreateNormal(UseCase):
