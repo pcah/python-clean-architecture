@@ -34,7 +34,7 @@ super_obj = Super(id_=super_id)
 super_list = (super_obj,)
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def clear_all_repos():
     """Clears register of all created ConfigRepository instances"""
     yield
@@ -113,7 +113,7 @@ def test_get_or_none_not_found(super_repo_loaded):
     assert super_repo_loaded.get_or_none('not existing') is None
 
 
-def test_borg(super_repo):
+def test_class_register(super_repo):
     other_super_repo = InMemoryRepository(Super)
     assert super_repo.all() == other_super_repo.all()
 
@@ -187,7 +187,7 @@ def test_insert(super_repo):
 
 def test_create_and_insert():
     """Repo `create_and_insert`"""
-    some_id = 'some id'
+    some_id = 12
 
     class A(object):
         def __init__(self, id_=some_id):
@@ -197,6 +197,42 @@ def test_create_and_insert():
     obj = repo.create_and_insert(id_=some_id)
     assert obj.id == some_id
     assert repo.get(some_id) is obj
+
+
+def test_update():
+    """Repo `update`"""
+    some_id = 12
+
+    class A(object):
+        def __init__(self, id_=some_id):
+            self.id = id_
+
+    repo = InMemoryRepository(A)
+    obj = repo.create_and_insert(id_=some_id)
+    new_obj = A(some_id)
+    success = repo.update(new_obj)
+    assert success
+    assert new_obj is not obj
+    assert repo.get(some_id) is new_obj
+
+
+def test_batch_update():
+    """Repo `update`"""
+    some_id = 12
+
+    class A(object):
+        def __init__(self, id_=some_id):
+            self.id = id_
+
+    repo = InMemoryRepository(A)
+    objs = {id_: repo.create_and_insert(id_=id_) for id_ in range(6)}
+    new_objs = [A(id_) for id_ in range(7)]
+    success = repo.batch_update(new_objs)
+    assert all(success[id_] for id_ in range(6))  # old instances has been updated
+    assert not success[6]  # the new instance #6 hasn't been already in repo so it raised an error
+    assert all(repo.get(id_) is new_objs[id_] for id_ in range(6))
+    with pytest.raises(InMemoryRepository.NotFound):
+        assert repo.get(6)  # and still the #6 is not there
 
 
 def test_pop_exists(super_repo_loaded):

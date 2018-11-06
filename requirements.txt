@@ -2,5 +2,5 @@
 
 # core
 traitlets==4.3.2
-ruamel.yaml==-0.15.74
+ruamel.yaml==0.15.74
 JsonWeb==0.8.2

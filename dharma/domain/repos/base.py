@@ -32,7 +32,7 @@ class BaseRepository(t.Generic[T]):
          If not provided, a default of `attrgetter('id')` will be used.
         """
         self._klass = klass
-        self._factory = factory
+        self._factory = factory or klass
         self._get_id = get_id or attrgetter('id')
 
     def create(self, *args, **kwargs) -> T:
@@ -46,8 +46,7 @@ class BaseRepository(t.Generic[T]):
         :params *args, **kwargs: arguments for calling the factory.
         :returns: the object created.
         """
-        factory = self._factory or self._klass
-        return factory(*args, **kwargs)
+        return self._factory(*args, **kwargs)
 
     def create_and_insert(self, *args, **kwargs) -> T:
         """

@@ -67,7 +67,7 @@ else:  # pragma: no cover
 
 
 def error_catcher(
-        error_class: t.Union[t.Type[Exception], t.Tuple[Exception]],
+        error_class: t.Union[t.Type[Exception], t.Sequence[Exception]],
         func: t.Callable[..., t.Any],
         *args,
         **kwargs

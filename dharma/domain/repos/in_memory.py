@@ -18,9 +18,6 @@ _NOT_FOUND_MSG = "Id '{}' in {} hasn't been found"
 class InMemoryRepository(BaseRepository, t.Generic[T]):
     """
     Repository implementation which holds the objects in memory.
-    All instances of a repository for given `klass` will behave as Borgs:
-    all share the same registry for instances of the klass.
-
     InMemoryRepository respects inheritance of the `klass`, so if there is
     created repository for the superclass of the `klass`, during loading it
     will have all the `klass` objects registered as well.
@@ -42,7 +39,11 @@ class InMemoryRepository(BaseRepository, t.Generic[T]):
         super().__init__(klass=klass, factory=factory, get_id=get_id)
         self._klass_qualname: str = get_dotted_path(klass)
         if self._klass_qualname not in self._SUPER_KLASSES_WITH_REPO:
-            self._SUPER_KLASSES_WITH_REPO[self._klass_qualname] = self._find_super_repos(klass)
+            self._SUPER_KLASSES_WITH_REPO[self._klass_qualname] = [
+                get_dotted_path(k)
+                for k in klass.mro()
+                if get_dotted_path(k) in self._REGISTERS
+            ]
         if self._klass_qualname not in self._REGISTERS:
             self._REGISTERS[self._klass_qualname] = {}
 
@@ -56,7 +57,7 @@ class InMemoryRepository(BaseRepository, t.Generic[T]):
             repo.clear()
 
     @classmethod
-    def register_klass(cls, klass: t.Type[T]) -> t.Type[T]:
+    def register_klass(cls, klass: t.Type[T]) -> t.Type[T]:  # pragma: no cover
         """
         Decorates a class to be recognized by InMemoryRepository as a target
         of a repository.
@@ -74,18 +75,16 @@ class InMemoryRepository(BaseRepository, t.Generic[T]):
                 repos[klass] = cls(klass)
             repos[klass].insert(obj)
 
-    def _find_super_repos(self, klass):
-        if self._klass_qualname in self._SUPER_KLASSES_WITH_REPO:
-            return self._SUPER_KLASSES_WITH_REPO[self._klass_qualname]
-        return [
-            get_dotted_path(k)
-            for k in klass.mro()
-            if get_dotted_path(k) in self._REGISTERS
-        ]
-
     def __repr__(self):
         return "<{0}: {1}; id: {2}>".format(
             self.__class__.__name__, self._klass.__name__, id(self))
+
+    @property  # TODO reify
+    def klass_register(self):
+        try:
+            return self._REGISTERS[self._klass_qualname]
+        except KeyError as e:  # pragma: no cover
+            raise self.NotFound(_NO_REPOSITORY_MSG.format(self._klass_qualname)) from e
 
     def get(self, id_: Id) -> T:
         """
@@ -93,42 +92,25 @@ class InMemoryRepository(BaseRepository, t.Generic[T]):
         :raises: NotFound iff object of given id is not present.
         """
         try:
-            klass_register = self._REGISTERS[self._klass_qualname]
-        except KeyError as e:
-            raise self.NotFound(_NO_REPOSITORY_MSG.format(self._klass_qualname)) from e
-        try:
-            return klass_register[id_]
+            return self.klass_register[id_]
         except KeyError as e:
             raise self.NotFound(_NOT_FOUND_MSG.format(id, self)) from e
 
     def get_or_none(self, id_: Id) -> t.Optional[T]:
         """Returns object of given id or None."""
-        try:
-            return self._REGISTERS[self._klass_qualname].get(id_)
-        except KeyError as e:
-            raise self.NotFound(_NO_REPOSITORY_MSG.format(self._klass_qualname)) from e
+        return self.klass_register.get(id_)
 
     def all(self) -> t.List[T]:
         """Returns a list of all the objects."""
-        try:
-            return list(self._REGISTERS[self._klass_qualname].values())
-        except KeyError as e:
-            raise self.NotFound(_NO_REPOSITORY_MSG.format(self._klass_qualname)) from e
+        return list(self.klass_register.values())
 
     def exists(self, id_: Id) -> bool:
         """Returns whether id exists in the repo."""
-        try:
-            return id_ in self._REGISTERS[self._klass_qualname]
-        except KeyError as e:
-            raise self.NotFound(_NO_REPOSITORY_MSG.format(self._klass_qualname)) from e
+        return id_ in self.klass_register
 
     def count(self, predicate: Predicate=None) -> int:
         if not predicate:
-            try:
-                klass_register = self._REGISTERS[self._klass_qualname]
-            except KeyError as e:
-                raise self.NotFound(_NO_REPOSITORY_MSG.format(self._klass_qualname)) from e
-            return len(klass_register)
+            return len(self.klass_register)
         filtered = self.filter(predicate)
         return len(filtered)
 
@@ -136,16 +118,12 @@ class InMemoryRepository(BaseRepository, t.Generic[T]):
         """
         Filters out objects in the register by the values in kwargs.
 
-        :param predicate: Predicate: (optional) predicate specifing conditions
+        :param predicate: (optional) predicate specifing conditions
          that items should met. Iff no predicate is given, all objects should
          be returned.
         :returns: list of objects conforming given predicate.
         """
-        try:
-            klass_register = self._REGISTERS[self._klass_qualname]
-        except KeyError as e:
-            raise self.NotFound(_NO_REPOSITORY_MSG.format(self._klass_qualname)) from e
-        return [obj for obj in klass_register.values() if predicate(obj)]
+        return [obj for obj in self.klass_register.values() if predicate(obj)]
 
     def insert(self, obj: T) -> bool:
         """
@@ -155,12 +133,8 @@ class InMemoryRepository(BaseRepository, t.Generic[T]):
         :returns: the object
         """
         super().insert(obj)
-        try:
-            klass_register = self._REGISTERS[self._klass_qualname]
-        except KeyError as e:
-            raise self.NotFound(_NO_REPOSITORY_MSG.format(self._klass_qualname)) from e
         id_ = self._get_id(obj)
-        klass_register[id_] = obj
+        self.klass_register[id_] = obj
         for super_klass_qualname in self._SUPER_KLASSES_WITH_REPO[self._klass_qualname]:
             assert id_ not in self._REGISTERS[super_klass_qualname], \
                 "Id conflict in super repos"
@@ -175,11 +149,7 @@ class InMemoryRepository(BaseRepository, t.Generic[T]):
         :returns: True iff object has been changed
         """
         super().update(obj)
-        try:
-            klass_register = self._REGISTERS[self._klass_qualname]
-        except KeyError as e:
-            raise self.NotFound(_NO_REPOSITORY_MSG.format(self._klass_qualname)) from e
-        klass_register[self._get_id(obj)] = obj
+        self.klass_register[self._get_id(obj)] = obj
         return True
 
     def batch_update(self, objs: t.Iterable[T]) -> t.Dict[Id, bool]:
@@ -192,7 +162,7 @@ class InMemoryRepository(BaseRepository, t.Generic[T]):
         super().batch_update(objs)
         error_classes = (AssertionError, self.NotFound)
         return {
-            self._get_id(obj): error_catcher(error_classes, self.insert, obj)
+            self._get_id(obj): error_catcher(error_classes, self.update, obj)
             for obj in objs
         }
 
@@ -200,7 +170,7 @@ class InMemoryRepository(BaseRepository, t.Generic[T]):
         """Removes given object from the repo."""
         id_ = self._get_id(obj)
         try:
-            self._REGISTERS[self._klass_qualname].pop(id_)
+            self.klass_register.pop(id_)
         except KeyError:
             raise self.NotFound(_NOT_FOUND_MSG.format(id_, self))
 
@@ -209,6 +179,6 @@ class InMemoryRepository(BaseRepository, t.Generic[T]):
         Removes an object specified by given id from the repo and returns it.
         """
         try:
-            return self._REGISTERS[self._klass_qualname].pop(id_)
+            return self.klass_register.pop(id_)
         except KeyError:
             raise self.NotFound(_NOT_FOUND_MSG.format(id_, self))
