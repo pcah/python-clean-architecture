@@ -6,6 +6,7 @@ from pyramid.request import Request
 from pyramid.response import Response
 from pyramid.view import view_config
 
+from examples.clean_architecture.framework import ValidationError
 from .dependency_injection import AbstractContainer
 from .logic import LogicError
 from .use_case import UseCase, UseCaseInput, UseCaseResult
@@ -23,54 +24,117 @@ class PyramidContainer(AbstractContainer):
 class PyramidResource:
     """
     This is HTTP-specific part of the application. It responses to all
-    the `GET`s and `POST`s and knows how to HTML/JSON. It may be CRUD-like
-    or respect the Command-Query Responsibility Segregation.
+    the `GET`s and `POST`s and knows how to talk in HTML/JSON.
+    It may be CRUD-like or respect the Command-Query Responsibility
+    Segregation.
 
-    For the sake of simplicity, let's assume that responses are AJAX.
+    For the sake of simplicity, let's assume that responses are all AJAX.
     """
-    USE_CASE: t.ClassVar[t.Type[UseCase]]
+    use_case_class: t.ClassVar[t.Type[UseCase]]
+    route: t.ClassVar[str]
+    get_action: t.ClassVar[str] = 'can_perform'
+    post_action: t.ClassVar[str] = 'perform'
     request: Request
 
     def __init_subclass__(cls, **kwargs):
-        cls.get = view_config(renderer='json')(cls.get)
-        cls.post = view_config(renderer='json')(cls.post)
+        """Register routes"""
+        super().__init_subclass__(**kwargs)
+        route_name = cls.route
+        kwargs = dict(renderer='json', route_name=route_name)
+        cls.get = view_config(request_method='GET', **kwargs)(cls.get)
+        cls.post = view_config(request_method='POST', **kwargs)(cls.post)
+        cls.routing = {
+            'get': {'request_method': 'GET', 'route_name': route_name},
+            'post': {'request_method': 'POST', 'route_name': route_name},
+        }
 
     @reify
-    def dic(self):
+    def container(self):
         return PyramidContainer(self.request)
 
     @reify
     def use_case(self):
-        return self.USE_CASE(self.dic)
+        return self.use_case_class(self.container)
+
+    def get(self, request: Request) -> Response:
+        """HTTP GET"""
+        action = getattr(self.use_case, self.get_action)
+        return self.handle(action, request)
+
+    def post(self, request: Request) -> Response:
+        """HTTP POST"""
+        action = getattr(self.use_case, self.post_action)
+        return self.handle(action, request)
+
+    def handle(self, action, request: Request) -> Response:
+        """
+        Actual request handler. Calls the UseCase and builds the HTTP Response.
+        """
+        input_dto = self.build_input(request)
+        try:
+            result = action(input_dto)
+        except (LogicError, ValidationError) as e:
+            return self.build_error_response(e)
+        return self.build_response(result)
 
     def build_input(self, request) -> UseCaseInput:
         """Build use case input data object based on the HTTP request."""
         raise NotImplementedError
 
-    def build_response(self, data: UseCaseResult) -> dict:
+    def build_response(self, data: UseCaseResult) -> Response:
         """Build HTTP response based on result got from UseCase."""
         raise NotImplementedError
 
-    def build_error_response(self, errors: t.Dict[str, LogicError]) -> dict:
+    def build_error_response(self, errors: Exception) -> Response:
         """Build HTTP response based on an errors raised by UseCase."""
         raise NotImplementedError
 
-    def get(self, request: Request) -> Response:
-        """HTTP GET"""
-        input = self.build_input(request)
-        try:
-            result = self.use_case.can_process(input)
-        except LogicError as e:
-            # TODO is it reasonable that use case can just raise an LogicError?
-            return self.build_error_response({'': e})
-        return self.build_response(result)
 
-    def post(self, request: Request) -> Response:
-        """HTTP POST"""
-        input = self.build_input(request)
-        try:
-            result = self.use_case.process(input)
-        except LogicError as e:
-            # TODO is it reasonable that use case can just raise an LogicError?
-            return self.build_error_response({'': e})
-        return self.build_response(result)
+# noinspection PyPep8Naming
+class register_rest_view_set:
+    def __init__(self, item_route=None, collection_route=None):
+        self.kwargs = {'_depth': 1, 'renderer': 'json'}
+        if item_route:
+            self.routing = dict(
+                read_item={'request_method': 'GET', 'route_name': item_route},
+                update_item={'request_method': 'PUT', 'route_name': item_route},
+                delete_item={'request_method': 'DELETE', 'route_name': item_route},
+            )
+        else:
+            self.routing = {}
+        if collection_route:
+            self.routing.update(
+                list_items={'request_method': 'GET', 'route_name': collection_route},
+                create_item={'request_method': 'POST', 'route_name': collection_route},
+            )
+
+    def __call__(self, cls):
+        for method, route in self.routing.items():
+            if hasattr(cls, method):
+                cls = view_config(attr=method, **self.kwargs, **route)
+            else:
+                self.routing.pop(method)
+        cls.routing = self.routing
+        return cls
+
+
+@register_rest_view_set(item_route='foo', collection_route='foos')
+class RestViewSet:
+
+    def __init__(self, request):
+        self.request = request
+
+    def read_item(self):
+        raise NotImplementedError
+
+    def update_item(self):
+        raise NotImplementedError
+
+    def delete_item(self):
+        raise NotImplementedError
+
+    def create_item(self):
+        raise NotImplementedError
+
+    def list_items(self):
+        raise NotImplementedError

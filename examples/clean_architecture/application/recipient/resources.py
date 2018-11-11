@@ -4,8 +4,8 @@ from examples.clean_architecture.framework import pyramid
 from .use_cases import *
 
 
-class CreateNormalResource(pyramid.PyramidResource):
+class CreateRecipientResource(pyramid.PyramidResource):
     """
     Former Flow. No persistent attributes nor states as both are pieces of use-cases.
     """
-    use_case = CreateNormal
+    use_case_class = CreateRecipient
