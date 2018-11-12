@@ -2,16 +2,23 @@
 from dataclasses import dataclass
 import typing as t
 
+from dharma.exceptions import DharmaConfigError
+from marshmallow import Schema
+
 from .dependency_injection import AbstractContainer
 from .logic import LogicError
 
 
 @dataclass
+class UseCaseInterface:
+    action: str
+    schema: Schema
+
+
+@dataclass
 class UseCaseInput:
     data: t.Dict[str, t.Any]
-    action: t.Optional[str] = 'init'
-    flow_id: t.Optional[str] = None
-    state_id: t.Optional[str] = None
+    action: str
 
 
 @dataclass
@@ -29,44 +36,35 @@ class UseCase:
     This is core object of the application. Its methods represent
     application-specific actions that can be taken or queries to ask.
     """
+    input_class: t.ClassVar[UseCaseInput] = UseCaseInterface
     container: AbstractContainer
 
-    def __init__(self, container: AbstractContainer):
-        self.container = container
-
-    def perform(self, input: UseCaseInput) -> UseCaseResult:
-        """Performs the operation defined by the use_case."""
+    @property  # reify
+    def interface(self):
         raise NotImplementedError
 
-    def can_perform(self, input: UseCaseInput) -> UseCaseResult:
-        """
-        Check whether the operation defined by the use_case can be performed.
 
-        True, by default.
+class SimpleUseCase(UseCase):
+    action: t.ClassVar[str]
+    schema_class: t.Optional[t.ClassVar[Schema]] = None
+
+    def __init__(self, container: AbstractContainer):
+        if not self.action:
+            raise DharmaConfigError(code='NO-USE-CASE-ACTION-SPECIFIED')
+        self.container = container
+
+    @property  # reify
+    def interface(self):
+        return UseCaseInterface(schema=self.schema_class, action=self.action)
+
+    def execute(self, input: UseCaseInput) -> UseCaseResult:
+        """Executes the operation defined by the use_case."""
+        raise NotImplementedError
+
+    def can_execute(self, input: UseCaseInput) -> UseCaseResult:
+        """
+        Check whether the operation defined by the use_case can be executed.
+
+        Success with empty data by default.
         """
         return UseCaseResult(errors={}, data={})
-
-
-StateId = t.NewType('StateId', str)
-AccountId = t.NewType('AccountId', str)
-
-
-class Process:
-    schema: t.ClassVar[Schema]
-
-
-class State:
-    id: t.ClassVar[str]
-    process: t.Type[Process]
-
-
-class FlowUseCase(UseCase):
-    """
-    Describes multistage use case: such a case that can be performed with
-    a few request. Has individual id & some inner state.
-    """
-    states: t.Dict[StateId, State]
-
-    @property  # TODO: reify
-    def interfaces(self):
-        return {id_: s.process.schema for id_, s in self.states.items()}

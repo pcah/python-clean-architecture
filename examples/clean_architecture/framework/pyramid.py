@@ -6,9 +6,8 @@ from pyramid.request import Request
 from pyramid.response import Response
 from pyramid.view import view_config
 
-from examples.clean_architecture.framework import ValidationError
 from .dependency_injection import AbstractContainer
-from .logic import LogicError
+from .logic import LogicError, ValidationError
 from .use_case import UseCase, UseCaseInput, UseCaseResult
 
 
@@ -32,8 +31,8 @@ class PyramidResource:
     """
     use_case_class: t.ClassVar[t.Type[UseCase]]
     route: t.ClassVar[str]
-    get_action: t.ClassVar[str] = 'can_perform'
-    post_action: t.ClassVar[str] = 'perform'
+    get_action: t.ClassVar[str] = 'can_execute'
+    post_action: t.ClassVar[str] = 'execute'
     request: Request
 
     def __init_subclass__(cls, **kwargs):
@@ -68,25 +67,25 @@ class PyramidResource:
 
     def handle(self, action, request: Request) -> Response:
         """
-        Actual request handler. Calls the UseCase and builds the HTTP Response.
+        Actual request handler. Calls the use-case and builds the HTTP Response.
         """
-        input_dto = self.build_input(request)
+        input = self.handle_request(request)
         try:
-            result = action(input_dto)
+            result = action(input)
         except (LogicError, ValidationError) as e:
-            return self.build_error_response(e)
-        return self.build_response(result)
+            return self.handle_error(e)
+        return self.handle_response(result)
 
-    def build_input(self, request) -> UseCaseInput:
+    def handle_request(self, request) -> UseCaseInput:
         """Build use case input data object based on the HTTP request."""
         raise NotImplementedError
 
-    def build_response(self, data: UseCaseResult) -> Response:
-        """Build HTTP response based on result got from UseCase."""
+    def handle_response(self, data: UseCaseResult) -> Response:
+        """Build HTTP response based on result got from use-case."""
         raise NotImplementedError
 
-    def build_error_response(self, errors: Exception) -> Response:
-        """Build HTTP response based on an errors raised by UseCase."""
+    def handle_error(self, errors: Exception) -> Response:
+        """Build HTTP response based on an errors raised by use-case."""
         raise NotImplementedError
 
 
