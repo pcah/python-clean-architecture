@@ -18,6 +18,11 @@ class FlowUseCaseInput(UseCaseInput):
     state_id: t.Optional[str] = None
 
 
+@dataclass
+class FlowUseCaseInterface(UseCaseInterface):
+    state_id: str
+
+
 class Process:
     schema: t.ClassVar[Schema]
 
@@ -43,18 +48,11 @@ class FlowUseCase(UseCase):
     """
     states: t.Dict[StateId, State]
     flow_id: FlowId
-    action: str = None
-
-    def __init__(self, flow_id: FlowId, state_id: StateId, action: str, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.flow_id = flow_id
-        self.state_id = state_id
-        self.action = action
-
-    @property
-    def state(self):
-        return self.states[self.state_id]
+    action: str = None  # TODO ?
 
     @property  # reify
-    def interface(self):
-        return UseCaseInterface(schema=self.state.schema, action=self.action)
+    def interfaces(self):
+        return [
+            FlowUseCaseInterface(schema=state.schema, action=self.action, state_id=state_id)
+            for state_id, state in self.states.items()
+        ]

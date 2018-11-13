@@ -27,7 +27,6 @@ class Person:
     phone: t.Optional[Phone] = None
     company: t.Optional[Company] = None
     position: t.Optional[Position] = None
-    comment: t.Optional[str] = None
 
 
 @dataclass

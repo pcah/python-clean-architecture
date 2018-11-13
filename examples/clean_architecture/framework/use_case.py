@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from abc import ABC
+
 from dataclasses import dataclass
 import typing as t
 
@@ -6,7 +8,7 @@ from dharma.exceptions import DharmaConfigError
 from marshmallow import Schema
 
 from .dependency_injection import AbstractContainer
-from .logic import LogicError
+from .logic import UseCaseError, ValidationError
 
 
 @dataclass
@@ -23,7 +25,7 @@ class UseCaseInput:
 
 @dataclass
 class UseCaseResult:
-    errors: t.Dict[str, LogicError]
+    errors: t.Dict[str, UseCaseError]
     data: t.Dict[str, t.Any]
 
     @property
@@ -44,22 +46,30 @@ class UseCase:
         raise NotImplementedError
 
 
+# noinspection PyAbstractClass
 class SimpleUseCase(UseCase):
-    action: t.ClassVar[str]
     schema_class: t.Optional[t.ClassVar[Schema]] = None
 
     def __init__(self, container: AbstractContainer):
-        if not self.action:
-            raise DharmaConfigError(code='NO-USE-CASE-ACTION-SPECIFIED')
         self.container = container
 
-    @property  # reify
-    def interface(self):
-        return UseCaseInterface(schema=self.schema_class, action=self.action)
+    @property  # TODO reify
+    def interfaces(self):
+        return [UseCaseInterface(schema=self.schema_class, action='action')]
+
+    def validate(self, input: UseCaseInput):
+        context = self.get_context()
+        schema = self.schema_class(context=context)
+        return schema.load(input)
 
     def execute(self, input: UseCaseInput) -> UseCaseResult:
         """Executes the operation defined by the use_case."""
-        raise NotImplementedError
+        try:
+            dto = self.validate(input)
+        except ValidationError as e:
+            return UseCaseResult(errors=e.errors, data={})
+        result = self.action(dto)
+        return UseCaseResult(errors={}, data=result)
 
     def can_execute(self, input: UseCaseInput) -> UseCaseResult:
         """
@@ -67,4 +77,14 @@ class SimpleUseCase(UseCase):
 
         Success with empty data by default.
         """
+        try:
+            self.validate(input)
+        except ValidationError as e:
+            return UseCaseResult(errors=e.errors, data={})
         return UseCaseResult(errors={}, data={})
+
+    def get_context(self) -> dict:
+        raise NotImplementedError
+
+    def action(self, input) -> dict:
+        raise NotImplementedError
