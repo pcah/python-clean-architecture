@@ -4,6 +4,8 @@ from dataclasses import dataclass
 
 from marshmallow import Schema
 
+from dharma.utils.functools import reify
+
 from examples.clean_architecture.framework import UseCaseInterface
 from .use_case import UseCaseInput, UseCase
 
@@ -50,7 +52,7 @@ class FlowUseCase(UseCase):
     flow_id: FlowId
     action: str = None  # TODO ?
 
-    @property  # reify
+    @reify
     def interfaces(self):
         return [
             FlowUseCaseInterface(schema=state.schema, action=self.action, state_id=state_id)

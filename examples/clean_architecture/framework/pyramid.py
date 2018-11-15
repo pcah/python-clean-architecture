@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import typing as t
 
-from pyramid.decorator import reify
 from pyramid.request import Request
 from pyramid.response import Response
 from pyramid.view import view_config
+
+from dharma.utils.functools import reify
 
 from .dependency_injection import AbstractContainer
 from .logic import LogicError, ValidationError

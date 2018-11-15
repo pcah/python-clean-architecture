@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from dharma.data.formulae import Predicate
 from dharma.utils.collections import iterate_over_values
+from dharma.utils.functools import reify
 from dharma.utils.imports import get_dotted_path
 from dharma.utils.operators import error_catcher
 from dharma.utils.serialization import load_from_filepath
@@ -79,7 +80,7 @@ class InMemoryRepository(BaseRepository, t.Generic[T]):
         return "<{0}: {1}; id: {2}>".format(
             self.__class__.__name__, self._klass.__name__, id(self))
 
-    @property  # TODO reify
+    @reify
     def klass_register(self):
         try:
             return self._REGISTERS[self._klass_qualname]

@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-from abc import ABC
-
 from dataclasses import dataclass
 import typing as t
 
-from dharma.exceptions import DharmaConfigError
 from marshmallow import Schema
+
+from dharma.utils.functools import reify
 
 from .dependency_injection import AbstractContainer
 from .logic import UseCaseError, ValidationError
@@ -41,7 +40,7 @@ class UseCase:
     input_class: t.ClassVar[UseCaseInput] = UseCaseInterface
     container: AbstractContainer
 
-    @property  # reify
+    @reify
     def interface(self):
         raise NotImplementedError
 
@@ -53,7 +52,7 @@ class SimpleUseCase(UseCase):
     def __init__(self, container: AbstractContainer):
         self.container = container
 
-    @property  # TODO reify
+    @reify
     def interfaces(self):
         return [UseCaseInterface(schema=self.schema_class, action='action')]
 
