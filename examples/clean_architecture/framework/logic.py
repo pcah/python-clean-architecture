@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import typing as t
 
-from dharma.exceptions import DharmaError
+from pca.exceptions import DharmaError
 
 
 class UseCaseError(DharmaError):

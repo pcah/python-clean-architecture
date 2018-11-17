@@ -4,7 +4,7 @@ import sys
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
-NAME = 'dharma'
+NAME = 'pca'
 VERSION = (0, 0, 1, 'dev')
 INSTALL_REQUIRES = (
     'traitlets>=4.3.2',

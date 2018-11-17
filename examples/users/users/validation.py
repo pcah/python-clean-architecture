@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import string
 
-from dharma.exceptions import TraitValidationError
+from pca.exceptions import TraitValidationError
 
 
 CHARS = string.ascii_letters

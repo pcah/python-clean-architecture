@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from string import ascii_letters
 
-from dharma.data import datetime, ip4, string
-from dharma.domain.entities import Entity
+from pca.data import datetime, ip4, string
+from pca.domain.entities import Entity
 
 from . import validation
 

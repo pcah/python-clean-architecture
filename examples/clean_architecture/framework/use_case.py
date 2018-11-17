@@ -4,7 +4,7 @@ import typing as t
 
 from marshmallow import Schema
 
-from dharma.utils.functools import reify
+from pca.utils.functools import reify
 
 from .dependency_injection import AbstractContainer
 from .logic import UseCaseError, ValidationError
