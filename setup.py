@@ -8,7 +8,8 @@ from setuptools import (
 from setuptools.command.test import test as TestCommand
 
 
-NAME = 'pca'
+PROJECT_NAME = 'python-clean-architecture'
+PACKAGE_NAME = 'pca'
 VERSION = (0, 0, 1)
 INSTALL_REQUIRES = (
     'traitlets>=4.3.2',
@@ -39,9 +40,9 @@ def readme():
 
 if __name__ == '__main__':
     setup(
-        name=NAME,
+        name=PROJECT_NAME,
         version='.'.join(str(i) for i in VERSION),
-        url=f'https://github.com/pcah/{NAME}',
+        url=f'https://github.com/pcah/{PROJECT_NAME}',
         license='MIT License',
         author='lhaze',
         author_email='lhaze@lhaze.name',

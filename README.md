@@ -1,13 +1,19 @@
-Inspirations:
-* Clean design patterns of application by Rober "Uncle Bob" Martin ([Architecture the Lost Years](http://www.youtube.com/watch?v=WpkDN78P884))
-* Domain Driven Development by Martin Fowler & Eric Evans
-* validation as boundary interfaces: [marshmallow](https://marshmallow.readthedocs.io/en/3.0/) or [cerberus](http://docs.python-cerberus.org/en/stable/)
+# python-clean-architecture
+[![GitHub version](https://badge.fury.io/gh/pcah%2Fpython-clean-architecture.svg)](https://badge.fury.io/gh/pcah%2Fpython-clean-architecture) [![Build Status](https://travis-ci.org/pcah/python-clean-architecture.svg?branch=master)](https://travis-ci.org/pcah/python-clean-architecture) [![Coverage Status](https://coveralls.io/repos/github/pcah/python-clean-architecture/badge.svg?branch=master)](https://coveralls.io/github/pcah/python-clean-architecture?branch=master)
 
-Spheres of consideration:
-* Clean design and ease of lightweight testing the key fragments of code on the first place.
-* Time/space cost optimization taken as the second matter.
+*python-clean-architecture* is a toolkit library aiming to equip you with a set of patterns and some implementations of The Clean Architecture. Using them can make your code focused on the knowledge you are trying to embody. A nice side-effect of this process is an ease of lightweight testing the key fragments of your codebase.
 
-Tiers of Dharma:
-* Data-level logic: traits & natures, formulae.
-* Domain-specific logic: entities, aggregates, value objects, shared entities (between bounded contexts), policies, factories, domain services, repositories.
-* Application-specific logic: application services, gateways, CQRS stacks, sagas. Task-, event- and data-driven applications, commands.
+#### Development Status
+
+The library is still in a planning phase, so expect multiple refactorizations and many changes to its API (Stage 2 - Pre-Alpha Status).
+
+#### Inspirations
+
+* Clean design patterns of application by Robert "Uncle Bob" Martin ([Architecture the Lost Years](http://www.youtube.com/watch?v=WpkDN78P884))
+* Domain Driven Development by [Eric Evans](http://dddcommunity.org/book/evans_2003/) & [Martin Fowler](https://martinfowler.com/books/eaa.html)
+
+#### Tiers of the architecture
+
+* Data-level logic: data description objects, schemas, serialization, predicates, formulae.
+* Domain-specific logic: bounded contexts (aka domains), entities, value objects, aggregates, repositories, policies, factories, domain services.
+* Application-specific logic: use-cases, application services, gateways, CQRS stacks, sagas. Task-, event- and data-driven applications, commands.

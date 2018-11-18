@@ -4,6 +4,8 @@
 .pytest_cache
 
 # build & test
+build/
+dist/
 *.egg-info
 .tox
 .coverage
