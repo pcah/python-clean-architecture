@@ -6,6 +6,7 @@
 # build & test
 build/
 dist/
+.eggs/
 *.egg-info
 .tox
 .coverage

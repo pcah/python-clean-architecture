@@ -11,25 +11,13 @@ from setuptools.command.test import test as TestCommand
 PROJECT_NAME = 'python-clean-architecture'
 PACKAGE_NAME = 'pca'
 VERSION = (0, 0, 1)
-INSTALL_REQUIRES = (
-    'traitlets>=4.3.2',
-    'six',
-)
-TEST_REQUIRE = (
-    'pytest>=3.6.3',
-)
 
 
 class PyTest(TestCommand):
-    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
-
-    def initialize_options(self):
-        TestCommand.initialize_options(self)
-        self.pytest_args = []
 
     def run_tests(self):
-        import pytest
-        errno = pytest.main(self.pytest_args)
+        from tox.session import main
+        errno = main(sys.argv[2:])
         sys.exit(errno)
 
 
@@ -46,7 +34,7 @@ if __name__ == '__main__':
         license='MIT License',
         author='lhaze',
         author_email='lhaze@lhaze.name',
-        description='A framework-agnostic toolkit for Python driven by the Clean Architecture ',
+        description='A Python toolkit for applications driven by the Clean Architecture',
         long_description_content_type='text/markdown',
         long_description=readme(),
         platforms='any',
@@ -63,7 +51,7 @@ if __name__ == '__main__':
         ],
 
         cmdclass={'test': PyTest},
-        install_requires=INSTALL_REQUIRES,
-        tests_require=TEST_REQUIRE,
+        install_requires=['virtualenv'],
+        tests_require=['tox'],
         packages=find_packages(),
     )
