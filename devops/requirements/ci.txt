@@ -2,4 +2,5 @@
 -r _core-test.txt
 -r _integration-test.txt
 
+coveralls
 -e .
