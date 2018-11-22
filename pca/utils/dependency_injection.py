@@ -1,20 +1,17 @@
 from enum import Enum
-from typing import Union, Any, Callable
+from typing import (
+    Any,
+    Callable,
+    Union,
+)
 
 NameOrInterface = Union[type, str]
-
-
-def instance_scope(container: 'Container', constructor: Callable) -> Any:
-    return constructor()
-
-
-class Scopes(Enum):
-    INSTANCE = instance_scope
 
 
 class Container:
     def __init__(self):
         self._registry = {}
+        self.default_scope = Scopes.INSTANCE
 
     def register_by_name(self, name: str, constructor: Callable):
         key = Container._get_registry_key(name)  # TODO: qualifier
@@ -30,8 +27,8 @@ class Container:
         key = Container._get_registry_key(name)  # TODO: qualifier
         return self.get_object(self._registry.get(key))
 
-    def get_object(self, constructor: type) -> Any:
-        call = getattr(constructor, '__scope_type', Scopes.INSTANCE)
+    def get_object(self, constructor: Callable) -> Any:
+        call = getattr(constructor, '__scope_type', self.default_scope)
         return call(self, constructor)
 
     def find_by_interface(self, interface):
@@ -40,9 +37,16 @@ class Container:
     def register_by_interface(self, interface):
         raise NotImplementedError
 
+    def instance_scope(self, constructor: Callable) -> Any:
+        return constructor()
 
-def scope(scope_type: str) -> Callable:
-    def decorator(class_: type) -> type:
-        class_.__scope_type = scope_type
-        return class_
-    return decorator
+
+class Scopes(Enum):
+    INSTANCE = Container.instance_scope
+
+
+def scope(scope_type: Callable) -> Callable:
+    def wrapper(obj: Callable) -> Callable:
+        obj.__scope_type = scope_type
+        return obj
+    return wrapper
