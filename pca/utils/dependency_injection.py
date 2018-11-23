@@ -46,7 +46,7 @@ class Scopes(Enum):
 
 
 def scope(scope_type: Callable) -> Callable:
-    def wrapper(obj: Callable) -> Callable:
+    def decorator(obj: Callable) -> Callable:
         obj.__scope_type = scope_type
         return obj
-    return wrapper
+    return decorator

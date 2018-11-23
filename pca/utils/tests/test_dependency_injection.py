@@ -1,6 +1,10 @@
 import pytest
 
-from pca.utils.dependency_injection import Container, Scopes, scope
+from pca.utils.dependency_injection import (
+    Container,
+    scope,
+    Scopes,
+)
 
 
 class WheelInterface:
