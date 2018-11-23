@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-from examples.clean_architecture import application, framework
+from examples import framework
 
-from . import repos, schemas
+from . import schemas
 
 
 class CreateContact(framework.SimpleUseCase):
 
     schema_class = schemas.PersonSchema
 
-    contact_repo: application.services.ContactRepo = framework.Inject()
+    contact_repo: examples.application.services.ContactRepo = framework.Inject()
     local_storage: framework.LocalStorage = framework.Inject()
 
     def action(self, input: framework.UseCaseInput):

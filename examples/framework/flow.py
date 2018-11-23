@@ -6,7 +6,7 @@ from marshmallow import Schema
 
 from pca.utils.functools import reify
 
-from examples.clean_architecture.framework import UseCaseInterface
+from examples.framework import UseCaseInterface
 from .use_case import UseCaseInput, UseCase
 
 
