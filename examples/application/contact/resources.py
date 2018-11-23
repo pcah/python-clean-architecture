@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-from examples.clean_architecture.framework import pyramid
-
-from .use_cases import *
+from examples.framework import pyramid
 
 
 class CreateRecipientResource(pyramid.PyramidResource):
