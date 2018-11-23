@@ -1,5 +1,2 @@
--r core.txt
--r _core-test.txt
--r _integration-test.txt
-
--e .
+tox-travis
+codecov
