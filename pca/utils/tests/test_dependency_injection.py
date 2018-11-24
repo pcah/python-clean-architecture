@@ -32,19 +32,19 @@ class Bike:
         self.wheel = container.find_by_name('wheel')
 
     def build_bike(self):
-        return f"Frame: {self.frame}\nWheels: {self.wheel}"
+        return f'Frame: {self.frame}\nWheels: {self.wheel}'
 
 
 @pytest.fixture
 def container():
-    return Container()
+    return Container(default_scope=Scopes.INSTANCE)
 
 
 def test_container_registration(container):
     container.register_by_name(name='frame', constructor=RoadFrame)
     container.register_by_name(name='wheel', constructor=RoadWheel)
     assert Bike(container).build_bike() == (
-        "Frame: <Road frame>\nWheels: <Road wheels>"
+        'Frame: <Road frame>\nWheels: <Road wheels>'
     )
 
 
@@ -54,3 +54,8 @@ def test_container_injection(container):
     with pytest.raises(ValueError) as e:
         container.register_by_name(name=name, constructor=RoadWheel)
     assert str(e.value) == f'Ambiguous name: {name}.'
+
+
+def test_scope_class(container):
+    assert repr(Scopes.INSTANCE) == f'<Scopes.{Scopes.INSTANCE.name}>'
+    assert repr(Scopes.INSTANCE(container, RoadWheel)) == f'<Road wheels>'
