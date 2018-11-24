@@ -5,4 +5,4 @@ from .logic import *
 from .use_case import *
 
 if compat.pyramid:
-    from .pyramid import *
+    from examples.framework.integrations.pyramid import *

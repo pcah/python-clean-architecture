@@ -7,9 +7,9 @@ from pyramid.view import view_config
 
 from pca.utils.functools import reify
 
-from .dependency_injection import AbstractContainer
-from .logic import LogicError, ValidationError
-from .use_case import UseCase, UseCaseInput, UseCaseResult
+from examples.framework.dependency_injection import AbstractContainer
+from examples.framework.logic import LogicError, ValidationError
+from examples.framework.use_case import UseCase, UseCaseInput, UseCaseResult
 
 
 class PyramidContainer(AbstractContainer):

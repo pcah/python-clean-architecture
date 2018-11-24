@@ -6,7 +6,7 @@ from marshmallow import Schema
 
 from pca.utils.functools import reify
 
-from .dependency_injection import AbstractContainer
+from .dependency_injection import Container
 from .logic import UseCaseError, ValidationError
 
 
@@ -19,7 +19,7 @@ class UseCaseInterface:
 @dataclass
 class UseCaseInput:
     data: t.Dict[str, t.Any]
-    action: str
+    action: t.Optional[str]
 
 
 @dataclass
@@ -37,11 +37,33 @@ class UseCase:
     This is core object of the application. Its methods represent
     application-specific actions that can be taken or queries to ask.
     """
-    input_class: t.ClassVar[UseCaseInput] = UseCaseInterface
-    container: AbstractContainer
+    Input: t.ClassVar[UseCaseInput]
+    container: Container
 
-    @reify
-    def interface(self):
+    @property
+    def interfaces(self) -> t.List[UseCaseInterface]:
+        raise NotImplementedError
+
+    def action(self, input: UseCaseInput):
+        if self.is_available(input):  # TODO ToCToU problem?
+            action_method = getattr(self, input.action, 'action')
+            action_method(input.data)
+        else:
+            raise ValueError(input)  # TODO library-specific error class to throw
+
+    def execute(self, input: UseCaseInput) -> UseCaseResult:
+        """Executes the operation defined by the use_case."""
+        try:
+            data_after_validation = self.validate(input)
+        except ValidationError as e:
+            return UseCaseResult(errors=e.errors, data={})
+        result = self.action(data_after_validation)
+        return UseCaseResult(errors={}, data=result)
+
+    def is_available(self, input: UseCaseInput):
+        raise NotImplementedError
+
+    def action(self, data: t.Mapping):
         raise NotImplementedError
 
 
@@ -49,11 +71,11 @@ class UseCase:
 class SimpleUseCase(UseCase):
     schema_class: t.Optional[t.ClassVar[Schema]] = None
 
-    def __init__(self, container: AbstractContainer):
+    def __init__(self, container: Container):
         self.container = container
 
     @reify
-    def interfaces(self):
+    def interfaces(self) -> t.List[UseCaseInterface]:
         return [UseCaseInterface(schema=self.schema_class, action='action')]
 
     def validate(self, input: UseCaseInput):
