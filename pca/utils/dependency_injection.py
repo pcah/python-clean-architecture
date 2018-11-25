@@ -42,13 +42,17 @@ class Container:
         scope_function = getattr(constructor, '__scope_type', self._default_scope)
         return scope_function(self, constructor)
 
-    def find_by_interface(self, interface):
+    def find_by_interface(self, interface: type, qualifier: t.Any = None) -> t.Any:
         """Finding registered constructors by interface."""
-        raise NotImplementedError
+        key = Container._get_registry_key(interface, qualifier)
+        return self.get_object(self._registry.get(key))
 
-    def register_by_interface(self, interface):
+    def register_by_interface(self, interface: type, constructor: Constructor, qualifier: t.Any = None):
         """Registering constructors by interface and qualifier."""
-        raise NotImplementedError
+        key = Container._get_registry_key(interface, qualifier)
+        if key in self._registry:
+            raise ValueError(f'Ambiguous interface: {interface}.')
+        self._registry[key] = constructor
 
     def instance_scope(self, constructor: Constructor) -> t.Any:
         """Every injection makes a new instance."""
