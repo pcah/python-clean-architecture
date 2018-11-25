@@ -54,6 +54,7 @@ def test_container_injection(container):
     with pytest.raises(ValueError) as e:
         container.register_by_name(name=name, constructor=RoadWheel)
     assert str(e.value) == f'Ambiguous name: {name}.'
+    container.register_by_name(name=name, constructor=RoadWheel, qualifier='sth')
 
 
 def test_scope_class(container):
