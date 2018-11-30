@@ -74,3 +74,34 @@ def scope(scope_type: Scopes) -> t.Callable:
         obj.__scope_function = scope_type
         return obj
     return decorator
+
+
+class Inject:
+    """
+    A descriptor for injecting dependencies as properties
+    """
+
+    container: Container = None
+    _type: t.Type = None
+
+    def __init__(self, name: str = None, interface: t.Type = None, qualifier: t.Any = None):
+        self._name = name
+        self._interface = interface
+        self._qualifier = qualifier
+
+    def __get__(self, instance: t.Any, owner: t.Type) -> t.Any:
+        if instance is None:
+            return self
+
+        if self.container is None:
+            self.container = instance.container
+
+        if self._name:
+            return self.container.find_by_name(self._name, self._qualifier)
+        elif self._type or self._interface:
+            return self.container.find_by_interface(self._interface or self._type, self._qualifier)
+        else:
+            raise TypeError('Missing name or interface for Inject.')
+
+    def __set_name__(self, owner: t.Type, name: str) -> None:
+        self._type = owner.__annotations__.get(name) if hasattr(owner, '__annotations__') else None
