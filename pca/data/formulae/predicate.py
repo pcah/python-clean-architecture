@@ -16,6 +16,7 @@ from enum import Enum
 import re
 import typing as t
 
+from pca.interfaces.dao import IPredicate
 from pca.utils.collections import freeze, is_iterable
 from pca.utils.operators import resolve_path, check_path
 
@@ -50,7 +51,7 @@ COMPOSITE_PREDICATES = (
 )
 
 
-class Predicate(object):
+class Predicate(IPredicate):
     """
     Enwraps the actual condition function, which is run when the
     predicate is evaluated by calling its object. Predicates can be combined
