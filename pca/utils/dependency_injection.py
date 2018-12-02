@@ -1,5 +1,6 @@
+import inspect
 from enum import Enum
-from functools import partial
+from functools import partial, wraps
 import typing as t
 
 
@@ -87,12 +88,12 @@ class Inject:
     """
 
     container: Container = None
-    _type: t.Type = None
+    type_: t.Type = None
 
     def __init__(self, name: str = None, interface: t.Type = None, qualifier: t.Any = None):
-        self._name = name
-        self._interface = interface
-        self._qualifier = qualifier
+        self.name = name
+        self.interface = interface
+        self.qualifier = qualifier
 
     def __get__(self, instance: t.Any, owner: t.Type) -> t.Any:
         if instance is None:
@@ -101,12 +102,59 @@ class Inject:
         if self.container is None:
             self.container = instance.container
 
-        if self._name:
-            return self.container.find_by_name(self._name, self._qualifier)
-        elif self._type or self._interface:
-            return self.container.find_by_interface(self._interface or self._type, self._qualifier)
-        else:
-            raise TypeError('Missing name or interface for Inject.')
+        return _find_object(
+            self.container, self.name, self.interface or self.type_, self.qualifier
+        )
 
     def __set_name__(self, owner: t.Type, name: str) -> None:
-        self._type = owner.__annotations__.get(name) if hasattr(owner, '__annotations__') else None
+        self.type_ = owner.__annotations__.get(name) if hasattr(owner, '__annotations__') else None
+
+
+def _find_object(container, name, interface, qualifier):
+    if name:
+        return container.find_by_name(name, qualifier)
+    elif interface:
+        return container.find_by_interface(interface, qualifier)
+    else:
+        raise TypeError('Missing name or interface for Inject.')
+
+
+def inject(fun: t.Callable) -> t.Callable:
+    """
+    A decorator for injecting dependencies into methods,
+
+    """
+    signature = inspect.signature(fun)
+
+    annotations: t.Dict[str, t.Any] = {}
+    for name, param in signature.parameters.items():
+        if name == 'self':
+            continue
+        else:
+            default = param.default
+            if isinstance(default, Inject):
+                annotations[name] = (
+                    param.annotation if param.annotation is not param.empty else None,
+                    default
+                )
+
+    @wraps(fun)
+    def wrapper(*args, **kwargs):
+        container = getattr(args[0], 'container', None)
+
+        if not container:
+            raise ValueError('Container not provided.')
+
+        for name_, data in annotations.items():
+            if name_ not in kwargs:
+                annotation, inject_instance = data
+                kwargs[name_] = _find_object(
+                    container,
+                    inject_instance.name,
+                    annotation or inject_instance.interface,
+                    inject_instance.qualifier
+                )
+
+        return fun(*args, **kwargs)
+
+    return wrapper
