@@ -2,6 +2,7 @@ import pytest
 
 from pca.utils.dependency_injection import (
     Container,
+    inject,
     Inject,
     scope,
     Scopes,
@@ -80,7 +81,7 @@ class TestContainer:
         assert repr(Scopes.INSTANCE(container, RoadWheel)) == f'<Road wheels>'
 
 
-class TestInject:
+class TestInjectParameters:
     @pytest.fixture
     def container(self, container):
         container.register_by_interface(FrameInterface, RoadFrame)
@@ -140,3 +141,66 @@ class TestInject:
 
     def test_injecting(self, another_bike):
         assert another_bike.build_bike() == 'Wheels: <Road wheels>, <Road wheels>, <Gravel wheel>.'
+
+
+class TestInjectDecorator:
+    @pytest.fixture
+    def container(self, container):
+        container.register_by_interface(FrameInterface, RoadFrame)
+        container.register_by_interface(WheelInterface, RoadWheel)
+        container.register_by_name('g_wheel', GravelWheel)
+        return container
+
+    @pytest.fixture
+    def bike_obj(self, container):
+        class NewBike:
+
+            def __init__(self, container: Container):
+                self.container = container
+
+            @inject
+            def build(
+                    self,
+                    frame: FrameInterface = Inject(),
+                    wheel=Inject(name='g_wheel')
+            ):
+                return f'Frame: {frame}\nWheels: {wheel}'
+
+            @inject
+            def build_frame(self, frame=Inject()):
+                pass
+
+        return NewBike(container)
+
+    def test_inject(self, bike_obj):
+        assert bike_obj.build() == 'Frame: <Road frame>\nWheels: <Gravel wheel>'
+
+    def test_inject_args(self, bike_obj):
+        with pytest.raises(TypeError) as e:
+            bike_obj.build(GravelFrame())
+        assert str(e.value) == "build() got multiple values for argument 'frame'"
+
+    def test_inject_kwargs(self, bike_obj):
+        assert (
+            bike_obj.build(frame=GravelFrame()) ==
+            'Frame: <Gravel frame>\nWheels: <Gravel wheel>'
+        )
+
+    def test_inject_no_name_or_interface(self, bike_obj):
+        with pytest.raises(TypeError) as e:
+            bike_obj.build_frame()
+        assert str(e.value) == 'Missing name or interface for Inject.'
+
+    @pytest.fixture
+    def no_container_bike_obj(self):
+        class NewBike:
+            @inject
+            def build(self, frame: FrameInterface = Inject(), wheel: WheelInterface = Inject()):
+                return f'Frame: {frame}\nWheels: {wheel}'
+
+        return NewBike()
+
+    def test_inject_no_container(self, no_container_bike_obj):
+        with pytest.raises(ValueError) as e:
+            assert no_container_bike_obj.build()
+        assert str(e.value) == 'Container not provided.'
