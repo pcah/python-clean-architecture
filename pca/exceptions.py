@@ -28,9 +28,21 @@ class DharmaError(Exception):
         return self.__class__.__name__
 
 
-class DharmaConfigError(DharmaError):
+class ConfigError(DharmaError):
     """An error was encountered during configuration of Dharma"""
     DEFAULT_AREA = 'CONF'
+
+
+class DependencyNotFoundError(DharmaError):
+    """An optional dependency was tried to be used but it has not been found"""
+    DEFAULT_AREA = 'INTEGRATION'
+    DEFAULT_CODE = 'DEPENDENCY-NOT-FOUND'
+
+    PRINTED_ATTRS = DharmaError.PRINTED_ATTRS + ('dependency',)
+
+    def __init__(self, dependency, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dependency = dependency
 
 
 class TraitError(DharmaError):
@@ -101,6 +113,13 @@ class RepoError(DharmaError):
     Base class for errors concerning repositories and DB handling.
     """
     DEFAULT_AREA = 'REPO'
+
+
+class InvalidQueryError(RepoError):
+    """
+    Query for a repo is invalid .
+    """
+    DEFAULT_CODE = 'INVALID-QUERY'
 
 
 class RepoUpdateNotUniqueError(RepoError):

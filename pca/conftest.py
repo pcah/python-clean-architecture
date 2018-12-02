@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-from mock import Mock
+import mock
 import pytest
+
+from pca.utils.dependency_injection import Container
 
 from pca.utils.testing.factories import nature_class_factory
 
@@ -17,7 +19,7 @@ def nature_instance(nature_class):
 
 @pytest.fixture
 def nature_instance_with_listener(nature_instance):
-    nature_instance.mock = Mock()
+    nature_instance.mock = mock.Mock()
 
     def a_listener(instance, old_value, new_value):
         instance.mock(instance, old_value, new_value)
@@ -49,3 +51,8 @@ def example_object():
     bar.baz = {'a': 1}
     obj.bar = bar
     return obj
+
+
+@pytest.fixture
+def mock_container():
+    return mock.Mock(spec=Container)
