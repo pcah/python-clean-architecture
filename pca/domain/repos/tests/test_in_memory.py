@@ -226,6 +226,7 @@ def test_batch_update():
 
     repo = InMemoryRepository(A)
     objs = {id_: repo.create_and_insert(id_=id_) for id_ in range(6)}
+    assert objs
     new_objs = [A(id_) for id_ in range(7)]
     success = repo.batch_update(new_objs)
     assert all(success[id_] for id_ in range(6))  # old instances has been updated

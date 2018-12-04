@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import six
 import sys
 import typing as t
 from importlib import import_module
@@ -19,6 +18,7 @@ def import_all_names(_file, _name):
     path = os.path.dirname(os.path.abspath(_file))
     parent_module = sys.modules[_name]
 
+    dir_list = []
     for py in [filename[:-3] for filename in os.listdir(path)
                if filename.endswith('.py') and filename != '__init__.py']:
         module = __import__('.'.join([_name, py]), fromlist=[py])
@@ -38,6 +38,8 @@ def import_all_names(_file, _name):
                 import warnings
                 warnings.warn(msg)
             setattr(parent_module, name, obj)
+        dir_list.extend(objects)
+    parent_module.__dir__ = lambda: dir_list
 
 
 # noinspection PyUnboundLocalVariable

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-from collections import MutableSet
+from collections.abc import MutableSet
 from functools import singledispatch
 import copy
 import six
@@ -20,7 +20,7 @@ def freeze(obj):
 
 
 # noinspection PyPep8Naming
-class frozendict(dict):
+class frozendict(dict):  # noqa: N801
     """
     Frozen (immutable) version of dict. Name is left to be consistent with
     set/frozenset pair.

@@ -109,7 +109,7 @@ class InMemoryRepository(BaseRepository, t.Generic[T]):
         """Returns whether id exists in the repo."""
         return id_ in self.klass_register
 
-    def count(self, predicate: Predicate=None) -> int:
+    def count(self, predicate: Predicate = None) -> int:
         if not predicate:
             return len(self.klass_register)
         filtered = self.filter(predicate)

@@ -2,8 +2,8 @@
 Contains the querying interface.
 Starting with :class:`Var` you can construct complex
 queries:
->>> ((where('f1') == 5) & (where('f2') != 2)) | where('s').matches(r'^\w+$')
-(('f1' == 5) and ('f2' != 2)) or ('s' ~= ^\w+$ )
+>>> ((where('f1') == 5) & (where('f2') != 2)) | where('s').matches(r'^abc$')
+(('f1' == 5) and ('f2' != 2)) or ('s' ~= ^abc$ )
 Predicates are executed by using the ``__call__``:
 >>> from pca.data.formulae import Predicate, where
 >>> predicate = where('val') == 5  # type: Predicate
@@ -14,17 +14,10 @@ False
 """
 from enum import Enum
 import re
-from typing import (  # flake8: noqa
-    Any,
-    Callable,
-    Iterable,
-    Optional,
-    Tuple,
-    Union,
-)
+import typing as t
 
 from pca.utils.collections import freeze, is_iterable
-from pca.utils.operators import eq, resolve_path, check_path
+from pca.utils.operators import resolve_path, check_path
 
 
 class Operation(Enum):
@@ -50,7 +43,7 @@ class Operation(Enum):
     ALL = 'all'
 
 
-COMPOSITE_PREDICATE = (
+COMPOSITE_PREDICATES = (
     Operation.OR,
     Operation.AND,
     Operation.NOT
@@ -67,7 +60,7 @@ class Predicate(object):
         self.test = test
         self.args = args
         self.operator = operator
-        self._composite = self.operator in COMPOSITE_PREDICATE
+        self._composite = self.operator in COMPOSITE_PREDICATES
         self.var_name = var_name
 
     def __call__(self, value):
@@ -144,8 +137,7 @@ class Var(object):
     depending on whether the elements matches the predicate or not.
     """
 
-    def __init__(self, name=None, _path=None):
-        # type: (str, Union[str, Iterable, None]) -> None
+    def __init__(self, name: str = None, _path: t.Union[str, t.Iterable, None] = None):
         """
         :param name: (optional) A name for the Var instance. Variables
          in a formula may be equated using their names.
@@ -153,16 +145,15 @@ class Var(object):
          path tuple between Var constructors.
         """
         self._name = name
-        self._path = None  # type: Tuple[Optional[str]]
+        self._path: t.Tuple[t.Optional[str]] = None
         if _path is None:
-            self._path = ()  # type: ignore noqa
+            self._path = ()
         elif is_iterable(_path):
-            self._path = tuple(_path)  # type: ignore noqa
+            self._path = tuple(_path)
         else:
-            self._path = (_path,)  # type: ignore noqa
+            self._path = (_path,)
 
-    def __getattr__(self, item):
-        # type: (str) -> Var
+    def __getattr__(self, item: str) -> 'Var':
         """
         Returns new Var instance with the same name of variable but its path
         extended by additional path element, given with `item` argument.
@@ -172,8 +163,7 @@ class Var(object):
         """
         return Var(self._name, self._path + (item,))
 
-    def __getitem__(self, item):
-        # type: (str) -> Var
+    def __getitem__(self, item: str) -> 'Var':
         """
         Returns new Var instance with the same name of variable but its path
         extended by dotted path, given with `item` argument.
@@ -183,8 +173,12 @@ class Var(object):
         """
         return Var(self._name, self._path + tuple(item.split('.')))
 
-    def _build_predicate(self, test, operation, args):
-        # type: (Callable[[Any, Any], Any], Operation, Iterable) -> Predicate
+    def _build_predicate(
+            self,
+            test: t.Callable,
+            operation: Operation,
+            args: t.Iterable
+            ) -> Predicate:
         """
         Generate a Predicate object based on a test function.
 
@@ -201,8 +195,7 @@ class Var(object):
             self._name
         )
 
-    def __eq__(self, rhs):
-        # type: (Any) -> Predicate
+    def __eq__(self, rhs: t.Any) -> Predicate:
         """
         Test the value for equality.
         >>> var('f1') == 42
@@ -214,13 +207,12 @@ class Var(object):
         """
         rhs_curried = _curry_rhs(rhs)
         return self._build_predicate(
-            lambda lhs, value: eq(lhs, rhs_curried(value)),
+            lambda lhs, value: lhs == rhs_curried(value),
             Operation.EQ,
             (self._path, freeze(rhs))
         )
 
-    def __ne__(self, rhs):
-        # type: (Any) -> Predicate
+    def __ne__(self, rhs: t.Any) -> Predicate:
         """
         Test the value for inequality.
         >>> var('f1') != 42
@@ -238,8 +230,7 @@ class Var(object):
             (self._path, freeze(rhs))
         )
 
-    def __lt__(self, rhs):
-        # type: (Any) -> Predicate
+    def __lt__(self, rhs: t.Any) -> Predicate:
         """
         Test the value for being lower than another value.
         >>> var('f1') < 42
@@ -256,8 +247,7 @@ class Var(object):
             (self._path, rhs)
         )
 
-    def __le__(self, rhs):
-        # type: (Any) -> Predicate
+    def __le__(self, rhs: t.Any) -> Predicate:
         """
         Test the value for being lower than or equal to another value.
         >>> where('f1') <= 42
@@ -274,8 +264,7 @@ class Var(object):
             (self._path, rhs)
         )
 
-    def __gt__(self, rhs):
-        # type: (Any) -> Predicate
+    def __gt__(self, rhs: t.Any) -> Predicate:
         """
         Test the value for being greater than another value.
         >>> var('f1') > 42
@@ -292,8 +281,7 @@ class Var(object):
             (self._path, rhs)
         )
 
-    def __ge__(self, rhs):
-        # type: (Any) -> Predicate
+    def __ge__(self, rhs: t.Any) -> Predicate:
         """
         Test the value for being greater than or equal to another value.
         >>> var('f1') >= 42
@@ -310,8 +298,7 @@ class Var(object):
             (self._path, rhs)
         )
 
-    def exists(self):
-        # type: () -> Predicate
+    def exists(self) -> Predicate:
         """
         Test for a dict/object where a provided key exists.
         >>> var('f1').exists()
@@ -322,11 +309,10 @@ class Var(object):
             (self._path,)
         )
 
-    def matches(self, regex):
-        # type: (str) -> Predicate
+    def matches(self, regex: str) -> Predicate:
         """
         Run a regex test against a dict value (whole string has to match).
-        >>> var('f1').matches(r'^\w+$')
+        >>> var('f1').matches(r'^\\w+$')
 
         :param regex: The regular expression to use for matching
         """
@@ -336,12 +322,11 @@ class Var(object):
             (self._path, regex)
         )
 
-    def search(self, regex):
-        # type: (str) -> Predicate
+    def search(self, regex: str) -> Predicate:
         """
         Run a regex test against the value (only substring string has to
         match).
-        >>> var('f1').search(r'^\w+$')
+        >>> var('f1').search(r'^\\w+$')
 
         :param regex: The regular expression to use for matching
         """
@@ -351,8 +336,7 @@ class Var(object):
             (self._path, regex)
         )
 
-    def test(self, func, *args, **kwargs):
-        # type: (Callable[..., bool], *Any, **Any) -> Predicate
+    def test(self, func: t.Callable[..., bool], *args, **kwargs) -> Predicate:
         """
         Run a user-defined test function against the value.
         >>> def test_func(val):
@@ -372,8 +356,7 @@ class Var(object):
             (self._path, func, args, freeze(kwargs))
         )
 
-    def any(self, cond):
-        # type: (Union[Predicate, Iterable]) -> Predicate
+    def any(self, cond: t.Union[Predicate, t.Iterable]) -> Predicate:
         """
         Checks if a condition is met by any element in a list,
         where a condition can also be a sequence (e.g. list).
@@ -404,8 +387,7 @@ class Var(object):
             (self._path, freeze(cond))
         )
 
-    def all(self, cond):
-        # type: (Union[Predicate, Iterable]) -> Predicate
+    def all(self, cond: t.Union[Predicate, t.Iterable]) -> Predicate:
         """
         Checks if a condition is met by any element in a list,
         where a condition can also be a sequence (e.g. list).
@@ -436,8 +418,7 @@ class Var(object):
 
 
 # noinspection PyProtectedMember
-def _curry_rhs(rhs):
-    # type: (Any) -> Callable[[Any], Any]
+def _curry_rhs(rhs) -> t.Callable:
     """
     Late evaluation of a RHS of an operation.
 
@@ -451,8 +432,7 @@ def _curry_rhs(rhs):
     return lambda value: rhs
 
 
-def var(path):
-    # type: (str) -> Var
+def var(path: str) -> Var:
     """
     Ad hoc Var constructor. The Var is named as the last element of the path.
 
@@ -462,8 +442,7 @@ def var(path):
     return Var(name)[path]
 
 
-def where(path):
-    # type: (str) -> Var
+def where(path: str) -> Var:
     """
     Ad hoc anonymous Var constructor.
 

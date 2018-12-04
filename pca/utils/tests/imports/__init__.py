@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 # flake8: noqa
 import pytest
-import warnings
 
 from pca.utils.imports import import_all_names
 
 
-import_all_names(__file__, __name__)
+with pytest.warns(UserWarning) as record:
+    import_all_names(__file__, __name__)
 
 
 def test_import():
@@ -26,8 +26,7 @@ def test_import_all():
 
 
 def test_import_warning():
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always")
+    with pytest.warns(None) as record:
         import_all_names(__file__, __name__)
-        assert issubclass(w[-1].category, UserWarning)
-        assert "conflicting names" in str(w[-1].message)
+    assert issubclass(record[-1].category, UserWarning)
+    assert "conflicting names" in str(record[-1].message)

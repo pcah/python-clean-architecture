@@ -3,7 +3,7 @@ from functools import update_wrapper
 
 
 # noinspection PyPep8Naming
-class reify(object):
+class reify(object):  # noqa: N801
     """
     Taken from pyramid.decorator.
 

@@ -21,12 +21,12 @@ class PolicyMeta(type):
     decorators.
     """
 
-    def __new__(mcs, name, bases, attrs):
+    def __new__(cls, name, bases, attrs):
         """Enwrap the class with JsonWeb decorators"""
-        cls = type.__new__(mcs, name, bases, attrs)
-        cls = encode.to_object()(cls)
-        cls = decode.from_object(policy_constructor)(cls)
-        return cls
+        type_ = type.__new__(cls, name, bases, attrs)
+        type_ = encode.to_object()(type_)
+        type_ = decode.from_object(policy_constructor)(type_)
+        return type_
 
 
 @six.add_metaclass(PolicyMeta)

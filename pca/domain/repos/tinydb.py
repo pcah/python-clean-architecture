@@ -15,7 +15,7 @@ class TinyDbRepository(BaseRepository, Generic[T]):
     _table = None
 
     def __init__(self, engine_config: dict, serializer: Callable[[T], dict],
-                 klass: T=None, factory: Callable[[dict], T]=None) -> None:
+                 klass: T = None, factory: Callable[[dict], T] = None) -> None:
         if not tinydb:
             raise DharmaConfigError
         super(TinyDbRepository, self).__init__(klass=klass, factory=factory)

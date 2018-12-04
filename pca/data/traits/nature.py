@@ -2,8 +2,6 @@
 Module 'pca.traits.nature' defines minimal API for a trait-oriented class.
 Look at docstrings of Nature, NatureMeta and Dharma classes.
 """
-# pylint: disable=protected-access, too-few-public-methods
-
 import six
 
 from pca.exceptions import TraitRequiredError, TraitValidationError
@@ -109,14 +107,14 @@ class NatureMeta(type):
     The metaclass that is doing the hard job building API of Nature.
     """
 
-    def __new__(mcs, name, bases, attrs):
+    def __new__(cls, name, bases, attrs):
         # fetch Dharma definition
         dharma = attrs.pop('Dharma', None)
         assert not isinstance(dharma, Trait) and attrs.get('dharma') is None, (
             "Trait sanity test -- you probably didn't want to pass a Trait as "
             "a Dharma")
         # create the type instance
-        cls = super(NatureMeta, mcs).__new__(mcs, name, bases, attrs)
+        type_ = super(NatureMeta, cls).__new__(cls, name, bases, attrs)
         traits = {}
         for name, attr in attrs.items():
             if isinstance(attr, Trait):
@@ -124,9 +122,9 @@ class NatureMeta(type):
                 traits[name] = attr
                 # injecting label & instance to the traits
                 attr._label = name
-                attr._nature = cls
-        cls.dharma = Dharma(nature=cls, traits=traits, dharma=dharma)
-        return cls
+                attr._nature = type_
+        type_.dharma = Dharma(nature=type_, traits=traits, dharma=dharma)
+        return type_
 
 
 class Nature(six.with_metaclass(NatureMeta, object)):

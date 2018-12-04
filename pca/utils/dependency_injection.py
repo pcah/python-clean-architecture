@@ -47,7 +47,12 @@ class Container:
         key = Container._get_registry_key(interface, qualifier)
         return self.get_object(self._registry.get(key))
 
-    def register_by_interface(self, interface: type, constructor: Constructor, qualifier: t.Any = None):
+    def register_by_interface(
+            self,
+            interface: type,
+            constructor: Constructor,
+            qualifier: t.Any = None
+    ):
         """Registering constructors by interface and qualifier."""
         key = Container._get_registry_key(interface, qualifier)
         if key in self._registry:

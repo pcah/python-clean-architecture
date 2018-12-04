@@ -3,20 +3,9 @@ import pytest
 
 from pca.exceptions import PathNotFoundError
 from pca.utils.operators import (
-    eq,
+    check_path,
     resolve_path,
-    check_path as operator_test_path,  # avoids identifying as a test by pytest
 )
-
-
-@pytest.mark.parametrize('lhs, rhs', [
-    ('foo', u'foo'),
-    (u'foo', 'foo'),
-    (u'foo', u'foo')
-], ids=["rhs", "lhs", "both"])
-def test_eq_unicode_warnings(lhs, rhs, recwarn):
-    assert eq(lhs, rhs)
-    assert not len(recwarn)
 
 
 @pytest.mark.parametrize('path, expected', [
@@ -73,9 +62,9 @@ def test_resolve_path_object_negative(example_object, path):
     "more_complex",
 ])
 def test_test_path_dict(example_dict, path, expected):
-    # this is the same as `bool`, but let's be explicite about intentions
-    test = lambda lhs, value: bool(lhs)
-    resolve_path_curried = operator_test_path(test, path)
+    # this is the same as `bool`, but let's be explicit about intentions
+    test = lambda lhs, value: bool(lhs)  # noqa: E731
+    resolve_path_curried = check_path(test, path)
     assert resolve_path_curried(example_dict) == expected
 
 
@@ -94,6 +83,6 @@ def test_test_path_dict(example_dict, path, expected):
 ])
 def test_test_path_object(example_object, path, expected):
     # this is the same as `bool`, but let's be explicit about intentions
-    test = lambda lhs, value: bool(lhs)
-    resolve_path_curried = operator_test_path(test, path)
+    test = lambda lhs, value: bool(lhs)  # noqa: E731
+    resolve_path_curried = check_path(test, path)
     assert resolve_path_curried(example_object) == expected
