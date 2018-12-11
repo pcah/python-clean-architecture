@@ -5,7 +5,7 @@
 ### 0.1.0
 
 - [ ] Spring-cleaning (obsolete code, support of old Python versions)
-- [ ] Dependency Injection feature
+- [x] Dependency Injection feature
 - Domain
     - [ ] Entities & aggregates
     - [ ] Repositories
@@ -20,6 +20,6 @@
 - Integration
     - [ ] `click` views
     - [ ] `marshmallow` schema
-    - [ ] `tinydb` db DAO
+    - [x] `tinydb` db DAO
     - [ ] `tinydb` session DAO
     - [ ] Google Drive file DAO
