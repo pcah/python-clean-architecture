@@ -138,6 +138,8 @@ class Var(object):
     depending on whether the elements matches the predicate or not.
     """
 
+    _path: t.Tuple[str, ...]
+
     def __init__(self, name: str = None, _path: t.Union[str, t.Iterable, None] = None):
         """
         :param name: (optional) A name for the Var instance. Variables
@@ -146,13 +148,12 @@ class Var(object):
          path tuple between Var constructors.
         """
         self._name = name
-        self._path: t.Tuple[t.Optional[str]] = None
         if _path is None:
             self._path = ()
         elif is_iterable(_path):
             self._path = tuple(_path)
-        else:
-            self._path = (_path,)
+        elif isinstance(_path, str):
+            self._path = tuple(_path.split('.'))
 
     def __getattr__(self, item: str) -> 'Var':
         """
@@ -440,7 +441,7 @@ def var(path: str) -> Var:
     :param path: A Python dotted path.
     """
     name = path.rsplit('.', 1)[-1]
-    return Var(name)[path]
+    return Var(name, _path=path)
 
 
 def where(path: str) -> Var:
@@ -449,4 +450,4 @@ def where(path: str) -> Var:
 
     :param path: A Python dotted path.
     """
-    return Var()[path]
+    return Var(_path=path)

@@ -1,11 +1,33 @@
 import pytest
 
-from pca.data.formulae.predicate import var, where, Predicate, Var  # noqa
+from pca.data.predicate import var, where, Predicate, Var  # noqa
 
+
+@pytest.fixture(scope='session')
+def example_dict():
+    return {
+        'foo': 1,
+        'bar': {
+            'baz': {'a': 1},
+        }
+    }
+
+
+# constructors
 
 def test_no_path():
     with pytest.raises(ValueError):
         Var() == 2
+
+
+def test_multiple_path_gerattr(example_dict):
+    predicate = Var().bar.baz.a == 1
+    assert predicate(example_dict)
+
+
+def test_multiple_path_getitem(example_dict):
+    predicate = Var()['bar.baz.a'] == 1
+    assert predicate(example_dict)
 
 
 def test_orm_usage(example_dict):
@@ -33,6 +55,8 @@ def test_var_usage(example_dict):
     assert predicate1(example_dict)
     assert predicate2(example_dict)
 
+
+# algebraic operations
 
 def test_eq():
     predicate = Var().value == 1  # type: Predicate
@@ -88,6 +112,8 @@ def test_ge():
     assert hash(predicate)
 
 
+# logical operations
+
 def test_or():
     predicate = (
         (Var().val1 == 1) |
@@ -129,6 +155,56 @@ def test_not():
     assert not predicate({'val1': '', 'val2': ''})
     assert hash(predicate)
 
+
+def test_any():
+    predicate = Var().followers.any(Var().name == 'don')  # type: Predicate
+
+    assert predicate({'followers': [{'name': 'don'}, {'name': 'john'}]})
+    assert not predicate({'followers': 1})
+    assert not predicate({})
+    assert hash(predicate)
+
+    predicate = Var().followers.any(Var().num.matches('\\d+'))  # type: Predicate
+    assert predicate({'followers': [{'num': '12'}, {'num': 'abc'}]})
+    assert not predicate({'followers': [{'num': 'abc'}]})
+    assert hash(predicate)
+
+    predicate = Var().followers.any(['don', 'jon'])  # type: Predicate
+    assert predicate({'followers': ['don', 'greg', 'bill']})
+    assert not predicate({'followers': ['greg', 'bill']})
+    assert not predicate({})
+    assert hash(predicate)
+
+    predicate = Var().followers.any([{'name': 'don'}, {'name': 'john'}])  # type: Predicate
+    assert predicate({'followers': [{'name': 'don'}, {'name': 'greg'}]})
+    assert not predicate({'followers': [{'name': 'greg'}]})
+    assert hash(predicate)
+
+
+def test_all():
+    predicate = Var().followers.all(Var().name == 'don')  # type: Predicate
+    assert predicate({'followers': [{'name': 'don'}]})
+    assert not predicate({'followers': [{'name': 'don'}, {'name': 'john'}]})
+    assert hash(predicate)
+
+    predicate = Var().followers.all(Var().num.matches('\\d+'))  # type: Predicate
+    assert predicate({'followers': [{'num': '123'}, {'num': '456'}]})
+    assert not predicate({'followers': [{'num': '123'}, {'num': 'abc'}]})
+    assert hash(predicate)
+
+    predicate = Var().followers.all(['don', 'john'])  # type: Predicate
+    assert predicate({'followers': ['don', 'john', 'greg']})
+    assert not predicate({'followers': ['don', 'greg']})
+    assert not predicate({})
+    assert hash(predicate)
+
+    predicate = Var().followers.all([{'name': 'john'}, {'age': 17}])  # type: Predicate
+    assert predicate({'followers': [{'name': 'john'}, {'age': 17}]})
+    assert not predicate({'followers': [{'name': 'john'}, {'age': 18}]})
+    assert hash(predicate)
+
+
+# db-like operations
 
 def test_has_key():
     predicate = Var().val3.exists()  # type: Predicate
@@ -179,54 +255,6 @@ def test_custom_with_params():
     assert not predicate({'val': 0})
     assert not predicate({'val': 11})
     assert not predicate({'': None})
-    assert hash(predicate)
-
-
-def test_any():
-    predicate = Var().followers.any(Var().name == 'don')  # type: Predicate
-
-    assert predicate({'followers': [{'name': 'don'}, {'name': 'john'}]})
-    assert not predicate({'followers': 1})
-    assert not predicate({})
-    assert hash(predicate)
-
-    predicate = Var().followers.any(Var().num.matches('\\d+'))  # type: Predicate
-    assert predicate({'followers': [{'num': '12'}, {'num': 'abc'}]})
-    assert not predicate({'followers': [{'num': 'abc'}]})
-    assert hash(predicate)
-
-    predicate = Var().followers.any(['don', 'jon'])  # type: Predicate
-    assert predicate({'followers': ['don', 'greg', 'bill']})
-    assert not predicate({'followers': ['greg', 'bill']})
-    assert not predicate({})
-    assert hash(predicate)
-
-    predicate = Var().followers.any([{'name': 'don'}, {'name': 'john'}])  # type: Predicate
-    assert predicate({'followers': [{'name': 'don'}, {'name': 'greg'}]})
-    assert not predicate({'followers': [{'name': 'greg'}]})
-    assert hash(predicate)
-
-
-def test_all():
-    predicate = Var().followers.all(Var().name == 'don')  # type: Predicate
-    assert predicate({'followers': [{'name': 'don'}]})
-    assert not predicate({'followers': [{'name': 'don'}, {'name': 'john'}]})
-    assert hash(predicate)
-
-    predicate = Var().followers.all(Var().num.matches('\\d+'))  # type: Predicate
-    assert predicate({'followers': [{'num': '123'}, {'num': '456'}]})
-    assert not predicate({'followers': [{'num': '123'}, {'num': 'abc'}]})
-    assert hash(predicate)
-
-    predicate = Var().followers.all(['don', 'john'])  # type: Predicate
-    assert predicate({'followers': ['don', 'john', 'greg']})
-    assert not predicate({'followers': ['don', 'greg']})
-    assert not predicate({})
-    assert hash(predicate)
-
-    predicate = Var().followers.all([{'name': 'john'}, {'age': 17}])  # type: Predicate
-    assert predicate({'followers': [{'name': 'john'}, {'age': 17}]})
-    assert not predicate({'followers': [{'name': 'john'}, {'age': 18}]})
     assert hash(predicate)
 
 
@@ -296,6 +324,14 @@ def test_has():
     predicate = Var().key1.int.test(lambda x: x == 3)  # type: Predicate
     assert predicate({'key1': {'int': 3}})
     assert hash(predicate)
+
+
+# other
+
+def test_predicate_eq(example_dict):
+    """One mistakenly try to compare Predicate instance with a value"""
+    predicate = Var().foo == 1
+    assert not (predicate == example_dict)
 
 
 def test_hash():

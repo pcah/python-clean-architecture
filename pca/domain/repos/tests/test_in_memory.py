@@ -2,7 +2,7 @@
 import mock
 import pytest
 
-from pca.data.formulae import where
+from pca.data.predicate import where
 from pca.domain.repos.in_memory import InMemoryRepository
 from pca.utils import serialization
 

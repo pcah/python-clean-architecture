@@ -2,7 +2,7 @@
 import typing as t
 from collections import defaultdict
 
-from pca.data.formulae import Predicate
+from pca.data.predicate import Predicate
 from pca.utils.collections import iterate_over_values
 from pca.utils.functools import reify
 from pca.utils.imports import get_dotted_path

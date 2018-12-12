@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from pca.data.formulae import where
+from pca.data.predicate import where
 from pca.exceptions import ConfigError, InvalidQueryError
 from pca.integration.tinydb import TinyDbDao
 

@@ -4,6 +4,7 @@ import re
 from pca.exceptions import TraitValidationError
 
 
+# TODO remove
 def construct_validators(genus):
     return ()
 

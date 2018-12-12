@@ -2,7 +2,7 @@ import abc
 import typing as t
 from operator import attrgetter
 
-from pca.data.formulae.predicate import Predicate
+from pca.data.predicate import Predicate
 from pca.exceptions import RepoError, RepoUpdateNotUniqueError
 from pca.utils.collections import get_duplicates
 from pca.utils.operators import error_catcher

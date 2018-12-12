@@ -1,5 +1,4 @@
-from pca.data.traits import Nature
 
 
-class Entity(Nature):
+class Entity:
     pass

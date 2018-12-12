@@ -15,7 +15,7 @@ from pca.interfaces.dao import (
     Rows,
 )
 
-from .formulae import Predicate
+from .predicate import Predicate
 
 
 class QueryChain(IQueryChain):
