@@ -2,8 +2,9 @@ import typing as t
 
 from pca.exceptions import RepoError
 
-Id = t.TypeVar('Id', int, str, t.Tuple)
-Ids = t.Iterable[Id]
+from .entity import Id, Ids
+
+
 Kwargs = t.Dict[str, t.Any]
 BatchOfKwargs = t.Sequence[Kwargs]
 
@@ -16,7 +17,7 @@ class Dto(Kwargs):
     lying beneath the DAO. DTOs carry de-structured and normalized data of some kind of domain
     entity, intended to be put into the persistence layer.
     """
-    __id__: Id
+    __id__: Id = None
 
     @property
     def id(self) -> Id:
@@ -106,12 +107,13 @@ class IDao(t.Generic[Id]):
     """
 
     class NotFound(RepoError):
-        PRINTED_ATTRS = RepoError.PRINTED_ATTRS + ('id_',)
+        PRINTED_ATTRS = RepoError.PRINTED_ATTRS + ('id_', 'entity')
         DEFAULT_CODE = 'NOT-FOUND'
 
-        def __init__(self, *args, id_, **kwargs):
+        def __init__(self, *args, id_, entity=None, **kwargs):
             super().__init__(*args, **kwargs)
             self.id_ = id_
+            self.entity = entity
 
     # lazy queries
 

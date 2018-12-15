@@ -127,6 +127,19 @@ class RepoError(DharmaError):
     DEFAULT_AREA = 'REPO'
 
 
+class NotFound(RepoError):
+    """
+    Query didn't found entity of given description.
+    """
+    DEFAULT_CODE = 'NOT-FOUND'
+    PRINTED_ATTRS = DharmaError.PRINTED_ATTRS + ('entity', 'id_')
+
+    def __init__(self, entity, id_, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.entity = entity
+        self.id_ = id_
+
+
 class InvalidQueryError(RepoError):
     """
     Query for a repo is invalid .
