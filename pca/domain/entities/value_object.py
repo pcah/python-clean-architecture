@@ -1,2 +1,0 @@
-class ValueObject(object):
-    pass

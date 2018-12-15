@@ -16,6 +16,7 @@ from pca.interfaces.dao import (
     Ids,
     IDao,
     IQueryChain,
+    Kwargs,
 )
 from pca.utils.dependency_injection import Container, Scopes, scope
 
@@ -132,7 +133,7 @@ class QueryChain(IQueryChain):
         """
         Updates all objects specified by the query with given update.
         """
-        return self._dao._resolve_update(self, **update)
+        return self._dao._resolve_update(self, update)
 
     def remove(self) -> Ids:
         """
@@ -205,7 +206,7 @@ class AbstractDao(IDao[Id], ABC):
     # evaluating commands
 
     @abstractmethod
-    def _resolve_update(self, query_chain: QueryChain, **update) -> Ids:
+    def _resolve_update(self, query_chain: QueryChain, update: Kwargs) -> Ids:
         """
         Updates all objects specified by the query with given update.
         """
@@ -281,7 +282,7 @@ class InMemoryDao(AbstractDao[int]):
         filtered = self._resolve_filter(query_chain)
         return len(filtered)
 
-    def _resolve_update(self, query_chain: QueryChain, **update) -> Ids:
+    def _resolve_update(self, query_chain: QueryChain, update: Kwargs) -> Ids:
         updated_dtos = (
             (dto.update(update), dto.id)
             for dto in self._resolve_filter(query_chain)

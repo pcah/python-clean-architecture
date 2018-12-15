@@ -13,6 +13,7 @@ from pca.data.dao import (
     Dto,
     Id,
     Ids,
+    Kwargs,
     QueryChain,
 )
 from pca.utils.dependency_injection import Container
@@ -100,7 +101,7 @@ class TinyDbDao(AbstractDao[int]):
         filtered = self._resolve_filter(query_chain)
         return len(filtered)
 
-    def _resolve_update(self, query_chain: QueryChain, **update) -> Ids:
+    def _resolve_update(self, query_chain: QueryChain, update: Kwargs) -> Ids:
         """
         Updates all objects specified by the query with given update.
 
