@@ -10,7 +10,6 @@ from pca.data.dao import (
     AbstractDao,
     Id,
     Ids,
-    Predicate,
     QueryChain,
     Row,
     Rows,
@@ -62,27 +61,27 @@ class TinyDbDao(AbstractDao[int]):
             self._db = tinydb.TinyDB(**kwargs)
         self._table: tinydb.database.Table = self._db.table(self._table_name)
 
-    def _resolve_filter(self, predicate: t.Optional[Predicate]) -> Rows:
+    def _resolve_filter(self, query_chain: QueryChain) -> Rows:
         """Resolves filtering for any other resolving operation to compute."""
-        if not predicate:
+        if query_chain._is_trivial:
+            # none of filtering queries
             return self._table.all()
-        return self._table.search(predicate)
+        if not query_chain._filters:
+            # only ids as query
+            return list(filter(
+                None, (self._table.get(doc_id=id_) for id_ in query_chain._ids)
+            ))
+        filtered = self._table.search(query_chain._reduced_filter)
+        if not query_chain._ids:
+            # only filters as query
+            return filtered
+        # both
+        return [row for row in filtered if row.doc_id in query_chain._ids]
 
-    def _resolve_get(
-            self, query_chain: t.Optional[QueryChain], id_: Id, nullable: bool = False
-            ) -> t.Optional[Row]:
-        """
-        Returns row of given id or raises a NotFound error.
-        """
-        if not query_chain or query_chain._is_trivial:
-            # simple "get by id"
-            result = self._table.get(doc_id=id_)
-        else:
-            # find the row in the filtered query
-            filtered = self._resolve_filter(query_chain._reduced_filter)
-            result = next((row for row in filtered if row.doc_id == id_), None)
-
-        if result:
+    def _resolve_get(self, rows: Rows, id_: Id, nullable: bool = False) -> t.Optional[Row]:
+        """Resolves `get` query described by the ids."""
+        result = next((row for row in rows if row.doc_id == id_), None)
+        if result is not None:
             return result
         elif nullable:
             return
@@ -90,14 +89,14 @@ class TinyDbDao(AbstractDao[int]):
 
     def _resolve_exists(self, query_chain: QueryChain) -> bool:
         """Returns whether any row specified by the query exist."""
-        filtered = self._resolve_filter(query_chain._reduced_filter)
+        filtered = self._resolve_filter(query_chain)
         return bool(filtered)
 
     def _resolve_count(self, query_chain: QueryChain) -> int:
         """
         Counts rows filtering them out by the query specifying conditions that they should met.
         """
-        filtered = self._resolve_filter(query_chain._reduced_filter)
+        filtered = self._resolve_filter(query_chain)
         return len(filtered)
 
     def _resolve_update(self, query_chain: QueryChain, update: Row) -> Ids:

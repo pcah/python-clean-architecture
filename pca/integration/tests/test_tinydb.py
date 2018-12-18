@@ -79,41 +79,32 @@ class TestApi:
         c = where('char') == 'c'
         assert list(dao.filter(not_a).filter(c)) == [{'char': 'c', 'is_a': False}]
 
+    # QueryChain.filter_by
+    def test_filter_by_success(self, dao: TinyDbDao):
+        not_a = ~(where('char') == 'a')
+        assert list(dao.filter(not_a).filter_by(id_=3)) == [{'char': 'c', 'is_a': False}]
+
+    def test_filter_by_both_arguments_error(self, dao: TinyDbDao):
+        with pytest.raises(InvalidQueryError):
+            assert dao.all().filter_by(id_=3, ids=[3, 5])
+
+    def test_filter_by_two_times_error(self, dao: TinyDbDao):
+        with pytest.raises(InvalidQueryError):
+            assert dao.all().filter_by(id_=3).filter_by(id_=5)
+
     # QueryChain.get
     def test_get_success(self, dao: TinyDbDao):
         assert dao.get(1) == {'char': 'a', 'is_a': True}
 
-    def test_get_error(self, dao: TinyDbDao):
-        with pytest.raises(dao.NotFound) as e:
-            dao.get(42)
-        assert e.value.area == 'REPO'
-        assert e.value.code == 'NOT-FOUND'
-        assert e.value.id_ == 42
+    def test_get_fail(self, dao: TinyDbDao):
+        assert dao.get(42) is None
 
     def test_filtered_get_success(self, dao: TinyDbDao):
-        row_1 = dao.get(1)
-        assert dao.filter(where('char') == 'a').get(1) == row_1
-
-    def test_filtered_get_error(self, dao: TinyDbDao):
-        with pytest.raises(dao.NotFound) as e:
-            dao.filter(where('char') == 'a').get(2)
-        assert e.value.area == 'REPO'
-        assert e.value.code == 'NOT-FOUND'
-        assert e.value.id_ == 2
-
-    # QueryChain.get_or_none
-    def test_get_or_none_success(self, dao: TinyDbDao):
-        assert dao.get_or_none(1) == {'char': 'a', 'is_a': True}
-
-    def test_get_or_none_fail(self, dao: TinyDbDao):
-        assert dao.get_or_none(42) is None
-
-    def test_filtered_get_or_none_success(self, dao: TinyDbDao):
         row_2 = dao.get(2)
-        assert dao.filter(~(where('char') == 'a')).get_or_none(2) == row_2
+        assert dao.filter(~(where('char') == 'a')).get(2) == row_2
 
-    def test_filtered_get_or_none_fail(self, dao: TinyDbDao):
-        assert dao.filter(~(where('char') == 'a')).get_or_none(1) is None
+    def test_filtered_get_fail(self, dao: TinyDbDao):
+        assert dao.filter(~(where('char') == 'a')).get(1) is None
 
     # QueryChain.exists
     def test_exists_all_success(self, dao: TinyDbDao):
@@ -185,6 +176,18 @@ class TestApi:
             {'char': 'b', 'is_a': False},
             {'char': 'c', 'is_a': False},
         ]
+
+    # Dao.filter_by
+    def test_dao_filter_by_success(self, dao: TinyDbDao):
+        assert list(dao.filter_by(id_=3)) == [{'char': 'c', 'is_a': False}]
+
+    def test_dao_filter_by_both_arguments_error(self, dao: TinyDbDao):
+        with pytest.raises(InvalidQueryError):
+            assert dao.filter_by(id_=3, ids=[3, 5])
+
+    def test_dao_filter_by_two_times_error(self, dao: TinyDbDao):
+        with pytest.raises(InvalidQueryError):
+            assert dao.filter_by(id_=3).filter_by(id_=5)
 
     # Dao.insert
     def test_insert(self, dao: TinyDbDao):

@@ -6,6 +6,7 @@ from functools import reduce
 from operator import and_
 import typing as t
 
+from pca.exceptions import InvalidQueryError
 from pca.interfaces.dao import (
     Id,
     Ids,
@@ -26,56 +27,90 @@ class QueryChain(IQueryChain):
     (ie. filter, sort, aggregate, etc) to call owning DAO to resolve them when non-lazy
     (ie. get, exists, count, update, etc) is called.
     """
-
-    # TODO lazy queries: filter(id=...), sort, aggregate, annotate
+    # TODO lazy queries: order_by, aggregate, annotate
     # TODO evaluating queries: slicing
 
-    def __init__(self, dao: 'AbstractDao', _filters: t.List[Predicate] = None):
-        super().__init__(dao, _filters)
+    _ids: Ids = None
+    _filters: t.List[Predicate] = None
+
+    def __init__(self, dao: 'AbstractDao'):
         self._dao = dao
-        self._filters = _filters or []
+
+    @classmethod
+    def _construct(
+            cls, dao: 'AbstractDao', filters: t.List[Predicate] = None, ids: t.List[Id] = None
+    ) -> 'QueryChain':
+        """
+        Technical detail of creating a new QueryChain with specified
+        argument.
+        """
+        qc = cls(dao)
+        qc._ids = ids
+        qc._filters = filters
+        return qc
+
+    def _clone(self, filters: t.List[Predicate] = None, ids: t.List[Id] = None):
+        """
+        Technical detail of cloning current QueryChain object extended by an additional
+        argument.
+        """
+        qc = self.__class__(self._dao)
+        qc._ids = self._ids or ids
+        if filters:
+            qc._filters = (self._filters or []) + filters
+        else:
+            qc._filters = self._filters
+        return qc
+
+    def __repr__(self):
+        return f"<QueryChain ids={self._ids}, filters={self._filters}>"
 
     @property
     def _is_trivial(self) -> bool:
         """Trivial QueryChain is the one that has no lazy operations defined."""
-        return not self._filters
+        return not (self._filters or self._ids)
 
     @property
     def _reduced_filter(self) -> t.Optional[Predicate]:
         """Before evaluation, sum up all filter predicates into a single one"""
-        if self._is_trivial:
-            return
-        return reduce(and_, self._filters)
+        return None if self._is_trivial else reduce(and_, self._filters)
 
     # lazy queries
 
     def filter(self, predicate: Predicate) -> 'QueryChain':
         """
-        Creates a new QueryChain with the list of filter predicates extended.
+        Filters out rows by the predicate specifying conditions that they should met.
         """
-        return self.__class__(self._dao, self._filters + [predicate])
+        return self._clone(filters=[predicate])
+
+    def filter_by(self, id_: Id = None, ids: Ids = None) -> 'QueryChain':
+        """
+        Filters rows by a single id or a iterable of ids.
+
+        :raises: InvalidQueryError if:
+            * both `id_` and `ids` arguments are defined
+            * or the query is already filtered by id
+        """
+        if self._ids or bool(id_) == bool(ids):
+            raise InvalidQueryError
+        ids = ids or [id_]
+        return self._clone(ids=ids)
 
     # evaluating queries
 
     def __iter__(self) -> Row:
         """Yields values"""
-        yield from self._dao._resolve_filter(self._reduced_filter)
+        yield from self._dao._resolve_filter(self)
 
     def __len__(self) -> int:
         """Proxy for `count`."""
         return self.count()
 
-    def get(self, id_: Id) -> Row:
-        """
-        Returns row of given id.
-
-        :raises: NotFound iff row of given id is not present.
-        """
-        return self._dao._resolve_get(self, id_)
-
-    def get_or_none(self, id_: Id) -> t.Optional[Row]:
+    def get(self, id_: Id) -> t.Optional[Row]:
         """Returns row of given id, or None iff not present."""
-        return self._dao._resolve_get(self, id_, nullable=True)
+        qc = self.filter_by(id_=id_)
+        filtered = self._dao._resolve_filter(qc)
+        return self._dao._resolve_get(filtered, id_, nullable=True)
 
     def exists(self) -> bool:
         """Returns whether any row specified by the query exist."""
@@ -121,37 +156,38 @@ class AbstractDao(IDao[Id], ABC):
         Filters out rows by the predicate specifying conditions that they
         should met. Can be chained via `QueryChain` helper class.
         """
-        return QueryChain(self, [predicate])
+        return QueryChain._construct(self, filters=[predicate])
+
+    def filter_by(self, id_: Id = None, ids: Ids = None) -> IQueryChain:
+        """
+        Filters rows by a single id or a iterable of ids.
+        Can be chained with other queries via `IQueryChain` helper.
+
+        :raises: InvalidQueryError iff both `id_` and `ids` arguments are defined.
+        """
+        if bool(id_) == bool(ids):
+            raise InvalidQueryError
+        ids = ids or [id_]
+        return QueryChain._construct(self, ids=ids)
 
     # evaluating queries
 
-    def get(self, id_: Id) -> Row:
-        """
-        Returns row of given id.
-        Shortcut for querying via `QueryChain.all`.
-
-        :raises: NotFound iff row of given id is not present.
-        """
-        return self._resolve_get(None, id_)
-
-    def get_or_none(self, id_: Id) -> t.Optional[Row]:
+    def get(self, id_: Id) -> t.Optional[Row]:
         """
         Returns row of given id, or None iff not present.
         Shortcut for querying via `QueryChain.all`.
         """
-        return self._resolve_get(None, id_, nullable=True)
+        qc = QueryChain._construct(self, ids=[id_])
+        filtered = self._resolve_filter(qc)
+        return self._resolve_get(filtered, id_, nullable=True)
 
     @abstractmethod
-    def _resolve_filter(self, predicate: Predicate) -> Rows:
+    def _resolve_filter(self, query_chain: QueryChain) -> Rows:
         """Resolves filtering for any other resolving operation to compute."""
 
     @abstractmethod
-    def _resolve_get(
-            self, query_chain: t.Optional[QueryChain], id_: Id, nullable: bool = False
-            ) -> Row:
-        """
-        Returns row of given id or raises a NotFound error.
-        """
+    def _resolve_get(self, rows: Rows, id_: Id, nullable: bool = False) -> t.Optional[Row]:
+        """Resolves `get`query described by the ids."""
 
     @abstractmethod
     def _resolve_exists(self, predicate: QueryChain) -> bool:
