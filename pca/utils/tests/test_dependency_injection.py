@@ -1,6 +1,7 @@
 import pytest
 
 from pca.utils.dependency_injection import (
+    Component,
     Container,
     inject,
     Inject,
@@ -18,28 +19,50 @@ class FrameInterface:
 
 
 @scope(Scopes.INSTANCE)
-class RoadFrame(FrameInterface):
+class RoadFrame(FrameInterface, Component):
     def __repr__(self):
-        return f'<Road frame>'
+        return '<Road frame>'
 
 
-class GravelFrame(FrameInterface):
+class GravelFrame(FrameInterface, Component):
     def __repr__(self):
-        return f'<Gravel frame>'
+        return '<Gravel frame>'
 
 
-class RoadWheel(WheelInterface):
+class CustomColoredFrame(FrameInterface, Component):
+    def __init__(self, container, color):
+        self.color = color
+        super().__init__(container)
+
     def __repr__(self):
-        return f'<Road wheels>'
+        return f'<Custom {self.color} frame>'
 
 
-class GravelWheel(WheelInterface):
+class RoadWheel(WheelInterface, Component):
     def __repr__(self):
-        return f'<Gravel wheel>'
+        return '<Road wheel>'
+
+
+class GravelWheel(WheelInterface, Component):
+    def __repr__(self):
+        return '<Gravel wheel>'
+
+
+class CustomColoredWheel(WheelInterface):
+    """
+    We can, but we don't have to inherit from component, as long as we accept container
+    as the first argument to the `__init__`.
+    """
+
+    def __init__(self, container, color):
+        self.color = color
+
+    def __repr__(self):
+        return f'<Custom {self.color} wheel>'
 
 
 class Bike:
-    def __init__(self, container: Container):
+    def __init__(self, container: Container, **kwargs):
         self.frame = container.find_by_name('frame')
         self.wheel = container.find_by_interface(WheelInterface)
 
@@ -47,17 +70,12 @@ class Bike:
         return f'Frame: {self.frame}\nWheels: {self.wheel}'
 
 
-@pytest.fixture
-def container():
-    return Container(default_scope=Scopes.INSTANCE)
-
-
 class TestContainer:
     def test_container_registration(self, container):
         container.register_by_name(name='frame', constructor=RoadFrame)
         container.register_by_interface(interface=WheelInterface, constructor=RoadWheel)
         assert Bike(container).build_bike() == (
-            'Frame: <Road frame>\nWheels: <Road wheels>'
+            'Frame: <Road frame>\nWheels: <Road wheel>'
         )
 
     def test_container_interface_duplicates(self, container):
@@ -78,7 +96,22 @@ class TestContainer:
 
     def test_scope_class(self, container):
         assert repr(Scopes.INSTANCE) == f'<Scopes.{Scopes.INSTANCE.name}>'
-        assert repr(Scopes.INSTANCE(container, RoadWheel)) == f'<Road wheels>'
+        assert repr(Scopes.INSTANCE(container, RoadWheel, {})) == f'<Road wheel>'
+
+    def test_constructor_kwargs(self, container):
+        container.register_by_name(
+            name='frame',
+            constructor=CustomColoredFrame,
+            kwargs={'color': 'pink'}
+        )
+        container.register_by_interface(
+            interface=WheelInterface,
+            constructor=CustomColoredWheel,
+            kwargs={'color': 'pink'}
+        )
+        assert Bike(container).build_bike() == (
+            'Frame: <Custom pink frame>\nWheels: <Custom pink wheel>'
+        )
 
 
 class TestInjectParameters:
@@ -105,7 +138,7 @@ class TestInjectParameters:
         return RoadBike(container)
 
     def test_property_injection(self, road_bike):
-        assert road_bike.build_bike() == 'Frame: <Road frame>\nWheels: <Road wheels>'
+        assert road_bike.build_bike() == 'Frame: <Road frame>\nWheels: <Road wheel>'
 
     def test_get_class(self):
         class Bike:
@@ -121,7 +154,7 @@ class TestInjectParameters:
                 self.container = container
 
         with pytest.raises(TypeError) as e:
-            NoAnnotationBike(container).wheel
+            assert NoAnnotationBike(container).wheel
         assert str(e.value) == 'Missing name or interface for Inject.'
 
     @pytest.fixture
@@ -140,7 +173,7 @@ class TestInjectParameters:
         return AnotherBike(container)
 
     def test_injecting(self, another_bike):
-        assert another_bike.build_bike() == 'Wheels: <Road wheels>, <Road wheels>, <Gravel wheel>.'
+        assert another_bike.build_bike() == 'Wheels: <Road wheel>, <Road wheel>, <Gravel wheel>.'
 
 
 class TestInjectDecorator:
@@ -153,10 +186,7 @@ class TestInjectDecorator:
 
     @pytest.fixture
     def bike_obj(self, container):
-        class NewBike:
-
-            def __init__(self, container: Container):
-                self.container = container
+        class NewBike(Component):
 
             @inject
             def build(
@@ -175,14 +205,14 @@ class TestInjectDecorator:
     def test_inject(self, bike_obj):
         assert bike_obj.build() == 'Frame: <Road frame>\nWheels: <Gravel wheel>'
 
-    def test_inject_args(self, bike_obj):
+    def test_inject_args(self, container, bike_obj):
         with pytest.raises(TypeError) as e:
-            bike_obj.build(GravelFrame())
+            bike_obj.build(GravelFrame(container))
         assert str(e.value) == "build() got multiple values for argument 'frame'"
 
-    def test_inject_kwargs(self, bike_obj):
+    def test_inject_kwargs(self, container, bike_obj):
         assert (
-            bike_obj.build(frame=GravelFrame()) ==
+            bike_obj.build(frame=GravelFrame(container)) ==
             'Frame: <Gravel frame>\nWheels: <Gravel wheel>'
         )
 

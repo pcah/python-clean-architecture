@@ -6,7 +6,8 @@ import typing as t
 
 NameOrInterface = t.Union[type, str]
 Constructor = t.Union[t.Type, t.Callable]
-ScopeFunction = t.Callable[[Constructor], t.Any]
+Kwargs = t.Dict[str, t.Any]  # keyword-arguments of a Constructor
+ScopeFunction = t.Callable[[Constructor, Kwargs], t.Any]
 
 
 class Container:
@@ -23,53 +24,77 @@ class Container:
     def _get_registry_key(identifier: NameOrInterface, qualifier: t.Any = None) -> tuple:
         return identifier, qualifier,
 
-    def register_by_name(self, name: str, constructor: Constructor, qualifier: t.Any = None):
+    def register_by_name(
+            self,
+            name: str,
+            constructor: Constructor,
+            qualifier: t.Any = None,
+            kwargs: Kwargs = None,
+    ):
         """Registering constructors by name and qualifier."""
         key = Container._get_registry_key(name, qualifier)
         if key in self._registry:
             raise ValueError(f'Ambiguous name: {name}.')
-        self._registry[key] = constructor
+        self._registry[key] = (constructor, kwargs)
 
     def find_by_name(self, name: str, qualifier: t.Any = None) -> t.Any:
         """Finding registered constructors by name."""
         key = Container._get_registry_key(name, qualifier)
-        return self.get_object(self._registry.get(key))
+        return self.get_object(*self._registry.get(key))
 
-    def get_object(self, constructor: Constructor) -> t.Any:
+    def get_object(self, constructor: Constructor, kwargs: Kwargs = None) -> t.Any:
         """
-        Method creates instance of registered constructor according to scope type
-        and returns it.
+        Gets proper scope type and creates instance of registered constructor accordingly.
         """
+        kwargs = kwargs or {}
         scope_function = getattr(constructor, '__scope_type', self._default_scope)
-        return scope_function(self, constructor)
+        return scope_function(self, constructor, kwargs)
 
     def find_by_interface(self, interface: type, qualifier: t.Any = None) -> t.Any:
         """Finding registered constructors by interface."""
         key = Container._get_registry_key(interface, qualifier)
-        return self.get_object(self._registry.get(key))
+        return self.get_object(*self._registry.get(key))
 
     def register_by_interface(
             self,
             interface: type,
             constructor: Constructor,
-            qualifier: t.Any = None
+            qualifier: t.Any = None,
+            kwargs: Kwargs = None,
     ):
         """Registering constructors by interface and qualifier."""
         key = Container._get_registry_key(interface, qualifier)
         if key in self._registry:
             raise ValueError(f'Ambiguous interface: {interface}.')
-        self._registry[key] = constructor
+        self._registry[key] = (constructor, kwargs)
 
-    def instance_scope(self, constructor: Constructor) -> t.Any:
+    # Implementation of the scopes
+
+    def instance_scope(self, constructor: Constructor, kwargs: Kwargs) -> t.Any:
         """Every injection makes a new instance."""
-        return constructor()
+        return constructor(self, **kwargs)
+
+
+class Component:
+    """
+    Archetypal superclass for DI Component, i.e. a class that can be injected.
+
+    The only expectation is (*) that it has to accept container as the first argument
+    of its `__init__`. The Component may use container to have dependant components
+    of its own, but this is not a requirement.
+
+    Actual components may inherit from this class but they do not have to, as long as
+    they comply with the (*) requirement.
+    """
+    def __init__(self, container: Container):
+        self.container = container
 
 
 class Scopes(Enum):
     INSTANCE: ScopeFunction = partial(Container.instance_scope)
 
-    def __call__(self, container: Container, constructor: Constructor):
-        return self.value(container, constructor)
+    def __call__(self, container: Container, constructor: Constructor, kwargs: Kwargs):
+        return self.value(container, constructor, kwargs)
 
     def __repr__(self):
         return f"<Scopes.{self.name}>"
