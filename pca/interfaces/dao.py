@@ -21,11 +21,8 @@ class IQueryChain(t.Iterable[Row], t.Sized, t.Generic[Id]):
     (ie. get, exists, count, update, etc) is called.
     """
 
-    # TODO lazy queries: sort, aggregate, annotate
+    # TODO lazy queries: order_by, aggregate, annotate
     # TODO evaluating queries: slicing
-
-    def __init__(self, dao: 'IDao', _filters: t.List[IPredicate] = None):
-        ...
 
     # lazy queries
 
@@ -35,19 +32,21 @@ class IQueryChain(t.Iterable[Row], t.Sized, t.Generic[Id]):
         should met. Can be chained via `IQueryChain` helper class.
         """
 
+    def filter_by(self, id_: Id = None, ids: Ids = None) -> 'IQueryChain':
+        """
+        Filters rows by a single id or a iterable of ids.
+
+        :raises: InvalidQueryError if:
+            * both `id_` and `ids` arguments are defined
+            * or the query is already filtered by id
+        """
+
     # evaluating queries
 
     def __iter__(self) -> Row:
         """Yields values"""
 
-    def get(self, id_: Id) -> Row:
-        """
-        Returns row of given id.
-
-        :raises: NotFound iff row of given id is not present.
-        """
-
-    def get_or_none(self, id_: Id) -> t.Optional[Row]:
+    def get(self, id_: Id) -> t.Optional[Row]:
         """Returns row of given id, or None iff not present."""
 
     def exists(self) -> bool:
@@ -102,20 +101,23 @@ class IDao(t.Generic[Id]):
     def filter(self, predicate: IPredicate) -> IQueryChain:
         """
         Filters out rows by the predicate specifying conditions that they
-        should met. Can be chained via `IQueryChain` helper class.
+        should met.
+        Can be chained with other queries via `IQueryChain` helper.
+        """
+
+    def filter_by(self, id_: Id = None, ids: Ids = None) -> IQueryChain:
+        """
+        Filters rows by a single id or a iterable of ids.
+        Can be chained with other queries via `IQueryChain` helper.
+
+        :raises: InvalidQueryError if:
+            * both `id_` and `ids` arguments are defined
+            * or the query is already filtered by id
         """
 
     # evaluating queries
 
-    def get(self, id_: Id) -> Row:
-        """
-        Returns row of given id.
-        Shortcut for querying via `IDao.all`.
-
-        :raises: NotFound iff row of given id is not present.
-        """
-
-    def get_or_none(self, id_: Id) -> t.Optional[Row]:
+    def get(self, id_: Id) -> t.Optional[Row]:
         """
         Returns row of given id, or None iff not present.
         Shortcut for querying via `IDao.all`.
