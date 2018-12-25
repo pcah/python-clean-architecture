@@ -3,8 +3,8 @@ import typing as t
 
 from pca.exceptions import (
     ConfigError,
-    DependencyNotFoundError,
     InvalidQueryError,
+    IntegrationNotFoundError,
 )
 from pca.data.dao import (
     AbstractDao,
@@ -36,7 +36,7 @@ class TinyDbDao(AbstractDao[int]):
 
     def __init__(self, container: Container, **kwargs):
         if not tinydb:  # pragma: no cover
-            raise DependencyNotFoundError('tinydb')
+            raise IntegrationNotFoundError('tinydb')
 
         self._container = container
         self._path = kwargs.get('path')

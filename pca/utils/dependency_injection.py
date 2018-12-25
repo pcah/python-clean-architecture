@@ -3,6 +3,8 @@ from enum import Enum
 from functools import partial, wraps
 import typing as t
 
+from pca.exceptions import DependencyNotFoundError
+
 
 NameOrInterface = t.Union[type, str]
 Constructor = t.Union[t.Type, t.Callable]
@@ -37,24 +39,6 @@ class Container:
             raise ValueError(f'Ambiguous name: {name}.')
         self._registry[key] = (constructor, kwargs)
 
-    def find_by_name(self, name: str, qualifier: t.Any = None) -> t.Any:
-        """Finding registered constructors by name."""
-        key = Container._get_registry_key(name, qualifier)
-        return self.get_object(*self._registry.get(key))
-
-    def get_object(self, constructor: Constructor, kwargs: Kwargs = None) -> t.Any:
-        """
-        Gets proper scope type and creates instance of registered constructor accordingly.
-        """
-        kwargs = kwargs or {}
-        scope_function = getattr(constructor, '__scope_type', self._default_scope)
-        return scope_function(self, constructor, kwargs)
-
-    def find_by_interface(self, interface: type, qualifier: t.Any = None) -> t.Any:
-        """Finding registered constructors by interface."""
-        key = Container._get_registry_key(interface, qualifier)
-        return self.get_object(*self._registry.get(key))
-
     def register_by_interface(
             self,
             interface: type,
@@ -67,6 +51,32 @@ class Container:
         if key in self._registry:
             raise ValueError(f'Ambiguous interface: {interface}.')
         self._registry[key] = (constructor, kwargs)
+
+    def find_by_name(self, name: str, qualifier: t.Any = None) -> t.Any:
+        """Finding registered constructors by name."""
+        key = Container._get_registry_key(name, qualifier)
+        try:
+            registered_constructor = self._registry[key]
+        except KeyError as e:
+            raise DependencyNotFoundError(name=name, qualifier=qualifier) from e
+        return self.get_object(*registered_constructor)
+
+    def find_by_interface(self, interface: type, qualifier: t.Any = None) -> t.Any:
+        """Finding registered constructors by interface."""
+        key = Container._get_registry_key(interface, qualifier)
+        try:
+            registered_constructor = self._registry[key]
+        except KeyError as e:
+            raise DependencyNotFoundError(interface=interface, qualifier=qualifier) from e
+        return self.get_object(*registered_constructor)
+
+    def get_object(self, constructor: Constructor, kwargs: Kwargs = None) -> t.Any:
+        """
+        Gets proper scope type and creates instance of registered constructor accordingly.
+        """
+        kwargs = kwargs or {}
+        scope_function = getattr(constructor, '__scope_type', self._default_scope)
+        return scope_function(self, constructor, kwargs)
 
     # Implementation of the scopes
 
