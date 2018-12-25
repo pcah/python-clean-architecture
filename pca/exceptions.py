@@ -30,11 +30,24 @@ class DharmaError(Exception):
 
 class ConfigError(DharmaError):
     """An error was encountered during configuration of Dharma"""
-    DEFAULT_AREA = 'CONF'
+    DEFAULT_AREA = 'CONFIG'
 
 
-class DependencyNotFoundError(DharmaError):
-    """An optional dependency was tried to be used but it has not been found"""
+class DependencyNotFoundError(ConfigError):
+    """A dependency was tried to be used but it has not been found"""
+    DEFAULT_CODE = 'DEPENDENCY-NOT-FOUND'
+
+    PRINTED_ATTRS = DharmaError.PRINTED_ATTRS + ('name', 'interface', 'qualifier')
+
+    def __init__(self, name=None, interface=None, qualifier=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.name = name
+        self.interface = interface
+        self.qualifier = qualifier
+
+
+class IntegrationNotFoundError(DharmaError):
+    """An external library was tried to be used but it has not been found"""
     DEFAULT_AREA = 'INTEGRATION'
     DEFAULT_CODE = 'DEPENDENCY-NOT-FOUND'
 

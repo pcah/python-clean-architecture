@@ -1,5 +1,6 @@
 import pytest
 
+from pca.exceptions import DependencyNotFoundError
 from pca.utils.dependency_injection import (
     Component,
     Container,
@@ -86,6 +87,15 @@ class TestContainer:
         assert str(e.value) == f'Ambiguous interface: {interface}.'
         container.register_by_interface(interface, GravelFrame, qualifier='gravel')
 
+    def test_container_interface_not_found(self, container):
+        interface = FrameInterface
+        qualifier = 'qualifier'
+        with pytest.raises(DependencyNotFoundError) as error_info:
+            container.find_by_interface(interface, qualifier)
+        assert error_info.value.code == 'DEPENDENCY-NOT-FOUND'
+        assert error_info.value.interface == interface
+        assert error_info.value.qualifier == qualifier
+
     def test_container_name_duplicates(self, container):
         name = 'frame'
         container.register_by_name(name=name, constructor=RoadFrame)
@@ -93,6 +103,15 @@ class TestContainer:
             container.register_by_name(name=name, constructor=GravelFrame)
         assert str(e.value) == f'Ambiguous name: {name}.'
         container.register_by_name(name=name, constructor=GravelFrame, qualifier='gravel')
+
+    def test_container_name_not_found(self, container):
+        name = 'frame'
+        qualifier = 'qualifier'
+        with pytest.raises(DependencyNotFoundError) as error_info:
+            container.find_by_name(name, qualifier)
+        assert error_info.value.code == 'DEPENDENCY-NOT-FOUND'
+        assert error_info.value.name == name
+        assert error_info.value.qualifier == qualifier
 
     def test_scope_class(self, container):
         assert repr(Scopes.INSTANCE) == f'<Scopes.{Scopes.INSTANCE.name}>'
