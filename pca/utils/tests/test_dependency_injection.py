@@ -84,7 +84,7 @@ class TestContainer:
         container.register_by_interface(interface, RoadFrame)
         with pytest.raises(ValueError) as e:
             container.register_by_interface(interface, GravelFrame)
-        assert str(e.value) == f'Ambiguous interface: {interface}.'
+        assert str(e.value) == f'Ambiguous identifier: {interface}.'
         container.register_by_interface(interface, GravelFrame, qualifier='gravel')
 
     def test_container_interface_not_found(self, container):
@@ -93,7 +93,7 @@ class TestContainer:
         with pytest.raises(DependencyNotFoundError) as error_info:
             container.find_by_interface(interface, qualifier)
         assert error_info.value.code == 'DEPENDENCY-NOT-FOUND'
-        assert error_info.value.interface == interface
+        assert error_info.value.identifier == interface
         assert error_info.value.qualifier == qualifier
 
     def test_container_name_duplicates(self, container):
@@ -101,7 +101,7 @@ class TestContainer:
         container.register_by_name(name=name, constructor=RoadFrame)
         with pytest.raises(ValueError) as e:
             container.register_by_name(name=name, constructor=GravelFrame)
-        assert str(e.value) == f'Ambiguous name: {name}.'
+        assert str(e.value) == f'Ambiguous identifier: {name}.'
         container.register_by_name(name=name, constructor=GravelFrame, qualifier='gravel')
 
     def test_container_name_not_found(self, container):
@@ -110,12 +110,12 @@ class TestContainer:
         with pytest.raises(DependencyNotFoundError) as error_info:
             container.find_by_name(name, qualifier)
         assert error_info.value.code == 'DEPENDENCY-NOT-FOUND'
-        assert error_info.value.name == name
+        assert error_info.value.identifier == name
         assert error_info.value.qualifier == qualifier
 
     def test_scope_class(self, container):
         assert repr(Scopes.INSTANCE) == f'<Scopes.{Scopes.INSTANCE.name}>'
-        assert repr(Scopes.INSTANCE(container, RoadWheel, {})) == f'<Road wheel>'
+        assert repr(Scopes.INSTANCE(container, RoadWheel, {})) == '<Road wheel>'
 
     def test_constructor_kwargs(self, container):
         container.register_by_name(
@@ -131,6 +131,18 @@ class TestContainer:
         assert Bike(container).build_bike() == (
             'Frame: <Custom pink frame>\nWheels: <Custom pink wheel>'
         )
+
+    def test_container_registration_scope(self):
+        pass
+
+
+class TestScopes:
+
+    def test_singleton_scope(self, container):
+        container.register_by_name(name='frame', constructor=RoadFrame, scope=Scopes.SINGLETON)
+        instance_1 = container.find_by_name('frame')
+        instance_2 = container.find_by_name('frame')
+        assert instance_1 is instance_2
 
 
 class TestInjectParameters:
