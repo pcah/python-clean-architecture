@@ -37,12 +37,11 @@ class DependencyNotFoundError(ConfigError):
     """A dependency was tried to be used but it has not been found"""
     DEFAULT_CODE = 'DEPENDENCY-NOT-FOUND'
 
-    PRINTED_ATTRS = DharmaError.PRINTED_ATTRS + ('name', 'interface', 'qualifier')
+    PRINTED_ATTRS = DharmaError.PRINTED_ATTRS + ('identifier', 'qualifier')
 
-    def __init__(self, name=None, interface=None, qualifier=None, *args, **kwargs):
+    def __init__(self, identifier=None, qualifier=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.name = name
-        self.interface = interface
+        self.identifier = identifier
         self.qualifier = qualifier
 
 
