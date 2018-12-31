@@ -11,6 +11,8 @@ Constructor = t.Union[t.Type, t.Callable]
 Kwargs = t.Dict[str, t.Any]  # keyword-arguments of a Constructor
 ScopeFunction = t.Callable[[Constructor, Kwargs], t.Any]
 
+_SCOPE_TYPE_REF = '__scope_type'
+
 
 class Container:
     """
@@ -19,7 +21,8 @@ class Container:
     """
 
     def __init__(self, default_scope: 'Scopes' = None):
-        self._registry = {}
+        self._constructor_registry = {}
+        self._singleton_registry = {}
         self._default_scope = default_scope
 
     @staticmethod
@@ -32,12 +35,27 @@ class Container:
             constructor: Constructor,
             qualifier: t.Any = None,
             kwargs: Kwargs = None,
+            scope: 'Scopes' = None,
     ):
-        """Registering constructors by name and qualifier."""
-        key = Container._get_registry_key(name, qualifier)
-        if key in self._registry:
-            raise ValueError(f'Ambiguous name: {name}.')
-        self._registry[key] = (constructor, kwargs)
+        """
+        Registering constructors by name and (optional) qualifier.
+
+        :param name: name as the identifier of the constructor registration
+        :param constructor: a type or a callable that can construct an instance of the dependency.
+            Expected signature: (Container, **kwargs) -> dependency_instance
+        :param qualifier: (optional) arbitrary object to narrow the context of identifying
+            the constructor. The typical use case is a situation when multiple constructors are
+            registered for the same interface, but for different target components.
+        :param kwargs: (optional) keyword arguments of the constructor
+        :param scope: (optional) scope of the registration. If provided, it defines when
+            the constructor is called to provide a new instance of the dependency. It overrides
+            scope declared with a `scope` decorator on the constructor, if any, and the default
+            scope of the container.
+        """
+        self._register(
+            identifier=name, constructor=constructor, qualifier=qualifier,
+            kwargs=kwargs, scope=scope
+        )
 
     def register_by_interface(
             self,
@@ -45,12 +63,70 @@ class Container:
             constructor: Constructor,
             qualifier: t.Any = None,
             kwargs: Kwargs = None,
+            scope: 'Scopes' = None,
     ):
-        """Registering constructors by interface and qualifier."""
-        key = Container._get_registry_key(interface, qualifier)
-        if key in self._registry:
-            raise ValueError(f'Ambiguous interface: {interface}.')
-        self._registry[key] = (constructor, kwargs)
+        """
+        Registering constructors by interface and (optional) qualifier.
+
+        :param interface: a type that defines API of the injected dependency.
+        :param constructor: a type or a callable that can construct an instance of the dependency.
+            Expected signature: (Container, **kwargs) -> dependency_instance
+        :param qualifier: (optional) arbitrary object to narrow the context of identifying
+            the constructor. The typical use case is a situation when multiple constructors are
+            registered for the same interface, but for different target components.
+        :param kwargs: (optional) keyword arguments of the constructor
+        :param scope: (optional) scope of the registration. If provided, it defines when
+            the constructor is called to provide a new instance of the dependency. It overrides
+            scope declared with a `scope` decorator on the constructor, if any, and the default
+            scope of the container.
+
+        """
+        # TODO Refs #20: should I register superclasses of the interface as well?
+        self._register(
+            identifier=interface, constructor=constructor, qualifier=qualifier,
+            kwargs=kwargs, scope=scope
+        )
+
+    def _register(
+        self,
+        identifier: NameOrInterface,
+        constructor: Constructor,
+        qualifier: t.Any = None,
+        kwargs: Kwargs = None,
+        scope: 'Scopes' = None,
+    ):
+        """Technical detail of registering a constructor"""
+        key = Container._get_registry_key(identifier, qualifier)
+        if key in self._constructor_registry:
+            raise ValueError(f'Ambiguous identifier: {identifier}.')
+        self._constructor_registry[key] = (constructor, kwargs)
+        if scope is not None:
+            setattr(constructor, _SCOPE_TYPE_REF, scope)
+
+    def find_by_name(self, name: str, qualifier: t.Any = None) -> t.Any:
+        """Finding registered constructor by name."""
+        return self._find(identifier=name, qualifier=qualifier)
+
+    def find_by_interface(self, interface: type, qualifier: t.Any = None) -> t.Any:
+        """Finding registered constructor by interface."""
+        # TODO Refs #20: should I look for the subclasses of the interface as well?
+        return self._find(identifier=interface, qualifier=qualifier)
+
+    def _find(self, identifier: NameOrInterface, qualifier: t.Any = None) -> t.Any:
+        key = Container._get_registry_key(identifier, qualifier)
+        try:
+            registered_constructor = self._constructor_registry[key]
+        except KeyError as e:
+            raise DependencyNotFoundError(identifier=identifier, qualifier=qualifier) from e
+        return self.get_object(*registered_constructor)
+
+    def get_object(self, constructor: Constructor, kwargs: Kwargs = None) -> t.Any:
+        """
+        Gets proper scope type and creates instance of registered constructor accordingly.
+        """
+        kwargs = kwargs or {}
+        scope_function = getattr(constructor, _SCOPE_TYPE_REF, self._default_scope)
+        return scope_function(self, constructor, kwargs)
 
     def find_by_name(self, name: str, qualifier: t.Any = None) -> t.Any:
         """Finding registered constructors by name."""
@@ -84,6 +160,14 @@ class Container:
         """Every injection makes a new instance."""
         return constructor(self, **kwargs)
 
+    def singleton_scope(self, constructor: Constructor, kwargs: Kwargs) -> t.Any:
+        """First injection makes a new instance, later ones return the same instance."""
+        try:
+            instance = self._singleton_registry[constructor]
+        except KeyError:
+            instance = self._singleton_registry[constructor] = constructor(self, **kwargs)
+        return instance
+
 
 class Component:
     """
@@ -102,6 +186,7 @@ class Component:
 
 class Scopes(Enum):
     INSTANCE: ScopeFunction = partial(Container.instance_scope)
+    SINGLETON: ScopeFunction = partial(Container.singleton_scope)
 
     def __call__(self, container: Container, constructor: Constructor, kwargs: Kwargs):
         return self.value(container, constructor, kwargs)
