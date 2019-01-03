@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from pathlib import Path
 
 import pytest
@@ -48,6 +47,12 @@ class TestConstruction:
         assert e.value.code == 'NO-TABLE-NAME-PROVIDED'
 
 
+pred_a = where('char') == 'a'
+pred_not_a = ~(where('char') == 'a')
+pred_c = where('char') == 'c'
+pred_z = where('char') == 'z'
+
+
 class TestApi:
 
     @pytest.fixture
@@ -75,13 +80,13 @@ class TestApi:
 
     # QueryChain.filter
     def test_multiple_filter_success(self, dao: TinyDbDao):
-        not_a = ~(where('char') == 'a')
-        c = where('char') == 'c'
-        assert list(dao.filter(not_a).filter(c)) == [{'char': 'c', 'is_a': False}]
+        assert list(dao.filter(pred_not_a).filter(pred_c)) == [
+            {'char': 'c', 'is_a': False}
+        ]
 
     # QueryChain.filter_by
     def test_filter_by_success(self, dao: TinyDbDao):
-        not_a = ~(where('char') == 'a')
+        not_a = pred_not_a
         assert list(dao.filter(not_a).filter_by(id_=3)) == [{'char': 'c', 'is_a': False}]
 
     def test_filter_by_both_arguments_error(self, dao: TinyDbDao):
@@ -100,11 +105,11 @@ class TestApi:
         assert dao.get(42) is None
 
     def test_filtered_get_success(self, dao: TinyDbDao):
-        row_2 = dao.get(2)
-        assert dao.filter(~(where('char') == 'a')).get(2) == row_2
+        object_2 = dao.get(2)
+        assert dao.filter(pred_not_a).get(2) == object_2
 
     def test_filtered_get_fail(self, dao: TinyDbDao):
-        assert dao.filter(~(where('char') == 'a')).get(1) is None
+        assert dao.filter(pred_not_a).get(1) is None
 
     # QueryChain.exists
     def test_exists_all_success(self, dao: TinyDbDao):
@@ -115,21 +120,21 @@ class TestApi:
         assert not dao.all().exists()
 
     def test_exists_filtered_success(self, dao: TinyDbDao):
-        assert dao.filter(where('char') == 'c').exists()
+        assert dao.filter(pred_c).exists()
 
     def test_exists_filtered_fail(self, dao: TinyDbDao):
-        assert not dao.filter(where('char') == 'z').exists()
+        assert not dao.filter(pred_z).exists()
 
     # QueryChain.count
     def test_count_all(self, dao: TinyDbDao):
         assert dao.all().count() == 3
 
     def test_filtered_count(self, dao: TinyDbDao):
-        assert dao.filter(~(where('char') == 'a')).count() == 2
+        assert dao.filter(pred_not_a).count() == 2
 
     # QueryChain.update
     def test_update_all(self, dao: TinyDbDao):
-        ids = dao.all().update({'char': 'z'})
+        ids = dao.all().update(char='z')
         assert ids == [1, 2, 3]
         assert list(dao.all()) == [
             {'char': 'z', 'is_a': True},
@@ -138,7 +143,7 @@ class TestApi:
         ]
 
     def test_update_filtered(self, dao: TinyDbDao):
-        ids = dao.filter(~(where('char') == 'a')).update({'char': 'z'})
+        ids = dao.filter(pred_not_a).update(char='z')
         assert ids == [2, 3]
         assert list(dao.all()) == [
             {'char': 'a', 'is_a': True},
@@ -146,8 +151,17 @@ class TestApi:
             {'char': 'z', 'is_a': False},
         ]
 
+    def test_update_filtered_by_id(self, dao: TinyDbDao):
+        ids = dao.filter(pred_not_a).filter_by(id_=2).update(char='z')
+        assert ids == [2]
+        assert list(dao.all()) == [
+            {'char': 'a', 'is_a': True},
+            {'char': 'z', 'is_a': False},
+            {'char': 'c', 'is_a': False},
+        ]
+
     def test_update_none(self, dao: TinyDbDao):
-        ids = dao.filter(where('char') == 'z').update({'char': 'a'})
+        ids = dao.filter(pred_z).update(char='z')
         assert ids == []
         assert list(dao.all()) == [
             {'char': 'a', 'is_a': True},
@@ -161,15 +175,23 @@ class TestApi:
             dao.all().remove()
 
     def test_remove_filtered(self, dao: TinyDbDao):
-        ids = dao.filter(where('char') == 'a').remove()
+        ids = dao.filter(pred_a).remove()
         assert ids == [1]
         assert list(dao.all()) == [
             {'char': 'b', 'is_a': False},
             {'char': 'c', 'is_a': False},
         ]
 
+    def test_remove_filtered_by_id(self, dao: TinyDbDao):
+        ids = dao.filter(pred_not_a).filter_by(id_=2).remove()
+        assert ids == [2]
+        assert list(dao.all()) == [
+            {'char': 'a', 'is_a': True},
+            {'char': 'c', 'is_a': False},
+        ]
+
     def test_remove_none(self, dao: TinyDbDao):
-        ids = dao.filter(where('char') == 'z').remove()
+        ids = dao.filter(pred_z).remove()
         assert ids == []
         assert list(dao.all()) == [
             {'char': 'a', 'is_a': True},
@@ -191,7 +213,7 @@ class TestApi:
 
     # Dao.insert
     def test_insert(self, dao: TinyDbDao):
-        id_ = dao.insert({'foo': 'bar'})
+        id_ = dao.insert(foo='bar')
         assert id_ == 4
 
     # Dao.batch_insert
