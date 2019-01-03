@@ -8,11 +8,12 @@ from pca.exceptions import (
 )
 from pca.data.dao import (
     AbstractDao,
+    BatchOfKwargs,
+    BatchOfDto,
+    Dto,
     Id,
     Ids,
     QueryChain,
-    Row,
-    Rows,
 )
 from pca.utils.dependency_injection import Container
 
@@ -61,7 +62,7 @@ class TinyDbDao(AbstractDao[int]):
             self._db = tinydb.TinyDB(**kwargs)
         self._table: tinydb.database.Table = self._db.table(self._table_name)
 
-    def _resolve_filter(self, query_chain: QueryChain) -> Rows:
+    def _resolve_filter(self, query_chain: QueryChain) -> BatchOfDto:
         """Resolves filtering for any other resolving operation to compute."""
         if query_chain._is_trivial:
             # none of filtering queries
@@ -76,11 +77,11 @@ class TinyDbDao(AbstractDao[int]):
             # only filters as query
             return filtered
         # both
-        return [row for row in filtered if row.doc_id in query_chain._ids]
+        return [dto for dto in filtered if dto.doc_id in query_chain._ids]
 
-    def _resolve_get(self, rows: Rows, id_: Id, nullable: bool = False) -> t.Optional[Row]:
+    def _resolve_get(self, dtos: BatchOfDto, id_: Id, nullable: bool = False) -> t.Optional[Dto]:
         """Resolves `get` query described by the ids."""
-        result = next((row for row in rows if row.doc_id == id_), None)
+        result = next((dto for dto in dtos if dto.doc_id == id_), None)
         if result is not None:
             return result
         elif nullable:
@@ -88,28 +89,32 @@ class TinyDbDao(AbstractDao[int]):
         raise self.NotFound(id_=id_)
 
     def _resolve_exists(self, query_chain: QueryChain) -> bool:
-        """Returns whether any row specified by the query exist."""
+        """Returns whether any object specified by the query exist."""
         filtered = self._resolve_filter(query_chain)
         return bool(filtered)
 
     def _resolve_count(self, query_chain: QueryChain) -> int:
         """
-        Counts rows filtering them out by the query specifying conditions that they should met.
+        Counts objects filtering them out by the query specifying conditions that they should met.
         """
         filtered = self._resolve_filter(query_chain)
         return len(filtered)
 
-    def _resolve_update(self, query_chain: QueryChain, update: Row) -> Ids:
+    def _resolve_update(self, query_chain: QueryChain, **update) -> Ids:
         """
-        Updates all rows specified by the query with given update.
+        Updates all objects specified by the query with given update.
+
+        NB: the command isn't atomic
         """
         if query_chain._is_trivial:
             return self._table.update(update)
-        return self._table.update(update, query_chain._reduced_filter)
+        filtered = self._resolve_filter(query_chain)
+        result = self._table.update(update, doc_ids=[d.doc_id for d in filtered])
+        return result
 
     def _resolve_remove(self, query_chain: QueryChain) -> Ids:
         """
-        Removes all rows specified by the query from the collection.
+        Removes all objects specified by the query from the collection.
 
         NB: the command isn't atomic
 
@@ -118,26 +123,27 @@ class TinyDbDao(AbstractDao[int]):
         """
         if query_chain._is_trivial:
             raise InvalidQueryError
-        result = self._table.remove(query_chain._reduced_filter)
+        filtered = self._resolve_filter(query_chain)
+        result = self._table.remove(doc_ids=[d.doc_id for d in filtered])
         return result
 
     # dao commands
 
-    def insert(self, row: Row) -> Id:
+    def insert(self, **kwargs) -> Id:
         """
-        Inserts the row into the collection.
+        Inserts the object into the collection.
 
-        :returns: id of the inserted row
+        :returns: id of the inserted object
         """
-        return self._table.insert(row)
+        return self._table.insert(kwargs)
 
-    def batch_insert(self, rows: Rows) -> Ids:
+    def batch_insert(self, batch_kwargs: BatchOfKwargs) -> Ids:
         """
-        Inserts multiple rows into the collection.
+        Inserts multiple objects into the collection.
 
         :returns: a iterable of ids
         """
-        return tuple(self._table.insert_multiple(rows))
+        return tuple(self._table.insert_multiple(batch_kwargs))
 
     def clear(self) -> None:
         """Clears the collection."""

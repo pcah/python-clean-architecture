@@ -3,18 +3,21 @@ from abc import (
     abstractmethod,
 )
 from functools import reduce
+from itertools import count
 from operator import and_
 import typing as t
 
 from pca.exceptions import InvalidQueryError
 from pca.interfaces.dao import (
+    BatchOfDto,
+    BatchOfKwargs,
+    Dto,
     Id,
     Ids,
     IDao,
     IQueryChain,
-    Row,
-    Rows,
 )
+from pca.utils.dependency_injection import Container, Scopes, scope
 
 from .predicate import Predicate
 
@@ -79,13 +82,13 @@ class QueryChain(IQueryChain):
 
     def filter(self, predicate: Predicate) -> 'QueryChain':
         """
-        Filters out rows by the predicate specifying conditions that they should met.
+        Filters out objects by the predicate specifying conditions that they should met.
         """
         return self._clone(filters=[predicate])
 
     def filter_by(self, id_: Id = None, ids: Ids = None) -> 'QueryChain':
         """
-        Filters rows by a single id or a iterable of ids.
+        Filters objects by a single id or a iterable of ids.
 
         :raises: InvalidQueryError if:
             * both `id_` and `ids` arguments are defined
@@ -98,7 +101,7 @@ class QueryChain(IQueryChain):
 
     # evaluating queries
 
-    def __iter__(self) -> Row:
+    def __iter__(self) -> Dto:
         """Yields values"""
         yield from self._dao._resolve_filter(self)
 
@@ -106,34 +109,34 @@ class QueryChain(IQueryChain):
         """Proxy for `count`."""
         return self.count()
 
-    def get(self, id_: Id) -> t.Optional[Row]:
-        """Returns row of given id, or None iff not present."""
+    def get(self, id_: Id) -> t.Optional[Dto]:
+        """Returns object of given id, or None iff not present."""
         qc = self.filter_by(id_=id_)
         filtered = self._dao._resolve_filter(qc)
         return self._dao._resolve_get(filtered, id_, nullable=True)
 
     def exists(self) -> bool:
-        """Returns whether any row specified by the query exist."""
+        """Returns whether any object specified by the query exist."""
         return self._dao._resolve_exists(self)
 
     def count(self) -> int:
         """
-        Counts rows filtering them out by the query specifying conditions that they
+        Counts objects filtering them out by the query specifying conditions that they
         should met.
         """
         return self._dao._resolve_count(self)
 
     # evaluating commands
 
-    def update(self, update: Row) -> Ids:
+    def update(self, **update) -> Ids:
         """
-        Updates all rows specified by the query with given update.
+        Updates all objects specified by the query with given update.
         """
-        return self._dao._resolve_update(self, update)
+        return self._dao._resolve_update(self, **update)
 
     def remove(self) -> Ids:
         """
-        Removes all rows specified by the query from the collection.
+        Removes all objects specified by the query from the collection.
         """
         return self._dao._resolve_remove(self)
 
@@ -145,22 +148,22 @@ class AbstractDao(IDao[Id], ABC):
 
     def all(self) -> QueryChain:
         """
-        Returns a query chain representing all rows.
+        Returns a query chain representing all objects.
 
-        Useful to explicitly denote counting, updating or removing all rows.
+        Useful to explicitly denote counting, updating or removing all objects.
         """
         return QueryChain(self)
 
     def filter(self, predicate: Predicate) -> QueryChain:
         """
-        Filters out rows by the predicate specifying conditions that they
+        Filters out objects by the predicate specifying conditions that they
         should met. Can be chained via `QueryChain` helper class.
         """
         return QueryChain._construct(self, filters=[predicate])
 
     def filter_by(self, id_: Id = None, ids: Ids = None) -> IQueryChain:
         """
-        Filters rows by a single id or a iterable of ids.
+        Filters objects by a single id or a iterable of ids.
         Can be chained with other queries via `IQueryChain` helper.
 
         :raises: InvalidQueryError iff both `id_` and `ids` arguments are defined.
@@ -172,9 +175,9 @@ class AbstractDao(IDao[Id], ABC):
 
     # evaluating queries
 
-    def get(self, id_: Id) -> t.Optional[Row]:
+    def get(self, id_: Id) -> t.Optional[Dto]:
         """
-        Returns row of given id, or None iff not present.
+        Returns object of given id, or None iff not present.
         Shortcut for querying via `QueryChain.all`.
         """
         qc = QueryChain._construct(self, ids=[id_])
@@ -182,51 +185,51 @@ class AbstractDao(IDao[Id], ABC):
         return self._resolve_get(filtered, id_, nullable=True)
 
     @abstractmethod
-    def _resolve_filter(self, query_chain: QueryChain) -> Rows:
+    def _resolve_filter(self, query_chain: QueryChain) -> BatchOfDto:
         """Resolves filtering for any other resolving operation to compute."""
 
     @abstractmethod
-    def _resolve_get(self, rows: Rows, id_: Id, nullable: bool = False) -> t.Optional[Row]:
+    def _resolve_get(self, dtos: BatchOfDto, id_: Id, nullable: bool = False) -> t.Optional[Dto]:
         """Resolves `get`query described by the ids."""
 
     @abstractmethod
-    def _resolve_exists(self, predicate: QueryChain) -> bool:
-        """Returns whether any row specified by the query exist."""
+    def _resolve_exists(self, query_chain: QueryChain) -> bool:
+        """Returns whether any object specified by the query exist."""
 
     @abstractmethod
     def _resolve_count(self, query_chain: QueryChain) -> int:
         """
-        Counts rows filtering them out by the query specifying conditions that they should met.
+        Counts objects filtering them out by the query specifying conditions that they should met.
         """
 
     # evaluating commands
 
     @abstractmethod
-    def _resolve_update(self, query_chain: QueryChain, update: Row) -> Ids:
+    def _resolve_update(self, query_chain: QueryChain, **update) -> Ids:
         """
-        Updates all rows specified by the query with given update.
+        Updates all objects specified by the query with given update.
         """
 
     @abstractmethod
     def _resolve_remove(self, query_chain: QueryChain) -> Ids:
         """
-        Removes all rows specified by the query from the collection.
+        Removes all objects specified by the query from the collection.
         """
 
     # instant commands
 
     @abstractmethod
-    def insert(self, row: Row) -> Id:
+    def insert(self, dto: Dto) -> Id:
         """
-        Inserts the row into the collection.
+        Inserts the object into the collection.
 
-        :returns: id of the inserted row
+        :returns: id of the inserted object
         """
 
     @abstractmethod
-    def batch_insert(self, rows: Rows) -> Ids:
+    def batch_insert(self, dtos: BatchOfDto) -> Ids:
         """
-        Inserts multiple rows into the collection.
+        Inserts multiple objects into the collection.
 
         :returns: a iterable of ids
         """
@@ -234,3 +237,75 @@ class AbstractDao(IDao[Id], ABC):
     @abstractmethod
     def clear(self) -> None:
         """Clears the collection."""
+
+
+@scope(Scopes.SINGLETON)
+class InMemoryDao(AbstractDao[int]):
+
+    def __init__(self, container: Container, initial_content: BatchOfKwargs = None):
+        self.container = container
+        self._register: t.Dict[int, Dto] = {}
+        self._id_generator = count(1)
+        if initial_content:
+            self.batch_insert(initial_content)
+
+    def _get_id(self) -> int:
+        return next(self._id_generator)
+
+    def _resolve_filter(self, query_chain: QueryChain) -> BatchOfDto:
+        if query_chain._filters:
+            filter_ = query_chain._reduced_filter
+            filtered: BatchOfDto = (
+                dto for dto in self._register.values()
+                if filter_(dto)
+            )
+        else:
+            filtered = self._register.values()
+        if query_chain._ids:
+            filtered = (dto for dto in filtered if dto.id in query_chain._ids)
+        return [dto for dto in filtered if dto]
+
+    def _resolve_get(self, dtos: BatchOfDto, id_: Id, nullable: bool = False) -> t.Optional[Dto]:
+        result = next((dto for dto in dtos if dto.id == id_), None)
+        if result is not None:
+            return result
+        elif nullable:
+            return
+        raise self.NotFound(id_=id_)
+
+    def _resolve_exists(self, query_chain: QueryChain) -> bool:
+        filtered = self._resolve_filter(query_chain)
+        return bool(filtered)
+
+    def _resolve_count(self, query_chain: QueryChain) -> int:
+        filtered = self._resolve_filter(query_chain)
+        return len(filtered)
+
+    def _resolve_update(self, query_chain: QueryChain, **update) -> Ids:
+        updated_dtos = (
+            (dto.update(update), dto.id)
+            for dto in self._resolve_filter(query_chain)
+        )
+        return [id_ for _, id_ in updated_dtos]
+
+    def _resolve_remove(self, query_chain: QueryChain) -> Ids:
+        if query_chain._is_trivial:
+            raise InvalidQueryError
+        dtos_to_remove = (
+            self._register.pop(dto.id)
+            for dto in self._resolve_filter(query_chain)
+        )
+        return [dto.id for dto in dtos_to_remove]
+
+    def insert(self, **kwargs) -> Id:
+        id_ = self._get_id()
+        dto = Dto(kwargs)
+        dto.__id__ = id_
+        self._register[id_] = dto
+        return id_
+
+    def batch_insert(self, batch_kwargs: BatchOfKwargs) -> Ids:
+        return tuple(self.insert(**kwargs) for kwargs in batch_kwargs)
+
+    def clear(self) -> None:
+        self._register.clear()
