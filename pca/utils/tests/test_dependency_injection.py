@@ -132,11 +132,20 @@ class TestContainer:
             'Frame: <Custom pink frame>\nWheels: <Custom pink wheel>'
         )
 
-    def test_container_registration_scope(self):
-        pass
-
 
 class TestScopes:
+
+    def test_scope_decorator(self, container):
+        @scope(Scopes.SINGLETON)
+        class MyFrame(FrameInterface, Component):
+            def __repr__(self):
+                return '<Road frame>'
+
+        container.register_by_name(name='frame', constructor=MyFrame)
+        instance_1 = container.find_by_name('frame')
+        instance_2 = container.find_by_name('frame')
+        assert MyFrame.__di_scope_type__ is Scopes.SINGLETON
+        assert instance_1 is instance_2
 
     def test_singleton_scope(self, container):
         container.register_by_name(name='frame', constructor=RoadFrame, scope=Scopes.SINGLETON)

@@ -11,7 +11,7 @@ Constructor = t.Union[t.Type, t.Callable]
 Kwargs = t.Dict[str, t.Any]  # keyword-arguments of a Constructor
 ScopeFunction = t.Callable[[Constructor, Kwargs], t.Any]
 
-_SCOPE_TYPE_REF = '__scope_type'
+_SCOPE_TYPE_REF = '__di_scope_type__'
 
 
 class Container:
@@ -171,7 +171,7 @@ class Scopes(Enum):
 
 def scope(scope_type: Scopes) -> t.Callable:
     def decorator(obj: t.Callable) -> t.Callable:
-        obj.__scope_function = scope_type
+        setattr(obj, _SCOPE_TYPE_REF, scope_type)
         return obj
     return decorator
 
