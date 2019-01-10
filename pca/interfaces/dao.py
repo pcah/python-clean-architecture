@@ -56,6 +56,7 @@ class IQueryChain(t.Iterable[Dto], t.Sized, t.Generic[Id]):
         Filters out objects by the predicate specifying conditions that they
         should met. Can be chained via `IQueryChain` helper class.
         """
+        raise NotImplementedError
 
     def filter_by(self, id_: Id = None, ids: Ids = None) -> 'IQueryChain':
         """
@@ -65,26 +66,32 @@ class IQueryChain(t.Iterable[Dto], t.Sized, t.Generic[Id]):
             * both `id_` and `ids` arguments are defined
             * or the query is already filtered by id
         """
+        raise NotImplementedError
 
     # evaluating queries
 
     def __iter__(self) -> Dto:
         """Yields values"""
+        raise NotImplementedError
 
     def get(self, id_: Id) -> t.Optional[Dto]:
         """Returns object of given id, or None iff not present."""
+        raise NotImplementedError
 
     def exists(self) -> bool:
         """Returns whether any object specified by the query exist."""
+        raise NotImplementedError
 
     def __len__(self) -> int:
         """Same as `count`."""
+        raise NotImplementedError
 
     def count(self) -> int:
         """
         Counts objects filtering them out by the query specifying conditions that they
         should met.
         """
+        raise NotImplementedError
 
     # evaluating commands
 
@@ -92,11 +99,13 @@ class IQueryChain(t.Iterable[Dto], t.Sized, t.Generic[Id]):
         """
         Updates all objects specified by the query with given update.
         """
+        raise NotImplementedError
 
     def remove(self) -> Ids:
         """
         Removes all objects specified by the query from the collection.
         """
+        raise NotImplementedError
 
 
 class IDao(t.Generic[Id]):
@@ -123,6 +132,7 @@ class IDao(t.Generic[Id]):
 
         Useful to explicitly denote counting, updating or removing all objects.
         """
+        raise NotImplementedError
 
     def filter(self, predicate: IPredicate) -> IQueryChain:
         """
@@ -130,6 +140,7 @@ class IDao(t.Generic[Id]):
         should met.
         Can be chained with other queries via `IQueryChain` helper.
         """
+        raise NotImplementedError
 
     def filter_by(self, id_: Id = None, ids: Ids = None) -> IQueryChain:
         """
@@ -140,6 +151,7 @@ class IDao(t.Generic[Id]):
             * both `id_` and `ids` arguments are defined
             * or the query is already filtered by id
         """
+        raise NotImplementedError
 
     # evaluating queries
 
@@ -148,6 +160,7 @@ class IDao(t.Generic[Id]):
         Returns object of given id, or None iff not present.
         Shortcut for querying via `IDao.all`.
         """
+        raise NotImplementedError
 
     # instant commands
 
@@ -157,6 +170,7 @@ class IDao(t.Generic[Id]):
 
         :returns: id of the inserted object
         """
+        raise NotImplementedError
 
     def batch_insert(self, batch_kwargs: BatchOfKwargs) -> Ids:
         """
@@ -164,8 +178,10 @@ class IDao(t.Generic[Id]):
 
         :returns: a iterable of ids
         """
+        raise NotImplementedError
 
     def clear(self) -> None:
         """
         Removes all items from the collection.
         """
+        raise NotImplementedError

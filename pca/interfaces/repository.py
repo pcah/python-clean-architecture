@@ -28,21 +28,28 @@ class IRepository(t.Generic[Id, Entity]):
 
         NB: Does not inserts the object to the repo. Use `create_and_add` method for that.
         """
+        raise NotImplementedError
 
     def add(self, entity: Entity):
         """Adds the object to the repo to the underlying persistence layer via its DAO."""
+        raise NotImplementedError
 
     def create_and_add(self, **kwargs) -> Entity:
         """Creates an object compatible with this repo and adds it to the collection."""
+        raise NotImplementedError
 
     def find(self, id_: Id) -> t.Optional[Entity]:
         """Returns object of given id or None"""
+        raise NotImplementedError
 
     def contains(self, id_: Id):
         """Checks whether an entity of given id is in the repo."""
+        raise NotImplementedError
 
     def update(self, entity: Entity) -> None:
         """Updates the object in the repo."""
+        raise NotImplementedError
 
     def remove(self, entity: Entity) -> None:
         """Removes the object from the underlying persistence layer via DAO."""
+        raise NotImplementedError
