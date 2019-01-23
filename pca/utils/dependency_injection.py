@@ -237,7 +237,8 @@ def inject(f: t.Callable) -> t.Callable:
     def wrapper(*args, **kwargs):
         # look for the DI container either on the function itself
         # or on its first argument (self iff f is a method)
-        container = getattr(f, 'container', None) or getattr(args[0], 'container', None)
+        container = getattr(wrapper, 'container', None) \
+            or (getattr(args[0], 'container', None) if args else None)
 
         if not container:
             raise ValueError('Container not provided.')
@@ -252,16 +253,25 @@ def inject(f: t.Callable) -> t.Callable:
                     inject_instance.qualifier
                 )
 
+        # finally, the call with all the injected arguments
         return f(*args, **kwargs)
 
     return wrapper
 
 
-def injectable(f: t.Callable) -> t.Callable[[Container], t.Callable]:
+T = t.TypeVar('T', t.Callable, t.Type[object], covariant=True)
 
-    @wraps(f)
-    def wrapper(container: Container) -> t.Callable:
-        f.container = container
-        return inject(f)
 
-    return wrapper
+def container_supplier(target: T) -> t.Callable[[Container], T]:
+    """
+    A decorator that produces a closure supplying a container instance into a component or
+    a function. Target can be either a function to use with a `inject` decorator or a class
+    which methods use `inject` decorator.
+    """
+    @wraps(target)
+    def container_closure(container: Container) -> T:
+        """A closure supplying a component or a function with a container instance."""
+        target.container = container
+        return target
+
+    return container_closure

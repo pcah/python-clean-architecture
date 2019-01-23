@@ -46,5 +46,5 @@ class reify(object):  # noqa: N801
         if inst is None:
             return self
         val = self.wrapped(inst)
-        setattr(inst, self.wrapped.__name__, val)
+        inst.__dict__[self.wrapped.__name__] = val
         return val

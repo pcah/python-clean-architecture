@@ -1,4 +1,8 @@
-# -*- coding: utf-8 -*-
+import marshmallow
+
+
+# TODO #39. integrate validation
+ValidationError = marshmallow.ValidationError
 
 
 class DharmaError(Exception):
