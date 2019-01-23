@@ -5,8 +5,8 @@ from pca.exceptions import DependencyNotFoundError
 from pca.utils.dependency_injection import (
     Component,
     Container,
+    container_supplier,
     inject,
-    injectable,
     Inject,
     scope,
     Scopes,
@@ -281,10 +281,14 @@ class TestInjectDecorator:
         mock_dependency = mock.Mock()
         container.register_by_name("dependency", lambda *args: mock_dependency)
 
-        @injectable
+        @container_supplier
+        @inject
         def f(dependency=Inject(name="dependency"), **kwargs):
             dependency(**kwargs)
+            return 42
 
-        f(container)(foo='bar')
+        f_closure = f(container)
+        result = f_closure(foo='bar')
 
         mock_dependency.assert_called_once_with(foo='bar')
+        assert result == 42
