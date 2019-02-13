@@ -213,12 +213,13 @@ def _find_object(container, name, interface, qualifier):
         raise TypeError('Missing name or interface for Inject.')
 
 
-def inject(fun: t.Callable) -> t.Callable:
+def inject(f: t.Callable) -> t.Callable:
     """
-    A decorator for injecting dependencies into methods,
+    A decorator for injecting dependencies into functions. It looks for DI container
+    either on the function itself or on its first argument (self iff f is a method).
 
     """
-    signature = inspect.signature(fun)
+    signature = inspect.signature(f)
 
     annotations: t.Dict[str, t.Any] = {}
     for name, param in signature.parameters.items():
@@ -232,9 +233,11 @@ def inject(fun: t.Callable) -> t.Callable:
                     default
                 )
 
-    @wraps(fun)
+    @wraps(f)
     def wrapper(*args, **kwargs):
-        container = getattr(args[0], 'container', None)
+        # look for the DI container either on the function itself
+        # or on its first argument (self iff f is a method)
+        container = getattr(f, 'container', None) or getattr(args[0], 'container', None)
 
         if not container:
             raise ValueError('Container not provided.')
@@ -249,6 +252,16 @@ def inject(fun: t.Callable) -> t.Callable:
                     inject_instance.qualifier
                 )
 
-        return fun(*args, **kwargs)
+        return f(*args, **kwargs)
+
+    return wrapper
+
+
+def injectable(f: t.Callable) -> t.Callable[[Container], t.Callable]:
+
+    @wraps(f)
+    def wrapper(container: Container) -> t.Callable:
+        f.container = container
+        return inject(f)
 
     return wrapper

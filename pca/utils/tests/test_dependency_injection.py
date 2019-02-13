@@ -1,3 +1,4 @@
+import mock
 import pytest
 
 from pca.exceptions import DependencyNotFoundError
@@ -5,6 +6,7 @@ from pca.utils.dependency_injection import (
     Component,
     Container,
     inject,
+    injectable,
     Inject,
     scope,
     Scopes,
@@ -274,3 +276,15 @@ class TestInjectDecorator:
         with pytest.raises(ValueError) as e:
             assert no_container_bike_obj.build()
         assert str(e.value) == 'Container not provided.'
+
+    def test_injectable_function(self, container, ):
+        mock_dependency = mock.Mock()
+        container.register_by_name("dependency", lambda *args: mock_dependency)
+
+        @injectable
+        def f(dependency=Inject(name="dependency"), **kwargs):
+            dependency(**kwargs)
+
+        f(container)(foo='bar')
+
+        mock_dependency.assert_called_once_with(foo='bar')
