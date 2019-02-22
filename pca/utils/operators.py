@@ -36,23 +36,3 @@ def check_path(
         return test(value, orig_value)
 
     return check_path_curried
-
-
-def error_catcher(
-        error_class: t.Union[t.Type[Exception], t.Sequence[t.Type[Exception]]],
-        func: t.Callable[..., t.Any],
-        *args,
-        **kwargs
-):
-    """
-    Catches expected type(s) of errors from a callable.
-
-    :param error_class: a class of errors or a tuple of classes to be caught
-    :param func: a callable that is expected to raise (one of) `error_class` errors
-    :return: a boolean that shows iff error was caught
-    """
-    try:
-        func(*args, **kwargs)
-        return True
-    except error_class:
-        return False

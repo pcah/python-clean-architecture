@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from functools import update_wrapper
+import typing as t
+from functools import update_wrapper, wraps
 
 
 # noinspection PyPep8Naming
@@ -48,3 +49,34 @@ class reify(object):  # noqa: N801
         val = self.wrapped(inst)
         inst.__dict__[self.wrapped.__name__] = val
         return val
+
+
+def error_catcher(
+        error_class: t.Union[t.Type[Exception], t.Sequence[t.Type[Exception]]] = Exception,
+        success_constructor: t.Callable = None,
+        error_constructor: t.Callable = None,
+):
+    """
+    Catches expected type(s) of errors from a callable. Prepares the result
+
+    :param error_class: a class of errors or a tuple of classes to be caught
+    :param func: a callable that is expected to raise (one of) `error_class` errors
+    :return: a boolean that shows iff error was caught
+    """
+    def decorator(f: t.Callable):
+
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            try:
+                # import pdb; pdb.set_trace()
+                result = f(*args, **kwargs)
+            except error_class as e:
+                return error_constructor(error=e, function=f, args=args, kwargs=kwargs) \
+                    if error_constructor else e
+            else:
+                return success_constructor(result=result, function=f, args=args, kwargs=kwargs) \
+                    if success_constructor else result
+
+        return wrapper
+
+    return decorator
