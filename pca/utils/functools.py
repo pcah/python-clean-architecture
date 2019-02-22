@@ -57,18 +57,23 @@ def error_catcher(
         error_constructor: t.Callable = None,
 ):
     """
-    Catches expected type(s) of errors from a callable. Prepares the result
+    Catches expected type(s) of errors from a callable. Can process successful result
+    or an error instance iff appropriate callback has been provided.
 
-    :param error_class: a class of errors or a tuple of classes to be caught
-    :param func: a callable that is expected to raise (one of) `error_class` errors
-    :return: a boolean that shows iff error was caught
+    :param error_class: a class of errors or a tuple of classes to be caught.
+    :param success_constructor: a callable that can process successful result.
+    :param error_constructor: a callable that can process erroneous result.
+    :returns:
+        * normal reply or a processed successful result iff calling the function has completed
+          with success
+        * an error instance or a processed erroneous result iff calling the function has raised
+          an error instance of specified type(s)
     """
     def decorator(f: t.Callable):
 
         @wraps(f)
         def wrapper(*args, **kwargs):
             try:
-                # import pdb; pdb.set_trace()
                 result = f(*args, **kwargs)
             except error_class as e:
                 return error_constructor(error=e, function=f, args=args, kwargs=kwargs) \
