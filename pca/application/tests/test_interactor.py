@@ -4,12 +4,13 @@ import mock
 import pytest
 
 from pca.application.interactor import (
-    interactor_function,
+    interactor_factory,
     ResponseModel,
     RequestModel,
 )
 from pca.domain.entity import Entity
 from pca.domain.repository import Repository
+from pca.exceptions import LogicError
 from pca.utils.dependency_injection import Inject
 
 
@@ -68,16 +69,17 @@ def add_team_member(
 
 class TestFunctionInteractor:
 
-    def test_wo_validation(self, container, input_data, team, teams, racers):
-        interactor = interactor_function()(add_team_member)(container)
+    @pytest.fixture
+    def error_result(self):
+        return {'error': 42}
 
-        response = interactor(input_data)
+    @pytest.fixture
+    def error_constructor(self, error_result):
+        return mock.Mock(return_value=error_result)
 
-        assert response.data == input_data
-        assert response.is_success
-        racers.find.assert_called_once_with(input_data['racer_id'])
-        teams.find.assert_called_once_with(input_data['team_id'])
-        teams.update.assert_called_once_with(team)
+    @pytest.fixture
+    def interactor_function(self, error_constructor):
+        return interactor_factory(error_constructor=error_constructor)
 
     @pytest.fixture
     def validators(self, input_data):
@@ -87,21 +89,133 @@ class TestFunctionInteractor:
         validator_2.return_value = input_data
         return (validator_1, validator_2)
 
-    def test_validation_passing_ok(self, container, input_data, teams, team, racers, validators):
+    def test_wo_validation(self, container, interactor_function, input_data, team, teams, racers):
+        interactor = interactor_function()(add_team_member)(container)
+
+        result = interactor(input_data)
+
+        assert result.data == input_data
+        assert result.is_success
+        racers.find.assert_called_once_with(input_data['racer_id'])
+        teams.find.assert_called_once_with(input_data['team_id'])
+        teams.update.assert_called_once_with(team)
+
+    def test_validation_passing_ok(
+            self, container, interactor_function, input_data, teams, team, racers, validators):
         interactor = interactor_function(*validators)(add_team_member)(container)
 
-        response = interactor(input_data)
+        result = interactor(input_data)
 
-        assert response.data == input_data
-        assert response.is_success
+        assert result.data == input_data
+        assert result.is_success
         teams.find.assert_called_once_with(input_data['team_id'])
         racers.find.assert_called_once_with(input_data['racer_id'])
         teams.update.assert_called_once_with(team)
+        validators[0].assert_called_once_with(input_data, racers=racers, teams=teams)
+        validators[1].assert_called_once_with(input_data, racers=racers, teams=teams)
 
-    def test_interactor_exceptions(self, container, input_data, teams, team, racers, validators):
-        # TODO #4.
-        pass
+    def test_late_validation_error_caught(
+            self, container, interactor_function, error_result, error_constructor, input_data,
+            validators, teams, racers):
+        error_instance = LogicError('foo')
+        validators[1].side_effect = error_instance
+        interactor = interactor_function(*validators)(add_team_member)(container)
 
-    def test_validation_exceptions(self, container, input_data, teams, team, racers, validators):
-        # TODO #4.
-        pass
+        result = interactor(input_data)
+
+        assert result == error_result
+        validators[0].assert_called_once_with(input_data, racers=racers, teams=teams)
+        validators[1].assert_called_once_with(input_data, racers=racers, teams=teams)
+        error_constructor.assert_called_once_with(
+            error=error_instance,
+            function=mock.ANY,
+            args=(input_data,),
+            kwargs={'teams': teams, 'racers': racers}
+        )
+
+    def test_early_validation_error_caught(
+            self, container, interactor_function, error_result, error_constructor, input_data,
+            validators, teams, racers):
+        error_instance = LogicError('foo')
+        validators[0].side_effect = error_instance
+        interactor = interactor_function(*validators)(add_team_member)(container)
+
+        result = interactor(input_data)
+
+        assert result == error_result
+        validators[0].assert_called_once_with(input_data, racers=racers, teams=teams)
+        validators[1].assert_not_called()
+        error_constructor.assert_called_once_with(
+            error=error_instance,
+            function=mock.ANY,
+            args=(input_data,),
+            kwargs={'teams': teams, 'racers': racers}
+        )
+
+    def test_validation_error_not_caught(
+            self, container, interactor_function, error_constructor, input_data, validators,
+            teams, racers):
+        error_instance = ValueError()
+        validators[0].side_effect = error_instance
+        interactor = interactor_function(*validators)(add_team_member)(container)
+
+        with pytest.raises(ValueError):
+            interactor(input_data)
+
+        validators[0].assert_called_once_with(input_data, racers=racers, teams=teams)
+        validators[1].assert_not_called()
+        error_constructor.assert_not_called()
+
+    def test_interactor_error_caught(
+            self, container, interactor_function, error_constructor, input_data, validators):
+        error_instance = LogicError('foo')
+        interactor_mock = mock.Mock(side_effect=error_instance)
+        interactor = interactor_function(*validators)(interactor_mock)(container)
+
+        interactor(input_data)
+
+        validators[0].assert_called_once_with(input_data)
+        validators[1].assert_called_once_with(input_data)
+        interactor_mock.assert_called_once_with(input_data)
+        error_constructor.assert_called_once_with(
+            error=error_instance,
+            function=mock.ANY,
+            args=(input_data,),
+            kwargs={}
+        )
+
+    def test_interactor_error_not_caught(
+            self, container, interactor_function, error_constructor, input_data, validators):
+        error_instance = ValueError()
+        interactor_mock = mock.Mock(side_effect=error_instance)
+        interactor = interactor_function(*validators)(interactor_mock)(container)
+
+        with pytest.raises(ValueError):
+            interactor(input_data)
+
+        validators[0].assert_called_once_with(input_data)
+        validators[1].assert_called_once_with(input_data)
+        interactor_mock.assert_called_once_with(input_data)
+        error_constructor.assert_not_called()
+
+    def test_multiple_error_class(
+            self, container, error_constructor, input_data, validators):
+        error_instance = ValueError()
+        interactor_mock = mock.Mock(side_effect=error_instance)
+        interactor_function = interactor_factory(
+            error_class=(LogicError, ValueError),
+            error_constructor=error_constructor
+        )
+        interactor = interactor_function(*validators)(interactor_mock)(container)
+
+        interactor(input_data)
+
+        validators[0].assert_called_once_with(input_data)
+        validators[1].assert_called_once_with(input_data)
+        interactor_mock.assert_called_once_with(input_data)
+        error_constructor.assert_called_once_with(
+            error=error_instance,
+            function=mock.ANY,
+            args=(input_data,),
+            kwargs={}
+        )

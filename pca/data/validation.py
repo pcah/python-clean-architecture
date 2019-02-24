@@ -40,19 +40,19 @@ def validated_by(*validators: Validator):
     def decorator(f):
 
         @wraps(f)
-        def decorated(input_data: Data, *args, **kwargs) -> Data:
+        def decorated(input_data: Data, **kwargs) -> Data:
             """
             Decorator that represents original method preceded by series of validation
             checks and possible data preprocessing by given validators, sequentially.
             """
             validated_data = input_data
             for validator in validators:
-                result = validator(validated_data)
+                result = validator(validated_data, **kwargs)
                 # validator is eligible to alter input data for the decorated function
                 # but doesnt have to; if it returns no result, his input will be used
                 validated_data = validated_data if result is None else result
             # finally, calling the decorated function with the validated data
-            return f(validated_data, *args, **kwargs)
+            return f(validated_data, **kwargs)
 
         # TODO #39. expose InputPort (whatever it is), not `validators`
         decorator.validators = validators

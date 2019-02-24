@@ -5,6 +5,14 @@ import marshmallow
 ValidationError = marshmallow.ValidationError
 
 
+class LogicError(Exception):
+    """
+    Base error class for errors of business logic. The subject of domain- & application-specific
+    validation.
+    # TODO #26
+    """
+
+
 class DharmaError(Exception):
     """Base error class for all errors from Dharma module"""
 
