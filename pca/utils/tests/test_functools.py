@@ -52,7 +52,10 @@ class TestErrorCatcher:
 
     @pytest.fixture
     def function(self):
-        return mock.Mock(return_value=42)
+        m = mock.Mock(return_value=42)
+        m.__qualname__ = 'a_function'
+        m.__module__ = 'a_module'
+        return m
 
     @pytest.fixture
     def error(self):
@@ -81,7 +84,7 @@ class TestErrorCatcher:
         constructor.assert_called_once_with(
             args=(1,),
             kwargs={'foo': 'bar'},
-            function=function,
+            function_name='a_module.a_function',
             result=42
         )
 
@@ -93,7 +96,7 @@ class TestErrorCatcher:
         constructor.assert_called_once_with(
             args=(1,),
             kwargs={'foo': 'bar'},
-            function=error_function,
+            function_name='a_module.a_function',
             error=error
         )
 

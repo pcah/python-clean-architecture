@@ -2,6 +2,8 @@
 import typing as t
 from functools import update_wrapper, wraps
 
+from .imports import get_dotted_path
+
 
 # noinspection PyPep8Naming
 class reify(object):  # noqa: N801
@@ -69,18 +71,32 @@ def error_catcher(
         * an error instance or a processed erroneous result iff calling the function has raised
           an error instance of specified type(s)
     """
+    success_constructor = success_constructor or (lambda result, **kwargs: result)
+    error_constructor = error_constructor or (lambda error, **kwargs: error)
+
     def decorator(f: t.Callable):
+
+        function_name = get_dotted_path(f)
 
         @wraps(f)
         def wrapper(*args, **kwargs):
             try:
                 result = f(*args, **kwargs)
             except error_class as e:
-                return error_constructor(error=e, function=f, args=args, kwargs=kwargs) \
-                    if error_constructor else e
+                result = error_constructor(
+                    error=e,
+                    function_name=function_name,
+                    args=args,
+                    kwargs=kwargs
+                )
             else:
-                return success_constructor(result=result, function=f, args=args, kwargs=kwargs) \
-                    if success_constructor else result
+                result = success_constructor(
+                    result=result,
+                    function_name=function_name,
+                    args=args,
+                    kwargs=kwargs
+                )
+            return result
 
         return wrapper
 

@@ -70,6 +70,11 @@ def import_dotted_path(dotted_path: str) -> t.Type:
 
 
 @lru_cache(maxsize=None)
-def get_dotted_path(klass: t.Type) -> str:
-    return klass.__qualname__ if klass.__module__ is None else \
-        klass.__module__ + "." + klass.__qualname__
+def get_dotted_path(target: t.Union[t.Type, t.Callable]) -> str:
+    """
+    Constructs python qualified name for the `target`. The function caches every result.
+    """
+    qualname = getattr(target, '__qualname__', None)
+    module_name = getattr(target, '__module__', None)
+    return f"{module_name}.{qualname}" if module_name and qualname \
+        else qualname if not module_name else ''

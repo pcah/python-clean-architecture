@@ -28,9 +28,8 @@ InteractorFunction = t.Callable[[RequestModel, t.Any], ResponseModel]
 
 
 def interactor_factory(
-    error_class: t.Union[t.Type[Exception], t.Sequence[t.Type[Exception]]] = LogicError,
-    success_constructor: t.Callable = None,
-    error_constructor: t.Callable = None,
+        error_handler: t.Callable = None,
+        error_class: t.Union[t.Type[Exception], t.Sequence[t.Type[Exception]]] = LogicError
 ):
     """
     Decorator factory that builds a decorator to enriches an application function
@@ -39,8 +38,7 @@ def interactor_factory(
     * input data will be validated using given validators
     * decorated function can use Inject descriptors in its signature
     * errors, described with `error_class`, raised during validation and interaction itself,
-      will be turned into a result using `error_constructor`; successful results may
-      be post-processed like the error ones, using `success_constructor`
+      will be turned into a result using `error_handler`
     """
     def interactor(*validators: Validator):
         """
@@ -61,8 +59,7 @@ def interactor_factory(
             decorated_f = validated_by(*validators)(f)
             decorated_f = error_catcher(
                 error_class=error_class,
-                success_constructor=success_constructor,
-                error_constructor=error_constructor
+                error_constructor=error_handler
             )(decorated_f)
             decorated_f = inject(decorated_f)
             decorated_f = container_supplier(decorated_f)
