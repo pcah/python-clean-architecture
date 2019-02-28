@@ -5,10 +5,10 @@ from pyramid.request import Request
 from pyramid.response import Response
 from pyramid.view import view_config
 
+from pca.exceptions import LogicError, ValidationError
 from pca.utils.functools import reify
 
 from examples.framework.dependency_injection import AbstractContainer
-from examples.framework.logic import LogicError, ValidationError
 from examples.framework.use_case import UseCase, UseCaseInput, UseCaseResult
 
 

@@ -1,10 +1,12 @@
 import typing as t
 
-from pca.exceptions import PathNotFoundError
+
+class PredicatePathNotFoundError(Exception):
+    """Resolving a query predicate found object has no appropriate path."""
 
 
 def resolve_path(path: t.Iterable[str]) -> t.Callable[..., t.Any]:
-    # raises: PathNotFoundError
+    # raises: PredicatePathNotFoundError
     def resolve_path_curried(value):
         for part in path:
             try:
@@ -13,7 +15,7 @@ def resolve_path(path: t.Iterable[str]) -> t.Callable[..., t.Any]:
                 try:
                     value = getattr(value, part)
                 except AttributeError:
-                    raise PathNotFoundError
+                    raise PredicatePathNotFoundError
         return value
 
     return resolve_path_curried

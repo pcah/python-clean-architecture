@@ -7,7 +7,6 @@ from itertools import count
 from operator import and_
 import typing as t
 
-from pca.exceptions import InvalidQueryError
 from pca.interfaces.dao import (
     BatchOfDto,
     BatchOfKwargs,
@@ -20,6 +19,7 @@ from pca.interfaces.dao import (
 )
 from pca.utils.dependency_injection import Container, Scopes, scope
 
+from .errors import QueryErrors
 from .predicate import Predicate
 
 
@@ -96,7 +96,7 @@ class QueryChain(IQueryChain):
             * or the query is already filtered by id
         """
         if self._ids or bool(id_) == bool(ids):
-            raise InvalidQueryError
+            raise QueryErrors.CONFLICTING_QUERY_ARGUMENTS.with_params(id=id_, ids=ids)
         ids = ids or [id_]
         return self._clone(ids=ids)
 
@@ -170,7 +170,7 @@ class AbstractDao(IDao[Id], ABC):
         :raises: InvalidQueryError iff both `id_` and `ids` arguments are defined.
         """
         if bool(id_) == bool(ids):
-            raise InvalidQueryError
+            raise QueryErrors.CONFLICTING_QUERY_ARGUMENTS.with_params(id=id_, ids=ids)
         ids = ids or [id_]
         return QueryChain._construct(self, ids=ids)
 
@@ -272,7 +272,7 @@ class InMemoryDao(AbstractDao[int]):
             return result
         elif nullable:
             return
-        raise self.NotFound(id_=id_)
+        raise QueryErrors.NOT_FOUND.with_params(id=id_)
 
     def _resolve_exists(self, query_chain: QueryChain) -> bool:
         filtered = self._resolve_filter(query_chain)
@@ -291,7 +291,7 @@ class InMemoryDao(AbstractDao[int]):
 
     def _resolve_remove(self, query_chain: QueryChain) -> Ids:
         if query_chain._is_trivial:
-            raise InvalidQueryError
+            raise QueryErrors.UNRESTRICTED_REMOVE
         dtos_to_remove = (
             self._register.pop(dto.id)
             for dto in self._resolve_filter(query_chain)

@@ -3,7 +3,8 @@ from pathlib import Path
 import pytest
 
 from pca.data.predicate import where
-from pca.exceptions import ConfigError, InvalidQueryError
+from pca.data.errors import QueryError, QueryErrors
+from pca.integration.errors import ConfigError, IntegrationErrors
 from pca.integration.tinydb import TinyDbDao
 
 
@@ -42,9 +43,9 @@ class TestConstruction:
         assert second_dao._db is json_dao._db
 
     def test_no_table_name(self, mock_container):
-        with pytest.raises(ConfigError) as e:
+        with pytest.raises(ConfigError) as error_info:
             TinyDbDao(mock_container)
-        assert e.value.code == 'NO-TABLE-NAME-PROVIDED'
+        assert error_info.value == IntegrationErrors.NO_TABLE_NAME_PROVIDED
 
 
 pred_a = where('char') == 'a'
@@ -90,12 +91,14 @@ class TestApi:
         assert list(dao.filter(not_a).filter_by(id_=3)) == [{'char': 'c', 'is_a': False}]
 
     def test_filter_by_both_arguments_error(self, dao: TinyDbDao):
-        with pytest.raises(InvalidQueryError):
+        with pytest.raises(QueryError) as error_info:
             assert dao.all().filter_by(id_=3, ids=[3, 5])
+        assert error_info.value == QueryErrors.CONFLICTING_QUERY_ARGUMENTS
 
     def test_filter_by_two_times_error(self, dao: TinyDbDao):
-        with pytest.raises(InvalidQueryError):
+        with pytest.raises(QueryError) as error_info:
             assert dao.all().filter_by(id_=3).filter_by(id_=5)
+        assert error_info.value == QueryErrors.CONFLICTING_QUERY_ARGUMENTS
 
     # QueryChain.get
     def test_get_success(self, dao: TinyDbDao):
@@ -171,8 +174,9 @@ class TestApi:
 
     # QueryChain.remove
     def test_remove_all_error(self, dao: TinyDbDao):
-        with pytest.raises(InvalidQueryError):
+        with pytest.raises(QueryError) as error_info:
             dao.all().remove()
+        assert error_info.value == QueryErrors.UNRESTRICTED_REMOVE
 
     def test_remove_filtered(self, dao: TinyDbDao):
         ids = dao.filter(pred_a).remove()
@@ -204,12 +208,14 @@ class TestApi:
         assert list(dao.filter_by(id_=3)) == [{'char': 'c', 'is_a': False}]
 
     def test_dao_filter_by_both_arguments_error(self, dao: TinyDbDao):
-        with pytest.raises(InvalidQueryError):
+        with pytest.raises(QueryError) as error_info:
             assert dao.filter_by(id_=3, ids=[3, 5])
+        assert error_info.value == QueryErrors.CONFLICTING_QUERY_ARGUMENTS
 
     def test_dao_filter_by_two_times_error(self, dao: TinyDbDao):
-        with pytest.raises(InvalidQueryError):
+        with pytest.raises(QueryError) as error_info:
             assert dao.filter_by(id_=3).filter_by(id_=5)
+        assert error_info.value == QueryErrors.CONFLICTING_QUERY_ARGUMENTS
 
     # Dao.insert
     def test_insert(self, dao: TinyDbDao):

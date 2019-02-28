@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from pca.exceptions import PathNotFoundError
 from pca.utils.operators import (
     check_path,
     resolve_path,
+    PredicatePathNotFoundError,
 )
 
 
@@ -48,7 +48,7 @@ def test_resolve_path_dict_positive(example_dict, path, expected):
 ])
 def test_resolve_path_dict_negative(example_dict, path):
     resolve_path_curried = resolve_path(path)
-    with pytest.raises(PathNotFoundError):
+    with pytest.raises(PredicatePathNotFoundError):
         resolve_path_curried(example_dict)
 
 
@@ -68,7 +68,7 @@ def test_resolve_path_object_positive(example_object, path, expected):
 ])
 def test_resolve_path_object_negative(example_object, path):
     resolve_path_curried = resolve_path(path)
-    with pytest.raises(PathNotFoundError):
+    with pytest.raises(PredicatePathNotFoundError):
         resolve_path_curried(example_object)
 
 

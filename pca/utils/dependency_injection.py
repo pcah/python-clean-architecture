@@ -3,8 +3,7 @@ from enum import Enum
 from functools import partial, wraps
 import typing as t
 
-from pca.exceptions import DependencyNotFoundError
-
+from pca.exceptions import ConfigError, ErrorCatalog
 
 NameOrInterface = t.Union[type, str]
 Constructor = t.Union[t.Type, t.Callable]
@@ -12,6 +11,17 @@ Kwargs = t.Dict[str, t.Any]  # keyword-arguments of a Constructor
 ScopeFunction = t.Callable[[Constructor, Kwargs], t.Any]
 
 _SCOPE_TYPE_REF = '__di_scope_type__'
+
+
+class DIErrors(ErrorCatalog):
+    DEFINITION_NOT_FOUND = ConfigError(hint=(
+        "A dependency definition for DI was tried to be injected, but it has not been found."))
+    AMBIGUOUS_DEFINITION = ConfigError(hint="This identifier has already been registered.")
+    NO_IDENTIFIER_SPECIFIED = ConfigError(hint="Missing both name and interface for Inject.")
+    NO_CONTAINER_PROVIDED = ConfigError(
+        hint="DI resolving found no instance of the DI `Container` to work with.")
+    INTEGRATION_NOT_FOUND = ConfigError(hint=(
+        "An integration target tried to use its external library, but it has not been found."))
 
 
 class Container:
@@ -98,7 +108,8 @@ class Container:
         """Technical detail of registering a constructor"""
         key = Container._get_registry_key(identifier, qualifier)
         if key in self._constructor_registry:
-            raise ValueError(f'Ambiguous identifier: {identifier}.')
+            raise DIErrors.AMBIGUOUS_DEFINITION.with_params(
+                identifier=identifier, qualifier=qualifier)
         self._constructor_registry[key] = (constructor, kwargs)
         if scope is not None:
             setattr(constructor, _SCOPE_TYPE_REF, scope)
@@ -116,8 +127,9 @@ class Container:
         key = Container._get_registry_key(identifier, qualifier)
         try:
             registered_constructor = self._constructor_registry[key]
-        except KeyError as e:
-            raise DependencyNotFoundError(identifier=identifier, qualifier=qualifier) from e
+        except KeyError:
+            raise DIErrors.DEFINITION_NOT_FOUND.with_params(
+                identifier=identifier, qualifier=qualifier)
         return self.get_object(*registered_constructor)
 
     def get_object(self, constructor: Constructor, kwargs: Kwargs = None) -> t.Any:
@@ -210,7 +222,7 @@ def _find_object(container, name, interface, qualifier):
     elif interface:
         return container.find_by_interface(interface, qualifier)
     else:
-        raise TypeError('Missing name or interface for Inject.')
+        raise DIErrors.NO_IDENTIFIER_SPECIFIED
 
 
 def inject(f: t.Callable) -> t.Callable:
@@ -241,7 +253,8 @@ def inject(f: t.Callable) -> t.Callable:
             or (getattr(args[0], 'container', None) if args else None)
 
         if not container:
-            raise ValueError('Container not provided.')
+            raise DIErrors.NO_CONTAINER_PROVIDED.with_params(
+                module=f.__module__, function=f.__qualname__)
 
         for name_, data in annotations.items():
             if name_ not in kwargs:

@@ -1,171 +1,54 @@
-import marshmallow
+import marshmallow.exceptions
+
+from pca.utils.errors import ExceptionWithCode, ErrorCatalog  # noqa: F401
 
 
-# TODO #39. integrate validation
-ValidationError = marshmallow.ValidationError
-
-
-class LogicError(Exception):
+class BaseError(ExceptionWithCode):
     """
-    Base error class for errors of business logic. The subject of domain- & application-specific
-    validation.
-    # TODO #26
+    Base class for all errors that are related to the library (excluding some errors raised by
+    `pca.utils`, that are related to purely technical details).
     """
 
 
-class DharmaError(Exception):
-    """Base error class for all errors from Dharma module"""
-
-    DEFAULT_AREA = None
-    DEFAULT_CODE = None
-    PRINTED_ATTRS = (
-        'area',
-        'code'
-    )
-
-    def __init__(self, code=None, area=None):
-        self.area = area or self.DEFAULT_AREA
-        self.code = code or self.DEFAULT_CODE
-        super(DharmaError, self).__init__()
-
-    def __str__(self):
-        return "{}({})".format(self._get_class_name(), ", ".join(
-            "{}='{}'".format(attr, getattr(self, attr) or 'None')
-            for attr in self.PRINTED_ATTRS
-        ))
-
-    __repr__ = __str__
-
-    def _get_class_name(self):
-        return self.__class__.__name__
-
-
-class ConfigError(DharmaError):
-    """An error was encountered during configuration of Dharma"""
-    DEFAULT_AREA = 'CONFIG'
-
-
-class DependencyNotFoundError(ConfigError):
-    """A dependency was tried to be used but it has not been found"""
-    DEFAULT_CODE = 'DEPENDENCY-NOT-FOUND'
-
-    PRINTED_ATTRS = DharmaError.PRINTED_ATTRS + ('identifier', 'qualifier')
-
-    def __init__(self, identifier=None, qualifier=None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.identifier = identifier
-        self.qualifier = qualifier
-
-
-class IntegrationNotFoundError(DharmaError):
-    """An external library was tried to be used but it has not been found"""
-    DEFAULT_AREA = 'INTEGRATION'
-    DEFAULT_CODE = 'DEPENDENCY-NOT-FOUND'
-
-    PRINTED_ATTRS = DharmaError.PRINTED_ATTRS + ('dependency',)
-
-    def __init__(self, dependency, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.dependency = dependency
-
-
-class TraitError(DharmaError):
-
-    PRINTED_ATTRS = DharmaError.PRINTED_ATTRS + ('trait',)
-
-    """Base error class for all Trait-related errors"""
-    def __init__(self, trait=None, *args, **kwargs):
-        super(TraitError, self).__init__(*args, **kwargs)
-        self.trait = trait
-
-
-class TraitInstantiationError(TraitError):
-    """Error class for errors related to the instantiation of a trait"""
-    # TODO is it still needed?
-    # TOMBSTONE 19.09.2016 or upon traits package finished milestone
-
-
-class TraitValidationError(TraitError):
+class PcaError(BaseError):
     """
-    Error class raised by trait validators during pca.data.Trait.validate.
-
-    It can be also used to summarize multiple single validation errors using
-    errors argument.
+    Base class for all technical errors raised by the very `pca` library
+    (and not the domain or application logic). The complementary type is `ProcessError`.
     """
-    DEFAULT_AREA = 'VALID'
-    PRINTED_ATTRS = TraitError.PRINTED_ATTRS + ('errors',)
-
-    def __init__(self, errors=None, *args, **kwargs):
-        super(TraitValidationError, self).__init__(*args, **kwargs)
-        self.errors = errors
 
 
-class TraitPreprocessorError(TraitValidationError):
+class ConfigError(PcaError):
+    """A problem has been encountered during loading configuration of the application."""
+    area = 'CONFIG'
+
+
+class IntegrationError(PcaError):
+    """A problem has been encountered during loading an integration module."""
+    area = 'INTEGRATION'
+
+
+class ProcessError(BaseError):
     """
-    Error class raised during pca.data.Trait._preprocess_value as a wrapper
-    to any error that might happen during preprocessing. Concrete error is
-    stored under __context__ attribute (as in python 3.x during reraising).
-
-    This error class inherrits from TraitValidationError, so that one have
-    a unified way of gathernig errors during trait assignment.
+    A problem with domain or application logic, that happened during executing business process
+    (contrary to technical problems, described by the complementary type: `PcaError`).
     """
-    DEFAULT_CODE = 'PREPROCESSOR-ERROR'
-
-    def __init__(self, context, *args, **kwargs):
-        super(TraitPreprocessorError, self).__init__(
-            errors={'_preprocess_value': context}, *args, **kwargs)
-        self.__context__ = context
 
 
-class TraitRequiredError(TraitValidationError):
+class QueryError(ProcessError):
+    """Process errors that are related to processing queries."""
+    area = 'QUERY'
+
+
+class ValidationError(ProcessError, marshmallow.exceptions.ValidationError):
     """
-    Error class describing unfulfilled required attribute. This means that
-    during Nature's validation process the trait.is_empty == True while
-    trait.required == True.
+    Process errors that happened during the data validation step of business logic.
+    # TODO #39. integrate validation
     """
-    DEFAULT_CODE = 'TRAIT-REQUIRED'
+    area = 'VALIDATION'
 
 
-class PathNotFoundError(DharmaError):
-    DEFAULT_AREA = 'INT'
-    DEFAULT_CODE = 'PREDICATE-PATH-NOT-FOUND'
-    PRINTED_ATTRS = DharmaError.PRINTED_ATTRS + ('args',)
-
-
-class RepoError(DharmaError):
+class LogicError(ProcessError):
     """
-    Base class for errors concerning repositories and DB handling.
+    Base error class for errors of purely business logic. This is the main
     """
-    DEFAULT_AREA = 'REPO'
-
-
-class NotFound(RepoError):
-    """
-    Query didn't found entity of given description.
-    """
-    DEFAULT_CODE = 'NOT-FOUND'
-    PRINTED_ATTRS = DharmaError.PRINTED_ATTRS + ('entity', 'id_')
-
-    def __init__(self, entity, id_, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.entity = entity
-        self.id_ = id_
-
-
-class InvalidQueryError(RepoError):
-    """
-    Query for a repo is invalid .
-    """
-    DEFAULT_CODE = 'INVALID-QUERY'
-
-
-class RepoUpdateNotUniqueError(RepoError):
-    """
-    Error class thrown iff content of the update to a repo is not unique, ie.
-    it contains duplicate entries to a single entity.
-    """
-    DEFAULT_CODE = 'REPO-UPDATE-NOT-UNIQUE'
-
-    def __init__(self, common, *args, **kwargs):
-        super(RepoUpdateNotUniqueError, self).__init__(*args, **kwargs)
-        self.common = common
+    area = 'LOGIC'

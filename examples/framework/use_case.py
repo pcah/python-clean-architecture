@@ -4,10 +4,10 @@ import typing as t
 
 from marshmallow import Schema
 
+from pca.exceptions import ProcessError, ValidationError
 from pca.utils.functools import reify
 
 from .dependency_injection import Container
-from .logic import UseCaseError, ValidationError
 
 
 @dataclass
@@ -24,7 +24,7 @@ class UseCaseInput:
 
 @dataclass
 class UseCaseResult:
-    errors: t.Dict[str, UseCaseError]
+    errors: t.Dict[str, ProcessError]
     data: t.Dict[str, t.Any]
 
     @property

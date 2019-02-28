@@ -2,11 +2,15 @@ import dataclasses
 import pytest
 
 from pca.data.dao import IDao, InMemoryDao
+from pca.data.errors import QueryErrors
 from pca.domain.repository import Repository, Schema
 from pca.domain.entity import Entity
-from pca.exceptions import DependencyNotFoundError, InvalidQueryError
+from pca.exceptions import (
+    ConfigError,
+    QueryError,
+)
 from pca.interfaces.dao import Dto
-from pca.utils.dependency_injection import Container
+from pca.utils.dependency_injection import Container, DIErrors
 
 
 @dataclasses.dataclass
@@ -78,11 +82,10 @@ class TestConstruction:
 
     def test_dao_injection_error(self, repo):
         assert repo.entity is Bike
-        with pytest.raises(DependencyNotFoundError) as error_info:
+        with pytest.raises(ConfigError) as error_info:
             assert repo.dao
-        assert error_info.value.code == 'DEPENDENCY-NOT-FOUND'
-        assert error_info.value.identifier == IDao
-        assert error_info.value.qualifier == Bike
+        assert error_info.value == DIErrors.DEFINITION_NOT_FOUND
+        assert error_info.value.params == {'identifier': IDao, 'qualifier': Bike}
 
 
 class TestApi:
@@ -122,10 +125,10 @@ class TestApi:
 
     def test_find_error(self, data, repo: Repository, dao: IDao):
         id_ = 42
-        with pytest.raises(IDao.NotFound) as error_info:
+        with pytest.raises(QueryError) as error_info:
             assert repo.find(id_)
-        assert error_info.value.entity == Bike
-        assert error_info.value.id_ == id_
+        assert error_info.value == QueryErrors.NOT_FOUND
+        assert error_info.value.params == {'id': id_, 'entity': Bike}
 
     def test_contains_success(self, data, repo: Repository, dao: IDao):
         id_ = dao.insert(**data)
@@ -151,12 +154,16 @@ class TestApi:
 
     def test_remove_error_not_added(self, data, repo: Repository, dao: IDao):
         entity = repo.create(**data)
-        with pytest.raises(InvalidQueryError):
+        with pytest.raises(QueryError) as error_info:
             repo.remove(entity)
+        assert error_info.value == QueryErrors.ENTITY_NOT_YET_ADDED
+        assert error_info.value.params == {'entity': entity}
 
     def test_remove_error_wrong_id(self, data, repo: Repository, dao: IDao):
         id_ = dao.insert(**data)
         entity = repo.find(id_)
         repo.remove(entity)
-        with pytest.raises(InvalidQueryError):
+        with pytest.raises(QueryError) as error_info:
             repo.remove(entity)
+        assert error_info.value == QueryErrors.NOT_FOUND
+        assert error_info.value.params == {'id': id_, 'entity': entity}

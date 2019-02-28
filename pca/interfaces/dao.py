@@ -1,7 +1,5 @@
 import typing as t
 
-from pca.exceptions import RepoError
-
 from .entity import Id, Ids
 
 
@@ -114,15 +112,6 @@ class IDao(t.Generic[Id]):
     of collections of objects of data: both relational database's tables and
     non-relational document sets, etc.
     """
-
-    class NotFound(RepoError):
-        PRINTED_ATTRS = RepoError.PRINTED_ATTRS + ('id_', 'entity')
-        DEFAULT_CODE = 'NOT-FOUND'
-
-        def __init__(self, *args, id_, entity=None, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.id_ = id_
-            self.entity = entity
 
     # lazy queries
 
