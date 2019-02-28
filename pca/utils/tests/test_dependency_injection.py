@@ -1,10 +1,11 @@
 import mock
 import pytest
 
-from pca.exceptions import DependencyNotFoundError
+from pca.exceptions import ConfigError
 from pca.utils.dependency_injection import (
     Component,
     Container,
+    DIErrors,
     container_supplier,
     inject,
     Inject,
@@ -84,36 +85,36 @@ class TestContainer:
     def test_container_interface_duplicates(self, container):
         interface = FrameInterface
         container.register_by_interface(interface, RoadFrame)
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ConfigError) as error_info:
             container.register_by_interface(interface, GravelFrame)
-        assert str(e.value) == f'Ambiguous identifier: {interface}.'
+        assert error_info.value == DIErrors.AMBIGUOUS_DEFINITION
+        assert error_info.value.params == {'identifier': interface, 'qualifier': None}
         container.register_by_interface(interface, GravelFrame, qualifier='gravel')
 
     def test_container_interface_not_found(self, container):
         interface = FrameInterface
         qualifier = 'qualifier'
-        with pytest.raises(DependencyNotFoundError) as error_info:
+        with pytest.raises(ConfigError) as error_info:
             container.find_by_interface(interface, qualifier)
-        assert error_info.value.code == 'DEPENDENCY-NOT-FOUND'
-        assert error_info.value.identifier == interface
-        assert error_info.value.qualifier == qualifier
+        assert error_info.value == DIErrors.DEFINITION_NOT_FOUND
+        assert error_info.value.params == {'identifier': interface, 'qualifier': qualifier}
 
     def test_container_name_duplicates(self, container):
         name = 'frame'
         container.register_by_name(name=name, constructor=RoadFrame)
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ConfigError) as error_info:
             container.register_by_name(name=name, constructor=GravelFrame)
-        assert str(e.value) == f'Ambiguous identifier: {name}.'
+        assert error_info.value == DIErrors.AMBIGUOUS_DEFINITION
+        assert error_info.value.params == {'identifier': name, 'qualifier': None}
         container.register_by_name(name=name, constructor=GravelFrame, qualifier='gravel')
 
     def test_container_name_not_found(self, container):
         name = 'frame'
         qualifier = 'qualifier'
-        with pytest.raises(DependencyNotFoundError) as error_info:
+        with pytest.raises(ConfigError) as error_info:
             container.find_by_name(name, qualifier)
-        assert error_info.value.code == 'DEPENDENCY-NOT-FOUND'
-        assert error_info.value.identifier == name
-        assert error_info.value.qualifier == qualifier
+        assert error_info.value == DIErrors.DEFINITION_NOT_FOUND
+        assert error_info.value.params == {'identifier': name, 'qualifier': qualifier}
 
     def test_scope_class(self, container):
         assert repr(Scopes.INSTANCE) == f'<Scopes.{Scopes.INSTANCE.name}>'
@@ -195,9 +196,9 @@ class TestInjectParameters:
             def __init__(self, container: Container):
                 self.container = container
 
-        with pytest.raises(TypeError) as e:
+        with pytest.raises(ConfigError) as error_info:
             assert NoAnnotationBike(container).wheel
-        assert str(e.value) == 'Missing name or interface for Inject.'
+        assert error_info.value == DIErrors.NO_IDENTIFIER_SPECIFIED
 
     @pytest.fixture
     def another_bike(self, container):
@@ -259,9 +260,9 @@ class TestInjectDecorator:
         )
 
     def test_inject_no_name_or_interface(self, bike_obj):
-        with pytest.raises(TypeError) as e:
+        with pytest.raises(ConfigError) as error_info:
             bike_obj.build_frame()
-        assert str(e.value) == 'Missing name or interface for Inject.'
+        assert error_info.value == DIErrors.NO_IDENTIFIER_SPECIFIED
 
     @pytest.fixture
     def no_container_bike_obj(self):
@@ -273,9 +274,9 @@ class TestInjectDecorator:
         return NewBike()
 
     def test_inject_no_container(self, no_container_bike_obj):
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ConfigError) as error_info:
             assert no_container_bike_obj.build()
-        assert str(e.value) == 'Container not provided.'
+        assert error_info.value == DIErrors.NO_CONTAINER_PROVIDED
 
     def test_injectable_function(self, container, ):
         mock_dependency = mock.Mock()

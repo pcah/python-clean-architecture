@@ -1,7 +1,7 @@
 import typing as t
 from dataclasses import asdict
 
-from pca.exceptions import ConfigError, InvalidQueryError
+from pca.data.errors import QueryErrors
 from pca.interfaces.dao import Dto, IDao
 from pca.interfaces.repository import Id, IRepository
 from pca.utils.functools import reify
@@ -66,7 +66,7 @@ class Repository(IRepository[Id, Entity]):
     def __init__(self, container: Container, schema: Schema = None):
         self.schema: Schema = schema or self.schema
         if not self.schema:  # pragma: no cover
-            raise ConfigError(code='NO-SCHEMA-FOUND')
+            raise QueryErrors.NO_SCHEMA_DEFINED
         self.container = container
 
     @reify
@@ -107,7 +107,7 @@ class Repository(IRepository[Id, Entity]):
         """Returns object of given id or None."""
         dto = self.dao.get(id_)
         if not dto:
-            raise IDao.NotFound(entity=self.entity, id_=id_)
+            raise QueryErrors.NOT_FOUND.with_params(id=id_, entity=self.entity)
         entity = self.schema.construct(dto)
         return entity
 
@@ -125,7 +125,7 @@ class Repository(IRepository[Id, Entity]):
     def remove(self, entity: Entity) -> None:
         """Removes the object from the underlying persistence layer via DAO."""
         if not entity.id:  # entity hasn't been added yet
-            raise InvalidQueryError
+            raise QueryErrors.ENTITY_NOT_YET_ADDED.with_params(entity=entity)
         result = self.dao.filter_by(id_=entity.id).remove()
         if not result:  # entity hasn't been found in the DAO
-            raise InvalidQueryError
+            raise QueryErrors.NOT_FOUND.with_params(id=entity.id, entity=entity)

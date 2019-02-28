@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 import typing as t
 
-from pca.exceptions import (
-    ConfigError,
-    InvalidQueryError,
-    IntegrationNotFoundError,
-)
 from pca.data.dao import (
     AbstractDao,
     BatchOfKwargs,
@@ -16,7 +11,10 @@ from pca.data.dao import (
     Kwargs,
     QueryChain,
 )
+from pca.data.errors import QueryErrors
 from pca.utils.dependency_injection import Container
+
+from .errors import IntegrationErrors
 
 try:
     import tinydb
@@ -38,8 +36,7 @@ class TinyDbDao(AbstractDao[int]):
 
     def __init__(self, container: Container, **kwargs):
         if not tinydb:  # pragma: no cover
-            raise IntegrationNotFoundError('tinydb')
-
+            raise IntegrationErrors.NOT_FOUND.with_params(target='tinydb')
         self._container = container
         self._path = kwargs.get('path')
         """
@@ -51,7 +48,7 @@ class TinyDbDao(AbstractDao[int]):
 
         self._table_name = kwargs.pop('table_name', None) or kwargs.pop('qualifier', None)
         if not self._table_name:
-            raise ConfigError(code='NO-TABLE-NAME-PROVIDED')
+            raise IntegrationErrors.NO_TABLE_NAME_PROVIDED
 
         if self._path:
             if self._path not in self._db_cache:
@@ -87,7 +84,7 @@ class TinyDbDao(AbstractDao[int]):
             return result
         elif nullable:
             return
-        raise self.NotFound(id_=id_)
+        raise QueryErrors.NOT_FOUND.with_params(id=id_)
 
     def _resolve_exists(self, query_chain: QueryChain) -> bool:
         """Returns whether any object specified by the query exist."""
@@ -119,11 +116,11 @@ class TinyDbDao(AbstractDao[int]):
 
         NB: the command isn't atomic
 
-        :raises: InvalidQueryError iff query is trivial. If you want to empty your collection,
+        :raises: QueryError iff query is trivial. If you want to empty your collection,
         use `clear` instead.
         """
         if query_chain._is_trivial:
-            raise InvalidQueryError
+            raise QueryErrors.UNRESTRICTED_REMOVE
         filtered = self._resolve_filter(query_chain)
         result = self._table.remove(doc_ids=[d.doc_id for d in filtered])
         return result

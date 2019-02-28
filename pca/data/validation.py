@@ -3,7 +3,7 @@ import re
 import typing as t
 from functools import wraps
 
-from pca.exceptions import TraitValidationError
+from pca.exceptions import ValidationError
 
 
 Data = t.Mapping[str, t.Any]
@@ -86,12 +86,12 @@ def validate_domain_part(value):
 
 def validate_email(value, whitelist):
     if not value or '@' not in value:
-        raise TraitValidationError(code='MALFORMED_EMAIL')
+        raise ValidationError(code='MALFORMED_EMAIL')
 
     user_part, domain_part = value.rsplit('@', 1)
 
     if not EMAIL_USER_RE.match(user_part):
-        raise TraitValidationError(code='MALFORMED_EMAIL')
+        raise ValidationError(code='MALFORMED_EMAIL')
 
     if (domain_part not in whitelist and
             not validate_domain_part(domain_part)):
@@ -102,7 +102,7 @@ def validate_email(value, whitelist):
                 return
         except UnicodeError:
             pass
-        raise TraitValidationError(code='MALFORMED_EMAIL')
+        raise ValidationError(code='MALFORMED_EMAIL')
 
 
 IPv4_RE = re.compile(

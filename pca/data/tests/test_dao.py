@@ -2,9 +2,9 @@ import typing as t
 
 import pytest
 
-from pca.data.predicate import where
 from pca.data.dao import InMemoryDao
-from pca.exceptions import InvalidQueryError
+from pca.data.errors import QueryError, QueryErrors
+from pca.data.predicate import where
 
 
 pred_a = where('char') == 'a'
@@ -55,11 +55,11 @@ class TestApi:
         assert list(dao.filter(pred_not_a).filter_by(id_=3)) == [{'char': 'c', 'is_a': False}]
 
     def test_filter_by_both_arguments_error(self, dao: InMemoryDao):
-        with pytest.raises(InvalidQueryError):
+        with pytest.raises(QueryError):
             assert dao.all().filter_by(id_=3, ids=[3, 5])
 
     def test_filter_by_two_times_error(self, dao: InMemoryDao):
-        with pytest.raises(InvalidQueryError):
+        with pytest.raises(QueryError):
             assert dao.all().filter_by(id_=3).filter_by(id_=5)
 
     # QueryChain.get
@@ -136,8 +136,9 @@ class TestApi:
 
     # QueryChain.remove
     def test_remove_all_error(self, dao: InMemoryDao):
-        with pytest.raises(InvalidQueryError):
+        with pytest.raises(QueryError) as error_info:
             dao.all().remove()
+        assert error_info.value == QueryErrors.UNRESTRICTED_REMOVE
 
     def test_remove_filtered(self, dao: InMemoryDao):
         ids = dao.filter(pred_a).remove()
@@ -159,11 +160,11 @@ class TestApi:
         assert list(dao.filter_by(id_=3)) == [{'char': 'c', 'is_a': False}]
 
     def test_dao_filter_by_both_arguments_error(self, dao: InMemoryDao):
-        with pytest.raises(InvalidQueryError):
+        with pytest.raises(QueryError):
             assert dao.filter_by(id_=3, ids=[3, 5])
 
     def test_dao_filter_by_two_times_error(self, dao: InMemoryDao):
-        with pytest.raises(InvalidQueryError):
+        with pytest.raises(QueryError):
             assert dao.filter_by(id_=3).filter_by(id_=5)
 
     # Dao.insert
