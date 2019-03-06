@@ -1,12 +1,14 @@
-
 """
-Entities are descriptions
+Entities are representations of business logic objects that have some distinctive identity.
 """
 import datetime
 import typing as t
 
-from examples.framework.domain import Entity, Id
 from pca.data.predicate import where
+from pca.domain.entity import Entity
+
+from examples.framework_ideas.domain import Id
+from examples.framework_ideas.logic_programming import PredicateDescriptor
 
 
 # ValueObject
@@ -29,8 +31,8 @@ class User(Entity):
     organization: t.List[Organization]
     is_staff: bool  # has additional privileges to invite
 
-    is_active = where('active') == True
-    is_deleted = where('active') == False
+    is_active = PredicateDescriptor(where('active') == True)  # noqa: E712
+    is_deleted = PredicateDescriptor(where('active') == False)  # noqa: E712
 
     @property
     def full_name(self):
@@ -46,8 +48,11 @@ class Invitation(Entity):
     sent_at: datetime.datetime
     expires_at: datetime.date
 
-    is_inviter_from_same_organization = where('inviter.organization') == where('organization')
-    is_valid_inviter = is_inviter_from_same_organization | where('inviter.is_staff') == True
+    is_inviter_from_same_organization = PredicateDescriptor(
+        where('inviter.organization') == where('organization'))
+    is_valid_inviter = PredicateDescriptor(
+        is_inviter_from_same_organization | where('inviter.is_staff') == True  # noqa: E712
+    )
 
     @property
     def _today(self):
@@ -56,3 +61,6 @@ class Invitation(Entity):
     @property
     def is_active(self):
         return self._today <= self.expires_at
+
+    def accept(self):
+        raise NotImplementedError

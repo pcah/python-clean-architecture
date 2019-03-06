@@ -74,7 +74,7 @@ class TestCustomError:
             "ExceptionWithCode(code='code', area='area', params={'foo': 'bar'})")
 
     def test_short_description(self, instance: ExceptionWithCode):
-        assert instance.short_description() == 'area/code/{"foo": "bar"}'
+        assert instance.short_description == 'area/code/{"foo": "bar"}'
 
 
 class ExampleCatalog(ErrorCatalog):

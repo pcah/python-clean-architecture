@@ -9,7 +9,7 @@ from pca.utils.dependency_injection import Component, container_supplier, inject
 from pca.utils.functools import error_catcher, reify
 
 
-Kwargs = t.Mapping[str, t.Any]
+Kwargs = t.Mapping[t.Optional[str], t.Any]
 RequestModel = Kwargs
 
 

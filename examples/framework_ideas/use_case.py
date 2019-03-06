@@ -1,3 +1,4 @@
+# TODO #18. clean up obsolete ideas and out-of-date patterns
 from dataclasses import dataclass
 import typing as t
 
@@ -5,8 +6,7 @@ from marshmallow import Schema
 
 from pca.exceptions import ProcessError, ValidationError
 from pca.utils.functools import reify
-
-from .dependency_injection import Container
+from pca.utils.dependency_injection import Container
 
 
 @dataclass
@@ -60,9 +60,6 @@ class UseCase:
         return UseCaseResult(errors={}, data=result)
 
     def is_available(self, input: UseCaseInput):
-        raise NotImplementedError
-
-    def action(self, data: t.Mapping):
         raise NotImplementedError
 
 
