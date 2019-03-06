@@ -1,12 +1,13 @@
-import typing as t
+# TODO #18. clean up obsolete ideas and out-of-date patterns
 from dataclasses import dataclass
+import typing as t
 
 from marshmallow import Schema
 
+from pca.application.interactor import RequestModel
 from pca.utils.functools import reify
 
-from examples.framework import UseCaseInterface
-from .use_case import UseCaseInput, UseCase
+from .use_case import UseCase, UseCaseInterface
 
 
 FlowId = t.NewType("FlowId", str)
@@ -14,7 +15,7 @@ StateId = t.NewType("StateId", str)
 
 
 @dataclass
-class FlowUseCaseInput(UseCaseInput):
+class FlowUseCaseInput(RequestModel):
     flow_id: t.Optional[str] = None
     state_id: t.Optional[str] = None
 
@@ -41,7 +42,6 @@ class State:
         return {}
 
 
-# noinspection PyAbstractClass
 class FlowUseCase(UseCase):
     """
     Describes multistage use-case: such a case that has to be executed with
@@ -49,7 +49,7 @@ class FlowUseCase(UseCase):
     """
     states: t.Dict[StateId, State]
     flow_id: FlowId
-    action: str = None  # TODO ?
+    action: str = None
 
     @reify
     def interfaces(self):

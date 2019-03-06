@@ -71,6 +71,7 @@ class ExceptionWithCode(Exception):
         raise AttributeError(  # pragma: no cover
             "The instances of this class should be considered immutable.")
 
+    @property
     def short_description(self) -> str:
         """
         Returns description that can be used to map errors to response value for a Presenter.

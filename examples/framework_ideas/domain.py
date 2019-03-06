@@ -1,6 +1,3 @@
-import random
-
-
 class Id:
     """
     Descriptor describing identity of an entity.
@@ -29,12 +26,6 @@ class Id:
         if not self._field_names:
             # TODO decide how to pass id auto-generation from
             # the implementation of the DAO to the Entity
+            import random
             return random.randint(1, 1000000)
         return tuple(getattr(instance, v) for v in self._field_names)
-
-
-class Entity:
-    """
-    Uses @dataclass decoration. Defines identity by checking `id: Id`
-    descriptor. Knows how to serialize itself to a Mapping.
-    """
