@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
-from examples.framework import (
+from examples.framework.use_case import (
     UseCase,
     UseCaseInput,
 )
-from examples.framework.dependency_injection import Inject
+from pca.utils.dependency_injection import Inject
 
 from . import entities, repos, services
 

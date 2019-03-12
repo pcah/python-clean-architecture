@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from examples.framework.dependency_injection import Container, Scopes
 from examples.framework.integrations.django import DjangoSessionStrategy
 

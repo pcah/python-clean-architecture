@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest
 
 from pca.utils.inspect import get_all_subclasses

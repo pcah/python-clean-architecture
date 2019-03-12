@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 from pca.utils.collections import iterate_over_values
 
 

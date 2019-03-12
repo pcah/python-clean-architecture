@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from pca.utils.imports import import_all_names
 
 

@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 import mock
-
 import pytest
 
 from pca.utils.functools import error_catcher, reify

@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 import pytest
 
 from pca.utils.collections import Bunch

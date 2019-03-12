@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
-import typing as t
 from functools import update_wrapper, wraps
+import typing as t
 
 from .imports import get_dotted_path
 

@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
 from jsonweb import decode, encode
-import six
 
 from pca.utils.inspect import get_func_name
 
@@ -29,8 +27,7 @@ class PolicyMeta(type):
         return type_
 
 
-@six.add_metaclass(PolicyMeta)
-class Policy(object):
+class Policy(metaclass=PolicyMeta):
     """
     A self-JSON-serializable class which consists of:
     * a collection of persistent attributes, defined by SERIALIZED_ATTRS list,

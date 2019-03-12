@@ -3,7 +3,7 @@ Some common interfaces.
 """
 import typing as t
 
-from pca.data.formulae import Predicate
+from pca.data.predicate import Predicate
 
 
 class IRequest:

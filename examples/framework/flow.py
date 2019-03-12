@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import typing as t
 from dataclasses import dataclass
 

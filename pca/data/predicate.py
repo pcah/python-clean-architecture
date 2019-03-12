@@ -2,10 +2,12 @@
 Contains the querying interface.
 Starting with :class:`Var` you can construct complex
 queries:
+
 >>> ((where('f1') == 5) & (where('f2') != 2)) | where('s').matches(r'^abc$')
 (('f1' == 5) and ('f2' != 2)) or ('s' ~= ^abc$ )
 Predicates are executed by using the ``__call__``:
->>> from pca.data.formulae import Predicate, where
+
+>>> from pca.data.predicate import Predicate, where
 >>> predicate = where('val') == 5  # type: Predicate
 >>> predicate({'val': 5})
 True

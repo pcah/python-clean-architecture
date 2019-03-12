@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest
 
 from pca.utils.imports import import_dotted_path

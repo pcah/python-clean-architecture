@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from jsonweb import decode, encode
 import pytest
 

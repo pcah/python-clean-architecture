@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """
 Entities are descriptions
 """
@@ -6,7 +6,7 @@ import datetime
 import typing as t
 
 from examples.framework.domain import Entity, Id
-from pca.data.formulae import where
+from pca.data.predicate import where
 
 
 # ValueObject

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from .dependency_injection import Container
 from .integrations.common import IDao
 

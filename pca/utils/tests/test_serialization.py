@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-from unittest import mock
-
+import mock
 import pytest
 
 from pca.utils import serialization

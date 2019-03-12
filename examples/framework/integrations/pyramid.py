@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import typing as t
 
 from pyramid.request import Request
@@ -6,19 +5,10 @@ from pyramid.response import Response
 from pyramid.view import view_config
 
 from pca.exceptions import LogicError, ValidationError
+from pca.utils.dependency_injection import Container
 from pca.utils.functools import reify
 
-from examples.framework.dependency_injection import AbstractContainer
 from examples.framework.use_case import UseCase, UseCaseInput, UseCaseResult
-
-
-class PyramidContainer(AbstractContainer):
-    """Knows how to construct Pyramid specific dependencies."""
-
-    request: Request
-
-    def __init__(self, request: Request):
-        self._request = request
 
 
 class PyramidResource:
@@ -50,7 +40,7 @@ class PyramidResource:
 
     @reify
     def container(self):
-        return PyramidContainer(self.request)
+        return Container()
 
     @reify
     def use_case(self):

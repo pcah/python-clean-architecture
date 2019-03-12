@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-from pca.data.formulae import where
+from pca.data.predicate import where
 
 from examples.framework.repo import AbstractRepo
 from examples.framework.integrations.common import IDao, ISession

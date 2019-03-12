@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from marshmallow import fields
 from marshmallow_annotations import (
     AnnotationSchema,

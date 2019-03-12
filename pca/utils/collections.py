@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 from __future__ import absolute_import
+
 from collections.abc import MutableSet
 from functools import singledispatch
 import copy
-import six
 import typing as t
 
 
@@ -278,7 +277,7 @@ def get_duplicates(iterable):
     return seen2
 
 
-Key = t.NewType('Key', six.text_type)
+Key = t.NewType('Key', str)
 
 
 class Bunch(dict):

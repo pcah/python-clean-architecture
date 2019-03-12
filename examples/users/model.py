@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Integration point with Django framework. It expects application DAOs
 (named Models) to be placed in `models` module in the package directory.
