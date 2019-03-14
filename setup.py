@@ -10,7 +10,7 @@ from setuptools.command.test import test
 
 PROJECT_NAME = 'python-clean-architecture'
 PACKAGE_NAME = 'pca'
-VERSION = (0, 0, 1)
+VERSION = (0, 0, 2)
 
 
 class PyTest(test):

@@ -4,22 +4,30 @@
 
 ### 0.1.0
 
-- [ ] Spring-cleaning (obsolete code, support of old Python versions)
-- [x] Dependency Injection feature
+- [x] Spring-cleaning (obsolete code, support of old Python versions)
+- [x] Dependency Injection
 - Domain
-    - [ ] Entities & aggregates
-    - [ ] Repositories
-    - [ ] Session storages
-    - [ ] File storages
+    - [ ] Value Objects
+    - [x] Entities
+    - [ ] Aggregates
+    - [x] Repositories
+    - [ ] Policies
 - Application
-    - [ ] Single action use cases with validation & control flow
-    - [ ] Flow use cases with states & processes
-    - [ ] Error catalog
-    - [ ] Task-driven application
+    - [x] Simple interactor with validation
+    - [x] Error catalog
+    - [ ] Command-driven application
     - [ ] Services
 - Integration
     - [ ] `click` views
     - [ ] `marshmallow` schema
     - [x] `tinydb` db DAO
-    - [ ] `tinydb` session DAO
-    - [ ] Google Drive file DAO
+
+
+### 0.2.0
+- Domain
+    - [ ] Session storages
+    - [ ] File storages
+- Application
+    - [ ] Task-driven application
+- Integration
+    - [ ] `flask`
