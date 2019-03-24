@@ -4,6 +4,7 @@ from functools import partial, wraps
 import typing as t
 
 from pca.exceptions import ConfigError, ErrorCatalog
+from pca.utils.collections import frozendict
 
 NameOrInterface = t.Union[type, str]
 Constructor = t.Union[t.Type, t.Callable]
@@ -155,16 +156,76 @@ class Container:
         return instance
 
 
-class Component:
+class Inject:
+    """
+    A class that can serve as:
+    * a descriptor for a `Component` class
+    * argument's default value
+    that should be used to mark a place for injecting dependencies as an attribute or an argument
+    of a function.
+    """
+
+    annotation: t.Type = None
+
+    def __init__(self, name: str = None, interface: t.Type = None, qualifier: t.Any = None):
+        self.name = name
+        self.interface = interface
+        self.qualifier = qualifier
+
+    def __set_name__(self, owner: t.Type['Component'], name: str) -> None:
+        self.annotation = owner.__annotations__.get(name) \
+            if hasattr(owner, '__annotations__') else None
+
+    def __get__(self, instance: t.Any, owner: t.Type) -> t.Any:
+        if instance is None:
+            return self
+        return self.find(instance.container)
+
+    def find(self, container: Container) -> t.Any:
+        """
+        Finds a injected instance of the dependency declared by the `Inject` attributes using
+        given container.
+        """
+        return _find_dependency(
+            container, self.name, self.interface or self.annotation, self.qualifier
+        )
+
+
+def _find_dependency(
+        container: Container, name: str, interface: t.Type, qualifier: t.Any
+) -> t.Any:
+    """
+    A helper function to prioritize name vs interface precedence & collision when seeking for
+    a dependency.
+    """
+    if name:
+        return container.find_by_name(name, qualifier)
+    elif interface:
+        return container.find_by_interface(interface, qualifier)
+    else:
+        raise DIErrors.NO_IDENTIFIER_SPECIFIED
+
+
+class ComponentMeta(type):
+    """
+    A metaclass that gathers all `Inject` dependency markers in declaration of a class inheriting
+    the `Component` class.
+    """
+    def __init__(cls, name, bases, dict):
+        super().__init__(name, bases, dict)
+        cls.__dependencies__ = frozendict(
+            (k, v) for k, v in dict.items()
+            if isinstance(v, Inject)
+        )
+
+
+class Component(metaclass=ComponentMeta):
     """
     Archetypal superclass for DI Component, i.e. a class that can be injected.
 
-    The only expectation is (*) that it has to accept container as the first argument
+    The only expectation is that it has to accept container as the first argument
     of its `__init__`. The Component may use container to have dependant components
     of its own, but this is not a requirement.
-
-    Actual components may inherit from this class but they do not have to, as long as
-    they comply with the (*) requirement.
     """
     def __init__(self, container: Container):
         self.container = container
@@ -182,93 +243,54 @@ class Scopes(Enum):
 
 
 def scope(scope_type: Scopes) -> t.Callable:
+    """
+    A decorator for declaring DI scope for the constructor of a dependency: a class or a factory
+    function. See `Scopes` enum for details of each scope type.
+
+    :param scope_type: a scope enum to set for the decorated constructor
+    """
     def decorator(obj: t.Callable) -> t.Callable:
         setattr(obj, _SCOPE_TYPE_REF, scope_type)
         return obj
     return decorator
 
 
-class Inject:
-    """
-    A descriptor for injecting dependencies as properties
-    """
-
-    container: Container = None
-    type_: t.Type = None
-
-    def __init__(self, name: str = None, interface: t.Type = None, qualifier: t.Any = None):
-        self.name = name
-        self.interface = interface
-        self.qualifier = qualifier
-
-    def __get__(self, instance: t.Any, owner: t.Type) -> t.Any:
-        if instance is None:
-            return self
-
-        if self.container is None:
-            self.container = instance.container
-
-        return _find_object(
-            self.container, self.name, self.interface or self.type_, self.qualifier
-        )
-
-    def __set_name__(self, owner: t.Type, name: str) -> None:
-        self.type_ = owner.__annotations__.get(name) if hasattr(owner, '__annotations__') else None
-
-
-def _find_object(container, name, interface, qualifier):
-    if name:
-        return container.find_by_name(name, qualifier)
-    elif interface:
-        return container.find_by_interface(interface, qualifier)
-    else:
-        raise DIErrors.NO_IDENTIFIER_SPECIFIED
-
-
 def inject(f: t.Callable) -> t.Callable:
     """
     A decorator for injecting dependencies into functions. It looks for DI container
-    either on the function itself or on its first argument (self iff f is a method).
-
+    either on the function itself or on its first argument (`self` when `f` is a method).
     """
     signature = inspect.signature(f)
+    dependency_declarations: t.Dict[str, Inject] = {}
 
-    annotations: t.Dict[str, t.Any] = {}
     for name, param in signature.parameters.items():
-        if name == 'self':
-            continue
-        else:
-            default = param.default
-            if isinstance(default, Inject):
-                annotations[name] = (
-                    param.annotation if param.annotation is not param.empty else None,
-                    default
-                )
+        default = param.default
+        if isinstance(default, Inject):
+            dependency_declarations[name] = default
+            if param.annotation is not param.empty:
+                default.interface = param.annotation
 
     @wraps(f)
     def wrapper(*args, **kwargs):
         # look for the DI container either on the function itself
-        # or on its first argument (self iff f is a method)
+        # or on its first argument (`self` when `f` is a method)
         container = getattr(wrapper, 'container', None) \
             or (getattr(args[0], 'container', None) if args else None)
 
         if not container:
+            # noinspection PyUnresolvedReferences
             raise DIErrors.NO_CONTAINER_PROVIDED.with_params(
                 module=f.__module__, function=f.__qualname__)
 
-        for name_, data in annotations.items():
+        # provide arguments that haven't been supplied by the call's kwargs
+        for name_, dependency_declaration in dependency_declarations.items():
             if name_ not in kwargs:
-                annotation, inject_instance = data
-                kwargs[name_] = _find_object(
-                    container,
-                    inject_instance.name,
-                    annotation or inject_instance.interface,
-                    inject_instance.qualifier
-                )
+                kwargs[name_] = dependency_declaration.find(container)
 
         # finally, the call with all the injected arguments
         return f(*args, **kwargs)
 
+    wrapper.__dependencies__ = dependency_declarations
     return wrapper
 
 
