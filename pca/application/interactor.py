@@ -1,9 +1,11 @@
+import abc
+
 from dataclasses import dataclass
 import typing as t
 
-from pca.data.validation import validated_by, Validator
-from pca.exceptions import LogicError
-from pca.utils.dependency_injection import container_supplier, inject
+from pca.data.validation import Validator, validated_by
+from pca.exceptions import ProcessError
+from pca.utils.dependency_injection import Component, container_supplier, inject
 from pca.utils.functools import error_catcher, reify
 
 
@@ -29,7 +31,7 @@ InteractorFunction = t.Callable[[RequestModel, t.Any], ResponseModel]
 
 def interactor_factory(
         error_handler: t.Callable = None,
-        error_class: t.Union[t.Type[Exception], t.Sequence[t.Type[Exception]]] = LogicError
+        error_class: t.Union[t.Type[Exception], t.Sequence[t.Type[Exception]]] = ProcessError
 ):
     """
     Decorator factory that builds a decorator to enriches an application function
@@ -68,3 +70,39 @@ def interactor_factory(
         return decorator
 
     return interactor
+
+
+class Interactor(Component):
+    """
+    Class-based interactor pattern. Abstract base class: implement error handling, validation
+    mechanism and the very business logic.
+    """
+
+    error_class: t.Type[Exception] = ProcessError
+    validators: t.Sequence[Validator] = ()
+
+    def __call__(self, request: RequestModel) -> ResponseModel:
+        try:
+            validated_request = self.validate(request)
+            response = self.execute(validated_request)
+        except self.error_class as e:
+            response = self.handle_error(error=e, request=request)
+        return response
+
+    def validate(self, request):
+        validated_data = request
+        for validator in self.validators:
+            validation_result = validator(
+                request=validated_data, dependencies=self.__dependencies__)
+            # validator is eligible to alter input data for the decorated function
+            # but doesnt have to; if it returns no result, his input will be used
+            validated_data = validated_data if validation_result is None else validation_result
+        return validated_data
+
+    @abc.abstractmethod
+    def handle_error(self, error: Exception, request: RequestModel) -> ResponseModel:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def execute(self, request: RequestModel) -> ResponseModel:
+        raise NotImplementedError
