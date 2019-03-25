@@ -1,3 +1,4 @@
+import abc
 import inspect
 from enum import Enum
 from functools import partial, wraps
@@ -206,7 +207,7 @@ def _find_dependency(
         raise DIErrors.NO_IDENTIFIER_SPECIFIED
 
 
-class ComponentMeta(type):
+class ComponentMeta(abc.ABCMeta):
     """
     A metaclass that gathers all `Inject` dependency markers in declaration of a class inheriting
     the `Component` class.
@@ -290,7 +291,7 @@ def inject(f: t.Callable) -> t.Callable:
         # finally, the call with all the injected arguments
         return f(*args, **kwargs)
 
-    wrapper.__dependencies__ = dependency_declarations
+    wrapper.__dependencies__ = frozendict(dependency_declarations)
     return wrapper
 
 

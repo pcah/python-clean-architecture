@@ -1,6 +1,11 @@
-from dataclasses import dataclass
+import dataclasses
 
 from pca.interfaces.entity import Id
+
+
+# TODO #40. is entity module using dataclasses `field` or have its own API for `fields`?
+# proxy import for now
+field = dataclasses.field
 
 
 class Entity:
@@ -17,7 +22,7 @@ class Entity:
     __id__: Id = None
 
     def __init_subclass__(cls, **kwargs):
-        return dataclass(cls, eq=False)
+        return dataclasses.dataclass(cls, eq=False)
 
     def __init__(self, **kwargs):
         """
