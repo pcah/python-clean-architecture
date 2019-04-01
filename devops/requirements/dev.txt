@@ -5,6 +5,7 @@
 # dev env
 ipython
 pdbpp
-twine
 
--e .
+# build tools
+twine
+wheel

@@ -1,24 +1,11 @@
 #!/usr/bin/env python3
-import sys
-
 from setuptools import (
     setup,
     find_packages,
 )
-from setuptools.command.test import test
 
-
-PROJECT_NAME = 'python-clean-architecture'
-PACKAGE_NAME = 'pca'
-VERSION = (0, 0, 2)
-
-
-class PyTest(test):
-
-    def run_tests(self):
-        from tox.session import main
-        errno = main(sys.argv[2:])
-        sys.exit(errno)
+import devops
+import pca
 
 
 def readme():
@@ -27,10 +14,11 @@ def readme():
 
 
 if __name__ == '__main__':
+    devops.PROJECT_DIR = pca.PROJECT_DIR
     setup(
-        name=PROJECT_NAME,
-        version='.'.join(str(i) for i in VERSION),
-        url=f'https://github.com/pcah/{PROJECT_NAME}',
+        name=pca.PROJECT_NAME,
+        version=pca.VERSION.as_string(),
+        url=f'https://github.com/pcah/{pca.PROJECT_NAME}',
         license='MIT License',
         author='lhaze',
         author_email='lhaze@lhaze.name',
@@ -50,8 +38,13 @@ if __name__ == '__main__':
             "Development Status :: 2 - Pre-Alpha"
         ],
 
-        cmdclass={'test': PyTest},
-        install_requires=['virtualenv'],
+        cmdclass=devops.commands.ALL,
+        install_requires=[
+            "dataclasses; python_version < '3.7'",
+            'twine',
+            'virtualenv',
+            'wheel',
+        ],
         tests_require=['tox'],
         packages=find_packages(),
     )

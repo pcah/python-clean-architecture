@@ -1,5 +1,5 @@
 # python-clean-architecture
-[![GitHub version](https://badge.fury.io/gh/pcah%2Fpython-clean-architecture.svg)](https://badge.fury.io/gh/pcah%2Fpython-clean-architecture)
+![GitHub tag](https://img.shields.io/github/tag-date/pcah/python-clean-architecture.svg?style=popout)
 [![development status](https://img.shields.io/badge/development%20status-pre--alpha-orange.svg)](https://pypi.org/project/python-clean-architecture/)
 [![Build Status](https://travis-ci.org/pcah/python-clean-architecture.svg?branch=master)](https://travis-ci.org/pcah/python-clean-architecture) 
 [![codecov](https://codecov.io/gh/pcah/python-clean-architecture/branch/master/graph/badge.svg)](https://codecov.io/gh/pcah/python-clean-architecture) [![Join the chat at https://gitter.im/pcah/python-clean-architecture](https://badges.gitter.im/pcah/python-clean-architecture.svg)](https://gitter.im/pcah/python-clean-architecture?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)

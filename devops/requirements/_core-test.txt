@@ -6,3 +6,4 @@ pytest-mock
 pytest-cov
 pep8-naming
 coverage
+pyfakefs
