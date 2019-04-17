@@ -105,11 +105,11 @@ class Version:
             major=self.major,
             minor=self.minor,
             micro=self.micro + 1 if self.micro else 1,
-            pre_phase=self.initial_pre_phase if add_pre else None,
-            pre_number=self.initial_pre_number if add_pre else None,
+            pre_phase=None,
+            pre_number=None,
         )
 
-    def bump_pre(self) -> 'Version':
+    def bump_pre(self, add_pre=None) -> 'Version':
         assert self.pre_phase is not None, \
             "You can't bump pre release the version that is final"
         return self.__class__(
@@ -120,7 +120,7 @@ class Version:
             pre_number=self.pre_number + 1,
         )
 
-    def promote_pre(self) -> 'Version':
+    def promote_pre(self, add_pre=None) -> 'Version':
         assert self.pre_phase is not None, \
             "You can't promote the version that is not a pre release"
         phase = self.pre_phase_sequence[self.pre_phase]

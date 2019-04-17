@@ -1,10 +1,12 @@
-from distutils.cmd import Command
+from setuptools import Command
 from pathlib import Path
 
 
 class Publish(Command):
 
     user_options = []
+    description = "publishes distributions to PyPI using `twine` library"
+
     distributions_glob = 'dist/*'
 
     def initialize_options(self):
@@ -15,9 +17,13 @@ class Publish(Command):
 
     def run(self):
         from twine.commands import upload
-        from devops import PROJECT_DIR
+        from devops import PROJECT_PACKAGE
+        assert hasattr(PROJECT_PACKAGE, 'PROJECT_DIR'), "No PROJECT_DIR variable declared"
+        assert PROJECT_PACKAGE.PROJECT_DIR, "No PROJECT_DIR variable injected"
+
         distributions = [
-            path.as_posix() for path in Path(PROJECT_DIR).glob(self.distributions_glob)
+            path.as_posix() for path in
+            Path(PROJECT_PACKAGE.PROJECT_DIR).glob(self.distributions_glob)
             if path.is_file()
         ]
         return upload.main(distributions)

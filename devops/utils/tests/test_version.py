@@ -92,11 +92,11 @@ def test_bump_minor(version, add_pre, expected):
 
 
 @pytest.mark.parametrize("version, add_pre, expected", [
-    (Version(0, 0), True, Version(0, 0, 1, 'a', 0)),
+    (Version(0, 0), True, Version(0, 0, 1)),
     (Version(0, 0), False, Version(0, 0, 1)),
-    (Version(1, 2, 3), True, Version(1, 2, 4, 'a', 0)),
+    (Version(1, 2, 3), True, Version(1, 2, 4)),
     (Version(1, 2, 3), False, Version(1, 2, 4)),
-    (Version(0, 2, None), True, Version(0, 2, 1, 'a', 0)),
+    (Version(0, 2, None), True, Version(0, 2, 1)),
     (Version(0, 2, None), False, Version(0, 2, 1)),
 ])
 def test_bump_micro(version, add_pre, expected):

@@ -14,7 +14,7 @@ def readme():
 
 
 if __name__ == '__main__':
-    devops.PROJECT_DIR = pca.PROJECT_DIR
+    devops.PROJECT_PACKAGE = pca
     setup(
         name=pca.PROJECT_NAME,
         version=pca.VERSION.as_string(),
@@ -41,6 +41,7 @@ if __name__ == '__main__':
         cmdclass=devops.commands.ALL,
         install_requires=[
             "dataclasses; python_version < '3.7'",
+            "gitpython",
             'twine',
             'virtualenv',
             'wheel',

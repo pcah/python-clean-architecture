@@ -7,5 +7,6 @@ ipython
 pdbpp
 
 # build tools
+gitpython
 twine
 wheel

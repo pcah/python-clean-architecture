@@ -1,11 +1,13 @@
-from distutils.cmd import Command
+from setuptools import Command
 from setuptools.command.sdist import sdist
 from wheel.bdist_wheel import bdist_wheel
 
 
+# noinspection PyAttributeOutsideInit
 class DistBuild(Command):
 
     user_options = []
+    description = "build preferred distributions (source & wheel) to publish to PyPI"
 
     def initialize_options(self):
         self.sdist = sdist(self.distribution)
