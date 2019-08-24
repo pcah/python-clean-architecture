@@ -5,6 +5,7 @@
 # dev env
 ipython
 pdbpp
+gnureadline
 
 # build tools
 gitpython

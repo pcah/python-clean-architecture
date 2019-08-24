@@ -1,82 +1,62 @@
-from __future__ import absolute_import
-
 from collections.abc import MutableSet
 from functools import singledispatch
-import copy
 import typing as t
 
-
-def freeze(obj):
-    """Returns immuttable copy of the `obj`"""
-    if isinstance(obj, dict):
-        return frozendict((k, freeze(v)) for k, v in obj.items())
-    elif isinstance(obj, list):
-        return tuple(freeze(el) for el in obj)
-    elif isinstance(obj, set):
-        return frozenset(obj)
-    else:
-        return obj
+SliceAll = slice(None)
+generator = type(e for e in ())
 
 
-# noinspection PyPep8Naming
-class frozendict(dict):  # noqa: N801
+def sget(target, key: str, default: t.Any = None):
     """
-    Frozen (immutable) version of dict. Name is left to be consistent with
-    set/frozenset pair.
+    structure-get, a function simmilar to dict's 'get' method, which can resolve inner
+    structure of keys. A string-typed key may be composed of series of keys (for maps)
+    or indexes (for sequences), concatenated with dots. The method cat take a default value,
+    just as dict.get does.
 
-    The code is taken from:
-    code.activestate.com/recipes/414283-frozen-dictionaries/
+    An example:
+    >>> bunch = Bunch(foo={'bar': ['value']})
+    >>> assert sget(bunch, 'foo.bar.0') == 'value'
+    >>> assert sget(bunch, 'foo.baz', 42) == 42
     """
-
-    @property
-    def _blocked_attribute(self):
-        raise AttributeError("A frozendict cannot be modified.")
-
-    __delitem__ = __setitem__ = clear = \
-        pop = popitem = setdefault = update = _blocked_attribute
-
-    def __new__(cls, *args, **kw):
-        new = dict.__new__(cls)
-
-        args_ = []
-        for arg in args:
-            if isinstance(arg, dict):
-                arg = copy.copy(arg)
-                for k, v in arg.items():
-                    if isinstance(v, dict):
-                        arg[k] = frozendict(v)
-                    elif isinstance(v, list):
-                        v_ = list()
-                        for elm in v:
-                            if isinstance(elm, dict):
-                                v_.append(frozendict(elm))
-                            else:
-                                v_.append(elm)
-                        arg[k] = tuple(v_)
-                args_.append(arg)
-            else:
-                args_.append(arg)
-
-        dict.__init__(new, *args_, **kw)
-        return new
-
-    # noinspection PyMissingConstructor
-    def __init__(self, *args, **kw):
-        pass
-
-    def __hash__(self):
+    value = target
+    for part in key.split('.'):
         try:
-            return self._cached_hash
+            # attribute access
+            value = getattr(value, part)
         except AttributeError:
-            self._cached_hash = hash(frozenset(self.items()))
-            return self._cached_hash
+            try:
+                # key access
+                value = value[part]
+            except KeyError:
+                return default
+            except TypeError:
+                # index access
+                try:
+                    value = value[int(part)]
+                except (TypeError, ValueError, IndexError):
+                    return default
+    return value
 
-    def __repr__(self):
-        return "frozendict(%s)" % dict.__repr__(self)
+
+@singledispatch
+def freeze(obj):
+    """Returns immutable copy of the `obj`"""
+    return obj
 
 
-# noinspection PyTypeChecker
-SLICE_ALL = slice(None)
+@freeze.register(dict)
+def _(d: dict):
+    return frozendict((k, freeze(v)) for k, v in d.items())
+
+
+@freeze.register(list)
+def _(l: list):
+    return tuple(freeze(v) for v in l)
+
+
+@freeze.register(set)
+def _(s: set):
+    return frozenset(freeze(v) for v in s)
 
 
 def is_iterable(obj):
@@ -128,7 +108,7 @@ class OrderedSet(MutableSet):
         corresponding to those indices. This is similar to NumPy's
         "fancy indexing".
         """
-        if index == SLICE_ALL:
+        if index == SliceAll:
             return self
         elif hasattr(index, '__index__') or isinstance(index, slice):
             result = self.items[index]
@@ -138,7 +118,7 @@ class OrderedSet(MutableSet):
                 return result
         elif is_iterable_and_not_tuple(index):
             return OrderedSet([self.items[i] for i in index])
-        else:
+        else:  # pragma: no cover
             raise TypeError(
                 "Don't know how to index an OrderedSet by %r" % index)
 
@@ -188,7 +168,7 @@ class OrderedSet(MutableSet):
         try:
             for item in sequence:
                 item_index = self.add(item)
-        except TypeError:
+        except TypeError:  # pragma: no cover
             raise ValueError(
                 'Argument needs to be an iterable, got %s' % type(sequence))
         return item_index
@@ -277,7 +257,70 @@ def get_duplicates(iterable):
     return seen2
 
 
-Key = t.NewType('Key', str)
+@singledispatch
+def iterate_over_values(collection):
+    yield collection
+
+
+@iterate_over_values.register(list)
+@iterate_over_values.register(tuple)
+@iterate_over_values.register(set)
+@iterate_over_values.register(OrderedSet)
+def _(collection):
+    for value in collection:
+        yield from iterate_over_values(value)
+
+
+@iterate_over_values.register(dict)
+def _(collection):
+    for key in sorted(collection):
+        yield from iterate_over_values(collection[key])
+
+
+# noinspection PyPep8Naming
+class frozendict(dict):  # noqa: N801
+    """
+    Frozen (immutable) version of dict. Name is left to be consistent with
+    set/frozenset pair.
+
+    The code is taken from:
+    code.activestate.com/recipes/414283-frozen-dictionaries/
+    """
+
+    def __not_implemented__(self, *args, **kwargs):
+        raise AttributeError("A frozendict cannot be modified.")
+
+    __delitem__ = __setitem__ = clear = \
+        pop = popitem = setdefault = update = __not_implemented__
+
+    def __copy__(self):
+        """
+        Addresses the problem with copy.copy(frozendict()) and its default copier (which asserts
+        mutability of the target).
+        """
+        return frozendict(dict.copy(self))
+
+    def __new__(cls, *args, **kwargs):
+        new = dict.__new__(cls)
+        combined_kwargs = {}
+        for structure in args + (kwargs,):
+            if isinstance(structure, (list, generator)):
+                combined_kwargs.update({v0: v1 for v0, v1 in structure})
+            elif isinstance(structure, dict):
+                combined_kwargs.update(structure)
+        frozen_structure = [(freeze(k), freeze(v)) for k, v in combined_kwargs.items()]
+        dict.__init__(new, frozen_structure)
+        return new
+
+    def __hash__(self):
+        try:
+            return self._cached_hash
+        except AttributeError:
+            self._cached_hash = hash(frozenset(self.items()))
+            return self._cached_hash
+
+    def __repr__(self):
+        return "frozendict(%s)" % dict.__repr__(self)
 
 
 class Bunch(dict):
@@ -289,19 +332,13 @@ class Bunch(dict):
     >>> assert bunch.foo == 'bar'
     >>> bunch.foo = {'bar': ['baz']}
     >>> assert bunch['foo'] = {'bar': ['baz']}
-
-    Additionaly, it offers 'get' method wich can take composite keys:
-    >>> assert bunch.get('foo.bar.0') == 'baz'
-    >>> assert bunch.get('foo.baz', 42) == 42
     """
 
-    def __getattr__(self, key: Key) -> t.Any:
+    def __getattr__(self, key: str) -> t.Any:
         """
         Gets key if it exists, otherwise throws AttributeError.
         NB __getattr__ is only called if key is not found in normal places.
 
-        :param Key key:
-        :rtype: Any
         :raises: AttributeError
         """
         try:
@@ -309,13 +346,11 @@ class Bunch(dict):
         except KeyError:
             raise AttributeError(key)
 
-    def __setattr__(self, key: Key, value: t.Any):
+    def __setattr__(self, key: str, value: t.Any) -> None:
         """
         Sets value under the specified key. Translates TypeError
         (ie. unhashable keys) to AttributeError.
 
-        :param Key key:
-        :param Any value:
         :raises: AttributeError
         """
         try:
@@ -323,14 +358,12 @@ class Bunch(dict):
         except (KeyError, TypeError):
             raise AttributeError(key)
 
-    def __delattr__(self, key: Key):
+    def __delattr__(self, key: str) -> None:
         """
         Deletes attribute k if it exists, otherwise deletes key k. A KeyError
         raised by deleting the key--such as when the key is missing--will
         propagate as an AttributeError instead.
 
-        :param Key key:
-        :rtype: Any
         :raises: AttributeError
         """
         try:
@@ -338,44 +371,7 @@ class Bunch(dict):
         except KeyError:
             raise AttributeError(key)
 
-    def get(self, key: Key, default: t.Any = None):
-        """
-        Dict-like 'get' method which can resolve inner structure of keys.
-        A string-typed key may be composed of series of keys (for maps)
-        or indexes (for sequences), concatenated with dots.
-        The method cat take a default value, just as dict.get does.
-
-        An example:
-        >>> bunch = Bunch(foo={'bar': ['value']})
-        >>> assert bunch.get('foo.bar.0') == 'value'
-        >>> assert bunch.get('foo.baz', 42) == 42
-
-        :param Key key:
-        :param Any default:
-        :rtype: Any
-        """
-        if not (hasattr(key, 'split') and '.' in key):
-            return super(Bunch, self).get(key, default)
-        value = self
-        for part in key.split('.'):
-            try:
-                # attribute access
-                value = getattr(value, part)
-            except AttributeError:
-                try:
-                    # key access
-                    value = value[part]
-                except KeyError:
-                    return default
-                except TypeError:
-                    # index access
-                    try:
-                        value = value[int(part)]
-                    except (TypeError, ValueError, IndexError):
-                        return default
-        return value
-
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Invertible string-form of a Bunch.
         """
@@ -385,21 +381,3 @@ class Bunch(dict):
             self.__class__.__name__,
             ', '.join(['%s=%r' % (key, self[key]) for key in keys])
         )
-
-
-@singledispatch
-def iterate_over_values(collection):
-    yield collection
-
-
-@iterate_over_values.register(list)
-@iterate_over_values.register(tuple)
-def _(collection):
-    for value in collection:
-        yield from iterate_over_values(value)
-
-
-@iterate_over_values.register(dict)
-def _(collection):
-    for key in sorted(collection):
-        yield from iterate_over_values(collection[key])

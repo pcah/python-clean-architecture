@@ -77,3 +77,12 @@ def get_dotted_path(target: t.Union[t.Type, t.Callable]) -> str:
     module_name = getattr(target, '__module__', None)
     return f"{module_name}.{qualname}" if module_name and qualname \
         else qualname if not module_name else ''
+
+
+def maybe_dotted(target: t.Union[str, t.Type]) -> t.Type:
+    """
+    Imports a Python qualified name given in the target.
+    """
+    if isinstance(target, str):
+        return import_dotted_path(target)
+    return target

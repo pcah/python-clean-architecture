@@ -16,28 +16,24 @@ class reify(object):  # noqa: N801
     Python parlance, a non-data descriptor.  The following is an example and
     its usage:
 
-    .. doctest::
+    >>> class Foo(object):
+    ...     @reify
+    ...     def jammy(self):
+    ...         print('jammy called')
+    ...         return 1
 
-        >>> from pyramid.decorator import reify
-
-        >>> class Foo(object):
-        ...     @reify
-        ...     def jammy(self):
-        ...         print('jammy called')
-        ...         return 1
-
-        >>> f = Foo()
-        >>> v = f.jammy
-        jammy called
-        >>> print(v)
-        1
-        >>> f.jammy
-        1
-        >>> # jammy func not called the second time; it replaced itself with 1
-        >>> # Note: reassignment is possible
-        >>> f.jammy = 2
-        >>> f.jammy
-        2
+    >>> f = Foo()
+    >>> v = f.jammy
+    jammy called
+    >>> print(v)
+    1
+    >>> f.jammy
+    1
+    >>> # jammy func not called the second time; it replaced itself with 1
+    >>> # Note: reassignment is possible
+    >>> f.jammy = 2
+    >>> f.jammy
+    2
     """
 
     def __init__(self, wrapped):
