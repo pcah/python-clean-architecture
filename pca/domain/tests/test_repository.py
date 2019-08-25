@@ -1,15 +1,15 @@
 import dataclasses
 import pytest
 
-from pca.data.dao import IDao, InMemoryDao
 from pca.data.errors import QueryErrors
+from pca.data.dao import InMemoryDao
 from pca.domain.repository import Repository, Schema
 from pca.domain.entity import Entity
 from pca.exceptions import (
     ConfigError,
     QueryError,
 )
-from pca.interfaces.dao import Dto
+from pca.interfaces.dao import Dto, IDao
 from pca.utils.dependency_injection import Container, DIErrors
 
 

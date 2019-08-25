@@ -1,12 +1,13 @@
 import os
+import pathlib  # noqa: F401
 import typing as t
 
 from ruamel import yaml
 
-from .os import read_from_file
+from pca.utils.os import read_from_file
 
 
-class CustomLoader(yaml.Loader):
+class CustomYamlLoader(yaml.Loader):
     """
     Custom YAML Loader with some extension features:
     * `!include` constructor which can incorporate another file (YAML, JSON or plain text lines)
@@ -43,18 +44,18 @@ class CustomLoader(yaml.Loader):
         raise NotImplementedError
 
 
-def construct_include(loader: CustomLoader, node: yaml.Node) -> t.Any:
+def _construct_include(loader: CustomYamlLoader, node: yaml.Node) -> t.Any:
     """Include file referenced at node."""
     filepath = os.path.abspath(os.path.join(loader.root, loader.construct_scalar(node)))
-    return load_from_filepath(filepath, master=loader)
+    return load_yaml_from_filepath(filepath, master=loader)
 
 
-yaml.add_constructor('!include', construct_include, CustomLoader)
+yaml.add_constructor('!include', _construct_include, CustomYamlLoader)
 
 
-def load(
+def load_yaml(
         stream: t.Union[str, t.IO],
-        master: CustomLoader = None,
+        master: CustomYamlLoader = None,
         version: str = None
 ) -> t.Any:
     """
@@ -63,7 +64,7 @@ def load(
         * unsafe loading (be sure to use it only for own datafiles)
         * YAML inclusion feature
     """
-    loader = CustomLoader(stream, version=version)
+    loader = CustomYamlLoader(stream, version=version)
     if master is not None:
         loader.anchors = master.anchors
     try:
@@ -80,12 +81,13 @@ def load(
             pass
 
 
-def load_from_filepath(
+def load_yaml_from_filepath(
         filepath: t.Union[str, 'pathlib.Path'],
-        master: CustomLoader = None
+        master: CustomYamlLoader = None
 ) -> t.Any:
     """
-    See: `load` function. This function differs only with that it expects filepath as an argument.
+    See: `load_yaml` function. This function differs only with that it expects filepath
+    as an argument.
     """
     contents = read_from_file(filepath)
-    return load(contents, master=master)
+    return load_yaml(contents, master=master)

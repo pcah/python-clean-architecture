@@ -13,3 +13,4 @@ class QueryErrors(ErrorCatalog):
     ENTITY_NOT_YET_ADDED = QueryError(hint=(
         "An operation was tried to be made on an entity, that hasn't been added to the repository "
         "yet and thus is invalid."))
+    IMMUTABLE_DAO = QueryError(hint="This DAO is immutable.")

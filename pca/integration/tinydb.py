@@ -2,15 +2,17 @@ import typing as t
 
 from pca.data.dao import (
     AbstractDao,
+    QueryChain,
+)
+from pca.data.errors import QueryErrors
+from pca.interfaces.dao import (
     BatchOfKwargs,
     BatchOfDto,
     Dto,
     Id,
     Ids,
     Kwargs,
-    QueryChain,
 )
-from pca.data.errors import QueryErrors
 from pca.utils.dependency_injection import Container
 
 from .errors import IntegrationErrors
