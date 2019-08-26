@@ -6,6 +6,10 @@ from pca.utils.collections import sget
 class AClass:
     attribute = {'foo': 'bar'}
 
+    @property
+    def sub_attribute(self):
+        return AClass()
+
 
 sentinel = AClass()
 dict_target = {
@@ -58,6 +62,7 @@ def test_list_default():
 
 @pytest.mark.parametrize('key, default, result', [
     ('attribute', None, {'foo': 'bar'}),
+    ('sub_attribute.attribute.foo', None, 'bar'),
     ('attribute.foo', None, 'bar'),
     ('attribute.baz', None, None),
     ('attribute.baz', 42, 42),

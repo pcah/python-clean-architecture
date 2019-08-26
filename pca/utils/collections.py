@@ -28,13 +28,11 @@ def sget(target, key: str, default: t.Any = None):
             try:
                 # key access
                 value = value[part]
-            except KeyError:
-                return default
-            except TypeError:
+            except (TypeError, KeyError):
                 # index access
                 try:
                     value = value[int(part)]
-                except (TypeError, ValueError, IndexError):
+                except (TypeError, ValueError, IndexError, KeyError):
                     return default
     return value
 
