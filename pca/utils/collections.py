@@ -18,12 +18,13 @@ def sget(target, key: str, default: t.Any = None):
     >>> assert sget(bunch, 'foo.bar.0') == 'value'
     >>> assert sget(bunch, 'foo.baz', 42) == 42
     """
+    key_iter = key.split('.') if hasattr(key, 'split') else [key]
     value = target
-    for part in key.split('.'):
+    for part in key_iter:
         try:
             # attribute access
             value = getattr(value, part)
-        except AttributeError:
+        except (TypeError, AttributeError):
             try:
                 # key access
                 value = value[part]
