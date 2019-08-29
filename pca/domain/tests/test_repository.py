@@ -3,7 +3,7 @@ import pytest
 
 from pca.data.errors import QueryErrors
 from pca.data.dao import InMemoryDao
-from pca.domain.repository import Repository, Schema
+from pca.domain.repository import Factory, Repository
 from pca.domain.entity import Entity
 from pca.exceptions import (
     ConfigError,
@@ -25,8 +25,8 @@ def data():
 
 
 @pytest.fixture(scope='session')
-def schema():
-    return Schema(Bike)
+def factory():
+    return Factory(Bike)
 
 
 class TestSchema:
@@ -42,22 +42,22 @@ class TestSchema:
         return Bike(**dto)
 
     def test_construction(self, dto):
-        schema = Schema(Bike)
-        entity = schema.construct(dto)
+        factory = Factory(Bike)
+        entity = factory.construct(dto)
         assert isinstance(entity, Bike)
         assert entity.id == 17
         assert entity.frame_type == 'gravel'
         assert entity.wheel_type == 'road'
 
     def test_deconstruction(self, entity, data):
-        schema = Schema(Bike)
-        result = schema.deconstruct(entity)
+        factory = Factory(Bike)
+        result = factory.deconstruct(entity)
         assert result == data
         assert result.id == entity.id
 
     def test_deconstruction_with_fields(self, entity, dto):
-        schema = Schema(Bike, fields=('wheel_type',))
-        result = schema.deconstruct(entity)
+        factory = Factory(Bike, fields=('wheel_type',))
+        result = factory.deconstruct(entity)
         assert result == {'wheel_type': 'road'}
         assert result.id == entity.id
 
@@ -73,8 +73,8 @@ class TestConstruction:
         return InMemoryDao
 
     @pytest.fixture
-    def repo(self, container, schema):
-        return Repository(container, schema)
+    def repo(self, container, factory):
+        return Repository(container, factory)
 
     def test_dao_injection_success(self, repo, dao_class):
         assert repo.entity is Bike
@@ -99,13 +99,13 @@ class TestApi:
         return container.find_by_interface(IDao, qualifier=Bike)
 
     @pytest.fixture
-    def repo(self, container, schema, dao):
-        repo = Repository(container, schema)
+    def repo(self, container, factory, dao):
+        repo = Repository(container, factory)
         return repo
 
     def test_create(self, data, repo: Repository, dao: IDao):
         entity = repo.create(**data)
-        assert repo.schema.deconstruct(entity) == data
+        assert repo.factory.deconstruct(entity) == data
         assert dao.all().count() == 0
 
     def test_add(self, data, repo: Repository, dao: IDao):

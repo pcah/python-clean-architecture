@@ -10,7 +10,7 @@ from pca.utils.dependency_injection import Container
 from .entity import Entity
 
 
-class Schema:
+class Factory:
     """
     A prototype serialization/validation class, designed to:
       * support dataclasses as entities
@@ -55,18 +55,18 @@ class Schema:
 class Repository(IRepository[Id, Entity]):
     """
     Repository serves as a collection of entites (get, add, update, remove) with underlying
-    persistence layer. Via its schema class, it knows how to construct an instance of the entity,
+    persistence layer. Via its factory class, it knows how to construct an instance of the entity,
     serialize it and get its id.
 
     Developers of repos for concrete entites are encouraged to subclass and put a meaningful
     query and command methods along the basic ones.
     """
-    schema: t.ClassVar[t.Optional[Schema]] = None
+    factory: t.ClassVar[t.Optional[Factory]] = None
 
-    def __init__(self, container: Container, schema: Schema = None):
-        self.schema: Schema = schema or self.schema
-        if not self.schema:  # pragma: no cover
-            raise QueryErrors.NO_SCHEMA_DEFINED
+    def __init__(self, container: Container, factory: Factory = None):
+        self.factory: Factory = factory or self.factory
+        if not self.factory:  # pragma: no cover
+            raise QueryErrors.NO_FACTORY_DEFINED
         self.container = container
 
     @reify
@@ -79,21 +79,21 @@ class Repository(IRepository[Id, Entity]):
 
     @reify
     def entity(self):
-        """Proxy to entity class defined by the schema."""
-        return self.schema.entity
+        """Proxy to entity class defined by the factory."""
+        return self.factory.entity
 
     def create(self, **kwargs) -> Entity:
         """
-        Creates an object compatible with this repo. Uses repo's schema
-        or the klass iff schema not present.
+        Creates an object compatible with this repo. Uses repo's factory
+        or the klass iff factory not present.
 
         NB: Does not inserts the object to the repo. Use `create_and_add` method for that.
         """
-        return self.schema.construct(Dto(kwargs))
+        return self.factory.construct(Dto(kwargs))
 
     def add(self, entity: Entity) -> Id:
         """Adds the object to the repo to the underlying persistence layer via its DAO."""
-        kwargs = self.schema.deconstruct(entity)
+        kwargs = self.factory.deconstruct(entity)
         return self.dao.insert(**kwargs)
 
     def create_and_add(self, **kwargs) -> Entity:
@@ -108,7 +108,7 @@ class Repository(IRepository[Id, Entity]):
         dto = self.dao.get(id_)
         if not dto:
             raise QueryErrors.NOT_FOUND.with_params(id=id_, entity=self.entity)
-        entity = self.schema.construct(dto)
+        entity = self.factory.construct(dto)
         return entity
 
     def contains(self, id_: Id) -> bool:
@@ -118,8 +118,8 @@ class Repository(IRepository[Id, Entity]):
     def update(self, entity: Entity) -> None:
         """Updates the object in the repo."""
         # TODO TBDL which layer should filter only changed fields of the entity
-        # TODO update = self.schema.diff(entity)
-        update = self.schema.deconstruct(entity)
+        # TODO update = self.factory.diff(entity)
+        update = self.factory.deconstruct(entity)
         self.dao.filter_by(id_=entity.id).update(**update)
 
     def remove(self, entity: Entity) -> None:

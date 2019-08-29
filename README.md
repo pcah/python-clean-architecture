@@ -35,7 +35,7 @@ Here you can find a short version of The Principles the library is meant to foll
 
 #### Tiers of the architecture
 
-* Data-level logic: data description objects, schemas, serialization, predicates, formulae. [Its not a specific layer]
+* Data-level logic: data description objects, factories, serialization, predicates, formulae. [Its not a specific layer]
 * Domain layer: bounded contexts (aka domains), entities, value objects, aggregates, repositories, policies, factories, domain services.
 * Application-specific logic: use-cases, application services, gateways, CQRS stacks, sagas. Task-, event- and data-driven applications, commands.
 

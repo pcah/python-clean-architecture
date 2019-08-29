@@ -18,8 +18,8 @@
     - [ ] Command-driven application
     - [ ] Services
 - Integration
-    - [ ] `click` views
-    - [ ] `marshmallow` schema
+    - [ ] `click` view
+    - [ ] `marshmallow` factory
     - [x] `tinydb` db DAO
 
 

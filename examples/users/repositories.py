@@ -1,5 +1,5 @@
 from pca.data.predicate import where
-from pca.domain.repository import Repository, Schema
+from pca.domain.repository import Repository, Factory
 from pca.utils.dependency_injection import Inject
 
 from ..framework_ideas.integrations.common import AuthenticationService
@@ -7,7 +7,7 @@ from . import entities
 
 
 class UserRepo(Repository):
-    schema: Schema = Schema(entity=entities.User)
+    factory: Factory = Factory(entity=entities.User)
 
     authentication: AuthenticationService = Inject()
 
@@ -29,7 +29,7 @@ class UserRepo(Repository):
 
 
 class InvitationRepo(Repository):
-    schema: Schema = Schema(entity=entities.Invitation)
+    factory: Factory = Factory(entity=entities.Invitation)
 
     q_inviter_from_same_organization = where('inviter.organization') == where('organization')
     q_valid_inviter = q_inviter_from_same_organization | \

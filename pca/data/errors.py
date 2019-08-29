@@ -2,7 +2,7 @@ from pca.exceptions import ErrorCatalog, QueryError
 
 
 class QueryErrors(ErrorCatalog):
-    NO_SCHEMA_DEFINED = QueryError(hint="A repository has no schema defined.")
+    NO_FACTORY_DEFINED = QueryError(hint="A repository has no factory defined.")
     UNRESTRICTED_REMOVE = QueryError(hint=(
         "A trivial query has been found while doing remove. If you want to clear all the entries "
         "in the dao, use `clear` explicitly."
