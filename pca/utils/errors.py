@@ -83,6 +83,8 @@ class ExceptionWithCode(Exception):
         params_str = f", params={self.params}" if self.params else ''
         return f"{self.__class__.__name__}(code='{self.code}', area='{self.area}'{params_str})"
 
+    __str__ = __repr__
+
     def with_params(self, **kwargs) -> 'ExceptionWithCode':
         """
         Clones the instance of error and sets kwargs as the new instance's params. Sets the
@@ -90,7 +92,7 @@ class ExceptionWithCode(Exception):
 
         Used to supply logic-dependent params to the catalog-defined instance of an error.
         """
-        copy = self.__class__(code=self.code, area=self.area, params=kwargs)
+        copy: ExceptionWithCode = self.__class__(code=self.code, area=self.area, params=kwargs)
         copy.__dict__['catalog'] = self.catalog
         return copy
 

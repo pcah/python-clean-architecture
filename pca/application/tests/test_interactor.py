@@ -12,7 +12,11 @@ from pca.application.interactor import (
 from pca.domain.entity import Entity, field
 from pca.domain.repository import Repository
 from pca.exceptions import LogicError
-from pca.utils.dependency_injection import Inject
+from pca.utils.dependency_injection import (
+    Inject,
+    create_component,
+    get_attribute_dependencies,
+)
 
 
 class Racer(Entity):
@@ -231,8 +235,7 @@ class AddTeamMember(Interactor):
     teams: Repository = Inject(qualifier=Team)
     racers: Repository = Inject(qualifier=Racer)
 
-    def __init__(self, container, validators):
-        super().__init__(container)
+    def __init__(self, validators):
         # testing properties; normally, validators would be just a property with functions declared
         self.error_handler = mock.MagicMock(return_value={'error': 42})
         self.validators = validators
@@ -252,10 +255,10 @@ class TestClassInteractor:
 
     @pytest.fixture
     def interactor(self, container, validators):
-        return AddTeamMember(container, validators)
+        return create_component(AddTeamMember, container, kwargs={'validators': validators})
 
     def test_without_validation(self, container, request_data, team):
-        interactor = AddTeamMember(container, ())
+        interactor = create_component(AddTeamMember, container, kwargs={'validators': ()})
         response = interactor(request_data)
 
         assert response.data == request_data
@@ -279,7 +282,7 @@ class TestClassInteractor:
         validators[1].side_effect = error_instance
 
         response = interactor(request_data)
-        dependencies = interactor.__dependencies__
+        dependencies = get_attribute_dependencies(interactor)
 
         assert response == error_result
         validators[0].assert_called_once_with(request=request_data, dependencies=dependencies)
@@ -293,7 +296,7 @@ class TestClassInteractor:
 
         with pytest.raises(ValueError):
             interactor(request_data)
-        dependencies = interactor.__dependencies__
+        dependencies = get_attribute_dependencies(interactor)
 
         validators[0].assert_called_once_with(request=request_data, dependencies=dependencies)
         validators[1].assert_called_once_with(request=request_data, dependencies=dependencies)
@@ -306,7 +309,7 @@ class TestClassInteractor:
         teams.find.side_effect = error_instance
 
         response = interactor(request_data)
-        dependencies = interactor.__dependencies__
+        dependencies = get_attribute_dependencies(interactor)
 
         assert response == error_result
         validators[0].assert_called_once_with(request=request_data, dependencies=dependencies)

@@ -25,7 +25,7 @@ def content():
 class TestConstruction:
 
     def test_initial_content(self, mock_container, content):
-        dao = InMemoryDao(mock_container, initial_content=content)
+        dao = InMemoryDao(initial_content=content)
         assert list(dao.all()) == content
 
 
@@ -39,7 +39,7 @@ class TestApi:
             {'char': 'b', 'is_a': False},
             {'char': 'c', 'is_a': False}
         """
-        dao = InMemoryDao(mock_container, initial_content=content)
+        dao = InMemoryDao(initial_content=content)
         return dao
 
     # Dao.all

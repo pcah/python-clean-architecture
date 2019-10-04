@@ -5,7 +5,12 @@ import typing as t
 
 from pca.data.validation import Validator, validated_by
 from pca.exceptions import ProcessError
-from pca.utils.dependency_injection import Component, container_supplier, inject
+from pca.utils.dependency_injection import (
+    Component,
+    container_supplier,
+    inject,
+    get_attribute_dependencies,
+)
 from pca.utils.functools import error_catcher, reify
 
 
@@ -93,7 +98,8 @@ class Interactor(Component):
         validated_data = request
         for validator in self.validators:
             validation_result = validator(
-                request=validated_data, dependencies=self.__dependencies__)
+                request=validated_data, dependencies=get_attribute_dependencies(self)
+            )
             # validator is eligible to alter input data for the decorated function
             # but doesnt have to; if it returns no result, his input will be used
             validated_data = validated_data if validation_result is None else validation_result

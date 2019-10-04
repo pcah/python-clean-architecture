@@ -1,7 +1,4 @@
-from abc import (
-    ABC,
-    abstractmethod,
-)
+from abc import abstractmethod
 from functools import reduce
 from operator import and_
 import typing as t
@@ -18,6 +15,7 @@ from pca.interfaces.dao import (
 
 from pca.data.errors import QueryErrors
 from pca.data.predicate import Predicate
+from pca.utils.dependency_injection import Component
 
 
 class QueryChain(IQueryChain):
@@ -139,7 +137,7 @@ class QueryChain(IQueryChain):
         return self._dao._resolve_remove(self)
 
 
-class AbstractDao(IDao[Id], ABC):
+class AbstractDao(IDao[Id], Component):
     """Base abstract implementation for Data Access Object."""
 
     # lazy queries

@@ -10,7 +10,10 @@ from pca.interfaces.dao import (
     Ids,
     Kwargs,
 )
-from pca.utils.dependency_injection import Container, Scopes, scope
+from pca.utils.dependency_injection import (
+    Scopes,
+    scope,
+)
 
 from .abstract import (
     AbstractDao,
@@ -21,8 +24,7 @@ from .abstract import (
 @scope(Scopes.SINGLETON)
 class InMemoryDao(AbstractDao[int]):
 
-    def __init__(self, container: Container, initial_content: BatchOfKwargs = None):
-        self.container = container
+    def __init__(self, initial_content: BatchOfKwargs = None):
         self._register: t.Dict[int, Dto] = {}
         self._id_generator = count(1)
         if initial_content:

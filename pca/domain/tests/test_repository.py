@@ -10,7 +10,11 @@ from pca.exceptions import (
     QueryError,
 )
 from pca.interfaces.dao import Dto, IDao
-from pca.utils.dependency_injection import Container, DIErrors
+from pca.utils.dependency_injection import (
+    Container,
+    DIErrors,
+    DIContext,
+)
 
 
 @dataclasses.dataclass
@@ -85,7 +89,9 @@ class TestConstruction:
         with pytest.raises(ConfigError) as error_info:
             assert repo.dao
         assert error_info.value == DIErrors.DEFINITION_NOT_FOUND
-        assert error_info.value.params == {'identifier': IDao, 'qualifier': Bike}
+        assert error_info.value.params == {'context': DIContext(
+            interface=IDao, qualifier=Bike
+        )}
 
 
 class TestApi:
