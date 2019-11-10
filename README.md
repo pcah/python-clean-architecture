@@ -16,15 +16,15 @@ The library is still in a planning phase, so expect much refactorization and man
 
 There is a saying that every developer should write his own framework once in a lifetime. Being happily married with our professional jobs, we do this library in our spare time. Why? To show ourselves and fellow developers there is an achievable way to come closer to The Clean Architecture using a finite amount of effort. We try to show that Python community can build well designed applications as well. We treat following lectures as food for thoughts as we strive to implement ideas found there:
 
-- _Clean architecture_ by Robert "Uncle Bob" Martin (or an eg. [Architecture the Lost Years](http://www.youtube.com/watch?v=WpkDN78P884)) (2011)
+- _Clean architecture_ by [Robert "Uncle Bob" Martin](https://www.oreilly.com/library/view/clean-architecture-a/9780134494272/) (2017) (or an eg. [Architecture the Lost Years](http://www.youtube.com/watch?v=WpkDN78P884) (2011))
 - _Onion Architecture_ by [Jeffrey Palermo](http://jeffreypalermo.com/blog/the-onion-architecture-part-1/) (2008)
 - _Hexagonal Architecture_ by [Alistair Cockburn](http://alistair.cockburn.us/Hexagonal+architecture) (2005)
-- _Domain Driven Development_ by [Eric Evans](http://dddcommunity.org/book/evans_2003/) (2003) & [Martin Fowler](https://martinfowler.com/books/eaa.html)
+- _Domain-Driven Design_ by [Eric Evans](http://dddcommunity.org/book/evans_2003/) (2003) & [Martin Fowler](https://martinfowler.com/tags/domain%20driven%20design.html) (2002)
 
 
 #### The Principles of the Library
 
-Here you can find a short version of The Principles the library is meant to follow. If you want to read more about them, [take a look at our docs](docs/PRINCIPLES.md):
+Here you can find a short version of The Principles the library is meant to follow. [If you want to read more about them, take a look at our docs](docs/PRINCIPLES.md).
 
 1. **Domain First Design.** Building an application should begin with its business intent and without any decision about a framework or other technical details.
 2. **Keep it simple and straightforward.** There's a great value of having simple business objects, like dataclasses. Decompose your every component to make them correspond a specific single responsibility, but only as far as to be straightforward in your intents. Keep your state-transformation functions pure and classes self-contained.
@@ -43,5 +43,6 @@ Here you can find a short version of The Principles the library is meant to foll
 
 One of the goals of this library is to provide integration with popular Python frameworks and libraries. Here are the most notable ones: 
 
-  * [TinyDb](https://tinydb.readthedocs.io) as [DAO](pca/integration/tinydb.py)
+  * [TinyDb](https://tinydb.readthedocs.io) as a [DAO](pca/integration/tinydb.py)
+  * YAML, JSON or INI file loaded into the memory as a [DAO](pca/data/dao/file.py)
   * more to come soon...
