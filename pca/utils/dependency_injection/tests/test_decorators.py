@@ -12,7 +12,7 @@ from pca.utils.dependency_injection import (
     Inject,
 )
 
-from .common import (
+from .components import (
     FrameInterface,
     GravelFrame,
     GravelWheel,

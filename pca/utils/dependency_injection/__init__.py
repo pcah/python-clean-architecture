@@ -3,6 +3,7 @@ from .container import (  # noqa: F401
     DIContext,
     Scopes,
     get_di_container,
+    get_di_context,
     get_scope_type,
     set_di_context,
     set_scope_type,

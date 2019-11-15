@@ -231,6 +231,13 @@ def get_di_container(instance: t.Any) -> Container:
     return getattr(instance, _CONTAINER_REF, None)
 
 
+def get_di_context(instance: t.Any) -> DIContext:
+    """
+    A helper function to get from an arbitrary object its DI context.
+    """
+    return getattr(instance, _CONTEXT_REF, None)
+
+
 def get_scope_type(constructor: Constructor) -> t.Optional[Scopes]:
     """
     A helper function to extract the scope type from a constructor.

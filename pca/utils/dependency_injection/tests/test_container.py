@@ -2,15 +2,17 @@ import pytest
 
 from pca.exceptions import ConfigError
 from pca.utils.dependency_injection import (
+    Container,
     Component,
     DIContext,
     DIErrors,
+    get_di_context,
     get_scope_type,
     scope,
     Scopes,
 )
 
-from .common import (
+from .components import (
     Bike,
     CustomColoredFrame,
     CustomColoredWheel,
@@ -112,3 +114,26 @@ class TestScopes:
         instance_1 = container.find_by_name('frame')
         instance_2 = container.find_by_name('frame')
         assert instance_1 is instance_2
+
+
+class TestContext:
+
+    def test_get_di_context_by_name(self, container: Container):
+        name = 'frame'
+        container.register_by_name(name=name, constructor=RoadFrame)
+        instance = container.find_by_name(name)
+        assert get_di_context(instance) == DIContext(name=name)
+
+    def test_get_di_context_by_interface(self, container: Container):
+        qualifier = 'qualifier'
+        container.register_by_interface(
+            interface=WheelInterface,
+            qualifier=qualifier,
+            constructor=RoadWheel
+        )
+        instance = container.find_by_interface(WheelInterface, qualifier=qualifier)
+        assert get_di_context(instance) == DIContext(interface=WheelInterface, qualifier=qualifier)
+
+    def test_get_di_context_none(self):
+        instance = object()
+        assert get_di_context(instance) is None

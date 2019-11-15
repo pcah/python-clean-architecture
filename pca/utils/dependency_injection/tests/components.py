@@ -17,15 +17,15 @@ class FrameInterface:
 
 
 @scope(Scopes.INSTANCE)
-class RoadFrame(FrameInterface, Component):
+class RoadFrame(FrameInterface):
     name = 'Road frame'
 
 
-class GravelFrame(FrameInterface, Component):
+class GravelFrame(FrameInterface):
     name = 'Gravel frame'
 
 
-class CustomColoredFrame(FrameInterface, Component):
+class CustomColoredFrame(FrameInterface):
     def __init__(self, color):
         self.color = color
 
@@ -34,15 +34,15 @@ class CustomColoredFrame(FrameInterface, Component):
         return f'Custom {self.color} frame'
 
 
-class RoadWheel(WheelInterface, Component):
+class RoadWheel(WheelInterface):
     name = 'Road wheel'
 
 
-class GravelWheel(WheelInterface, Component):
+class GravelWheel(WheelInterface):
     name = 'Gravel wheel'
 
 
-class CustomColoredWheel(WheelInterface, Component):
+class CustomColoredWheel(WheelInterface):
     def __init__(self, color):
         self.color = color
 
