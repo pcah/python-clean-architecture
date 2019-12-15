@@ -21,6 +21,7 @@
     - [ ] `click` view
     - [ ] `marshmallow` factory
     - [x] `tinydb` db DAO
+    - [x] data file (YAML, JOSN or INI) DAO
 
 
 ### 0.2.0
