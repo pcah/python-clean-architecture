@@ -9,3 +9,5 @@ from .repository import (    # noqa: F401
     Factory,
     Repository,
 )
+from .value_object import ValueObject  # noqa: F401
+

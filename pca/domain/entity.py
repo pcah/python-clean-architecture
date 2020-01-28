@@ -154,3 +154,4 @@ class Entity(t.Generic[IdType]):
     def __eq__(self, other) -> bool:
         """Entity is identified by the value of its `Id` field."""
         return isinstance(other, self.__class__) and other.__get_id__() == self.__get_id__()
+
