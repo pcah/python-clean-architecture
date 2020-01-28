@@ -1,7 +1,0 @@
----
-- interface: examples.framework_ideas.integrations.common.ISession
-  constructor: examples.framework_ideas.integrations.redis.RedisSession
-
-- interface: examples.framework_ideas.integrations.common.IDao
-  qualifier: examples.users.entities.User
-  constructor: examples.framework_ideas.integrations.django.DjangoDao
