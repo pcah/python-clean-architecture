@@ -10,4 +10,3 @@ from .repository import (    # noqa: F401
     Repository,
 )
 from .value_object import ValueObject  # noqa: F401
-

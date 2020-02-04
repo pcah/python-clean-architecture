@@ -1,11 +1,10 @@
-from pca.domain import Entity, Id, ValueObject
+from pca.domain import Entity, Uuid4Id, ValueObject  # noqa: F401
 
 from .time import MeetingTerm
 
 
 class Meeting(Entity):
-    id = Id()
-
+    id = Uuid4Id()
     title: str
     term: MeetingTerm
     description: str

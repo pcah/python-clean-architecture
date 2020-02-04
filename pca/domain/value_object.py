@@ -10,11 +10,18 @@ class ValueObject(abc.ABC):
         pass
 
     def __repr__(self):
+        """
+        Repr respects only fields which values are not default
+        (practical decision for large dataclasses).
+        """
         # noinspection PyDataclass
-        fields = dataclasses.fields(self)
+        fields = (
+            (f.name, getattr(self, f.name), f.default)
+            for f in dataclasses.fields(self)
+        )
         fields_str = ', '.join(
-            f"{f.name}={repr(value)}"
-            for f in fields
-            if (value := getattr(self, f.name)) is not f.default
+            f"{name}={repr(value)}"
+            for name, value, default in fields
+            if value is not default
         )
         return f"{self.__class__.__qualname__}({fields_str})"

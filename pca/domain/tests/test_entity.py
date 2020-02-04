@@ -131,7 +131,7 @@ class TestNaturalId:
         entity = Bike(**data).__set_id__()
         assert entity.__get_id__() == ('gravel', 'road')
 
-        # NatualId ignores setting explicit value, it always gets it from
+        # NaturalId ignores setting explicit value, it always gets it from
         # the values of natural key's fields
         entity.__set_id__(2)
         assert entity.__get_id__() == ('gravel', 'road')
