@@ -1,10 +1,11 @@
 import dataclasses
+
 import pytest
 
 from pca.data.errors import QueryErrors
 from pca.data.dao import InMemoryDao
 from pca.domain.repository import Factory, Repository
-from pca.domain.entity import Entity
+from pca.domain.entity import Entity, SequenceId
 from pca.exceptions import (
     ConfigError,
     QueryError,
@@ -19,6 +20,7 @@ from pca.utils.dependency_injection import (
 
 @dataclasses.dataclass
 class Bike(Entity):
+    id = SequenceId()
     frame_type: str
     wheel_type: str
 
@@ -33,7 +35,7 @@ def factory():
     return Factory(Bike)
 
 
-class TestSchema:
+class TestFactory:
 
     @pytest.fixture
     def dto(self, data):
@@ -121,7 +123,7 @@ class TestApi:
 
     def test_create_and_add(self, data, repo: Repository, dao: IDao):
         entity = repo.create_and_add(**data)
-        assert dao.get(entity.id) == data
+        assert dao.get(entity.__get_id__()) == data
 
     def test_find_success(self, data, repo: Repository, dao: IDao):
         id_ = dao.insert(**data)
@@ -162,8 +164,8 @@ class TestApi:
         entity = repo.create(**data)
         with pytest.raises(QueryError) as error_info:
             repo.remove(entity)
-        assert error_info.value == QueryErrors.ENTITY_NOT_YET_ADDED
-        assert error_info.value.params == {'entity': entity}
+        assert error_info.value == QueryErrors.NOT_FOUND
+        assert error_info.value.params == {'id': entity.__get_id__(), 'entity': entity}
 
     def test_remove_error_wrong_id(self, data, repo: Repository, dao: IDao):
         id_ = dao.insert(**data)

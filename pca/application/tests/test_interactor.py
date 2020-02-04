@@ -9,7 +9,7 @@ from pca.application.interactor import (
     RequestModel,
     interactor_factory,
 )
-from pca.domain.entity import Entity, field
+from pca.domain.entity import Entity, SequenceId, field
 from pca.domain.repository import Repository
 from pca.exceptions import LogicError
 from pca.utils.dependency_injection import (
@@ -20,11 +20,13 @@ from pca.utils.dependency_injection import (
 
 
 class Racer(Entity):
+    id = SequenceId()
     first_name: str
     last_name: str
 
 
 class Team(Entity):
+    id = SequenceId()
     name: str
     members: t.List[Racer] = field(default_factory=list)
 

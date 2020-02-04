@@ -7,7 +7,7 @@ Kwargs = t.Dict[str, t.Any]
 BatchOfKwargs = t.Sequence[Kwargs]
 
 
-class Dto(Kwargs):
+class Dto(Kwargs, dict):
     """
     Represents a Data Transfer Object retrieved from some Data Access Object.
 

@@ -32,7 +32,7 @@ class Factory:
         """
         entity = self.entity(**dto)
         # supporting immutable entities
-        object.__setattr__(entity, '__id__', dto.id)
+        entity.__get_id_field__().__set_id__(entity, dto.__id__)
         return entity
 
     def deconstruct(self, entity: Entity) -> Dto:
@@ -48,7 +48,7 @@ class Factory:
                 if field in self.mapped_fields
             }
         dto = Dto(data)
-        dto.__id__ = entity.id
+        dto.__id__ = entity.__get_id__()
         return dto
 
 
@@ -120,12 +120,11 @@ class Repository(IRepository[Id, Entity]):
         # TODO TBDL which layer should filter only changed fields of the entity
         # TODO update = self.factory.diff(entity)
         update = self.factory.deconstruct(entity)
-        self.dao.filter_by(id_=entity.id).update(**update)
+        self.dao.filter_by(id_=entity.__get_id__()).update(**update)
 
     def remove(self, entity: Entity) -> None:
         """Removes the object from the underlying persistence layer via DAO."""
-        if not entity.id:  # entity hasn't been added yet
-            raise QueryErrors.ENTITY_NOT_YET_ADDED.with_params(entity=entity)
-        result = self.dao.filter_by(id_=entity.id).remove()
+        entity_id = entity.__get_id__()
+        result = self.dao.filter_by(id_=entity_id).remove()
         if not result:  # entity hasn't been found in the DAO
-            raise QueryErrors.NOT_FOUND.with_params(id=entity.id, entity=entity)
+            raise QueryErrors.NOT_FOUND.with_params(id=entity_id, entity=entity)
