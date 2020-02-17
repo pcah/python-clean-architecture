@@ -4,7 +4,7 @@ from dataclasses import asdict
 from pca.data.errors import QueryErrors
 from pca.interfaces.dao import Dto, IDao
 from pca.interfaces.repository import Id, IRepository
-from pca.utils.functools import reify
+from pca.data.descriptors import reify
 from pca.utils.dependency_injection import Container
 
 from .entity import Entity

@@ -4,8 +4,8 @@ import typing as t
 
 from marshmallow import Schema
 
+from pca.data.descriptors import reify
 from pca.application.interactor import RequestModel
-from pca.utils.functools import reify
 
 from .use_case import UseCase, UseCaseInterface
 

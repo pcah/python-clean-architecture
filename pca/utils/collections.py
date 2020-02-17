@@ -3,12 +3,13 @@ from functools import singledispatch
 import typing as t
 
 SliceAll = slice(None)
-generator = type(e for e in ())
+generator_type = type(e for e in ())
+none_type = type(None)
 
 
 def sget(target, key: str, default: t.Any = None):
     """
-    structure-get, a function simmilar to dict's 'get' method, which can resolve inner
+    structure-get, a function similar to dict's 'get' method, which can resolve inner
     structure of keys. A string-typed key may be composed of series of keys (for maps)
     or indexes (for sequences), concatenated with dots. The method cat take a default value,
     just as dict.get does.
@@ -35,27 +36,6 @@ def sget(target, key: str, default: t.Any = None):
                 except (TypeError, ValueError, IndexError, KeyError):
                     return default
     return value
-
-
-@singledispatch
-def freeze(obj):
-    """Returns immutable copy of the `obj`"""
-    return obj
-
-
-@freeze.register(dict)
-def _(d: dict):
-    return frozendict((k, freeze(v)) for k, v in d.items())
-
-
-@freeze.register(list)
-def _(l: list):
-    return tuple(freeze(v) for v in l)
-
-
-@freeze.register(set)
-def _(s: set):
-    return frozenset(freeze(v) for v in s)
 
 
 def is_iterable(obj):
@@ -276,6 +256,10 @@ def _(collection):
         yield from iterate_over_values(collection[key])
 
 
+def __not_implemented__(self, *args, **kwargs):
+    raise AttributeError(f"A {self.__class__.__name__} is immutable and can't be modified.")
+
+
 # noinspection PyPep8Naming
 class frozendict(dict):  # noqa: N801
     """
@@ -285,9 +269,6 @@ class frozendict(dict):  # noqa: N801
     The code is taken from:
     code.activestate.com/recipes/414283-frozen-dictionaries/
     """
-
-    def __not_implemented__(self, *args, **kwargs):
-        raise AttributeError("A frozendict cannot be modified.")
 
     __delitem__ = __setitem__ = clear = \
         pop = popitem = setdefault = update = __not_implemented__
@@ -303,7 +284,7 @@ class frozendict(dict):  # noqa: N801
         new = dict.__new__(cls)
         combined_kwargs = {}
         for structure in args + (kwargs,):
-            if isinstance(structure, (list, generator)):
+            if isinstance(structure, (list, generator_type)):
                 combined_kwargs.update({v0: v1 for v0, v1 in structure})
             elif isinstance(structure, dict):
                 combined_kwargs.update(structure)
@@ -320,6 +301,124 @@ class frozendict(dict):  # noqa: N801
 
     def __repr__(self):
         return "frozendict(%s)" % dict.__repr__(self)
+
+
+class FrozenProxy:
+    """
+    The class that is a proxy for an object for the purpose of making its attributes frozen
+    (immutable).
+
+    NB: This doesn't inherently mean that the resulting proxy is immutable: the proxy's target
+    may have *methods* that mutate its internal state (vide dict's methods: pop, setdefault,
+    update, aso.). But this is not something FrozenProxy can do about it. FrozenProxy's purpose
+    is to make non-intentional assignments easier to catch.
+    """
+
+    def __init__(self, target: t.Any):
+        self.__dict__['_frozen_target'] = target
+
+    def __getattr__(self, item: str) -> t.Any:
+        try:
+            value = self.__dict__[item]
+        except KeyError:
+            value = getattr(self.__dict__['_frozen_target'], item)
+            value = self.__dict__[item] = freeze(value)
+        return value
+
+    def __getitem__(self, item: str) -> t.Any:
+        try:
+            value = self.__dict__[item]
+        except KeyError:
+            value = self.__dict__['_frozen_target'][item]
+            value = self.__dict__[item] = freeze(value)
+        return value
+
+    __setattr__ = __delattr__ = \
+        __setitem__ = __delitem__ = __not_implemented__
+
+    def __call__(self, *args, **kwargs):
+        value = self.__dict__['_frozen_target'](*args, **kwargs)
+        return freeze(value)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({repr(self.__dict__['_frozen_target'])})"
+
+
+def _freeze_with_proxy(obj) -> FrozenProxy:
+    # default case is representing "custom" objects that aren't value objects
+    return FrozenProxy(obj)
+
+
+freeze = singledispatch(_freeze_with_proxy)
+freeze.__doc__ = """
+    Data transform that makes sure immutability of a structure:
+    * returns the very object iff it is of immutable type and such that can't
+      have an internal mutability
+    * if there is an immutable type for the type of the structure, it returns
+      immutable copy of it
+    * returns a frozen proxy otherwise (mostly, for the instances of
+      non-primitive types)
+"""
+
+
+def register_as_proxied(cls):
+    """
+    Registers a type that has to be treated not as a non-primitive type. Instead of being
+    target to convert to immutable counterpart, the type will be proxied (wrapped
+    with FrozenProxy). This may be important when a non-primitive type is inheriting by
+    a primitive one, and we don't want to lose any enhancement to type's API after being
+    frozen.
+
+    I.e. `Bunch` class is a child of built-in `dict`, but extends its API. We don't want to
+    lose these enhancements after calling `freeze` so `Bunch` is registered as proxied:
+
+    >>> freeze.register_as_proxied(Bunch)
+    >>> freeze(dict())
+    frozendict()
+    >>> freeze(Bunch())
+    FrozenProxy(Bunch())
+    """
+    freeze.register(cls, _freeze_with_proxy)
+
+
+freeze.register_as_proxied = register_as_proxied
+
+
+@freeze.register(none_type)
+@freeze.register(bool)
+@freeze.register(str)
+@freeze.register(bytes)
+@freeze.register(int)
+@freeze.register(float)
+@freeze.register(complex)
+@freeze.register(FrozenProxy)
+def _(obj) -> t.Any:
+    """
+    Already an immutable type and such that can't have an internal mutability.
+    """
+    return obj
+
+
+@freeze.register(dict)
+# immutable by itself but may contain mutable elements
+@freeze.register(frozendict)
+def _(d: dict) -> frozendict:
+    return frozendict((freeze(k), freeze(v)) for k, v in d.items())
+
+
+@freeze.register(list)
+@freeze.register(generator_type)
+# immutable by itself but may contain mutable elements
+@freeze.register(tuple)
+def _(s: t.Sequence) -> tuple:
+    return tuple(freeze(e) for e in s)
+
+
+@freeze.register(set)
+# immutable by itself but may contain mutable elements
+@freeze.register(frozenset)
+def _(s: set) -> frozenset:
+    return frozenset(freeze(e) for e in s)
 
 
 class Bunch(dict):
@@ -354,7 +453,7 @@ class Bunch(dict):
         """
         try:
             self[key] = value
-        except (KeyError, TypeError):
+        except (KeyError, TypeError):  # pragma: no cover
             raise AttributeError(key)
 
     def __delattr__(self, key: str) -> None:
@@ -380,3 +479,6 @@ class Bunch(dict):
             self.__class__.__name__,
             ', '.join(['%s=%r' % (key, self[key]) for key in keys])
         )
+
+
+freeze.register_as_proxied(Bunch)

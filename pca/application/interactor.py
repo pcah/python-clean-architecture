@@ -3,6 +3,7 @@ import abc
 from dataclasses import dataclass
 import typing as t
 
+from pca.data.descriptors import reify
 from pca.data.validation import Validator, validated_by
 from pca.exceptions import ProcessError
 from pca.utils.dependency_injection import (
@@ -11,7 +12,7 @@ from pca.utils.dependency_injection import (
     inject,
     get_attribute_dependencies,
 )
-from pca.utils.functools import error_catcher, reify
+from pca.utils.functools import error_catcher
 
 
 Kwargs = t.Mapping[t.Optional[str], t.Any]
