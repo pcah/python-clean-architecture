@@ -1,13 +1,8 @@
 from functools import update_wrapper
 import typing as t
 
-# from pca.data.values import undefined_value
-
-
-# sentinel object for expressing that a value of a observable hasn't been set
-# NB: None object might be a valid value
-Owner = t.TypeVar('Owner')
-Value = t.TypeVar('Value')
+from pca.data.values import Value, Owner
+from pca.utils.collections import freeze
 
 
 # noinspection PyPep8Naming
@@ -54,22 +49,27 @@ class reify:  # noqa: N801
         return val
 
 
+def __not_supported__(name: str, instance: Owner) -> None:
+    raise TypeError(
+        f"An attribute '{name}' of class {instance.__class__.__name__} is immutable and can't be"
+        f"modified."
+    )
+
+
 # noinspection PyPep8Naming
 class frozen(t.Generic[Value]):
 
     owner: t.Any
     name: str
+    _value_key: str
     # pattern for __dict__ key on the owner class; space chars are intended
     # to be sure we are not colliding with any proper attribute name
-    _key_pattern = "'%s' frozen cached value"
+    _key_pattern = "'%s' frozen value"
 
     def __set_name__(self, owner: t.Any, name: str) -> None:
         self.owner = owner
         self.name = name
-
-    @reify
-    def _value_key(self):
-        return self._key_pattern % self.name
+        self._value_key = self._key_pattern % self.name
 
     def __get__(self, instance: Owner, owner: t.Type) -> Value:
         if instance is None:
@@ -77,14 +77,14 @@ class frozen(t.Generic[Value]):
         try:
             value = instance.__dict__[self._value_key]
         except KeyError:
-            raise AttributeError
+            __not_supported__(self.name, instance)
         return value
 
     def __set__(self, instance: Owner, value: Value) -> None:
         try:
             old_value = instance.__dict__[self._value_key]
         except KeyError:
-            instance.__dict__[self._value_key] = value
+            instance.__dict__[self._value_key] = freeze(value)
         else:
             if value != old_value:
-                raise AttributeError
+                __not_supported__(self.name, instance)

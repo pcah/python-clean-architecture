@@ -48,7 +48,7 @@ class TestFrozendict:
         lambda d: frozendict.update(d, key='value'),
     ])
     def test_immutability(self, mutator):
-        with pytest.raises(AttributeError):
+        with pytest.raises(TypeError):
             mutator(frozendict())
 
     def test_copying(self):

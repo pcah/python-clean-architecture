@@ -1,4 +1,5 @@
 import pytest
+from operator import setitem
 
 from pca.utils.collections import (
     freeze,
@@ -106,9 +107,24 @@ def test_frozen_proxy_types():
     lambda o: setattr(o, 'not_set', {1, 2, 3}),
     lambda o: delattr(o, 'set'),
     lambda o: setattr(o.inner['key'], 'foo', 'value'),
+    lambda o: setitem(o.inner, 'key', 'value'),
+    lambda o: setitem(o.inner, 'non existing key', 'value'),
     lambda o: setattr(o.inner.key, 'foo', 'value'),
 ])
 def test_frozen_proxy_setters_raises(setter):
     frozen = freeze(ValueClass())
-    with pytest.raises(AttributeError):
+    with pytest.raises(TypeError):
+        setter(frozen)
+
+
+@pytest.mark.parametrize("setter", [
+    lambda o: setattr(o, 'set', {1, 2, 3}),
+    lambda o: setattr(o, 'not_set', {1, 2, 3}),
+    lambda o: delattr(o, 'set'),
+    lambda o: setattr(o.inner['key'], 'foo', 'value'),
+    lambda o: setattr(o.inner.key, 'foo', 'value'),
+])
+def test_frozen_proxy_setting_the_same_value(setter):
+    frozen = freeze(ValueClass())
+    with pytest.raises(TypeError):
         setter(frozen)

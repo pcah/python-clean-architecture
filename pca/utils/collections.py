@@ -256,8 +256,8 @@ def _(collection):
         yield from iterate_over_values(collection[key])
 
 
-def __not_implemented__(self, *args, **kwargs):
-    raise AttributeError(f"A {self.__class__.__name__} is immutable and can't be modified.")
+def __not_supported__(self, *args, **kwargs):
+    raise TypeError(f"A {self.__class__.__name__} is immutable and can't be modified.")
 
 
 # noinspection PyPep8Naming
@@ -271,7 +271,7 @@ class frozendict(dict):  # noqa: N801
     """
 
     __delitem__ = __setitem__ = clear = \
-        pop = popitem = setdefault = update = __not_implemented__
+        pop = popitem = setdefault = update = __not_supported__
 
     def __copy__(self):
         """
@@ -317,12 +317,12 @@ class FrozenProxy:
     def __init__(self, target: t.Any):
         self.__dict__['_frozen_target'] = target
 
-    def __getattr__(self, item: str) -> t.Any:
+    def __getattr__(self, name: str) -> t.Any:
         try:
-            value = self.__dict__[item]
+            value = self.__dict__[name]
         except KeyError:
-            value = getattr(self.__dict__['_frozen_target'], item)
-            value = self.__dict__[item] = freeze(value)
+            value = getattr(self.__dict__['_frozen_target'], name)
+            value = self.__dict__[name] = freeze(value)
         return value
 
     def __getitem__(self, item: str) -> t.Any:
@@ -333,8 +333,31 @@ class FrozenProxy:
             value = self.__dict__[item] = freeze(value)
         return value
 
-    __setattr__ = __delattr__ = \
-        __setitem__ = __delitem__ = __not_implemented__
+    def __setattr__(self, name: str, value: t.Any) -> None:
+        """
+        Doesn't raise an error iff value is the same as the old one (checked by equality).
+        """
+        try:
+            old_value = self.__getattr__(name)
+        except (KeyError, AttributeError):
+            __not_supported__(self)
+        else:
+            if value != old_value:
+                __not_supported__(self)
+
+    def __setitem__(self, name: str, value: t.Any) -> None:
+        """
+        Doesn't raise an error iff value is the same as the old one (checked by equality).
+        """
+        try:
+            old_value = self.__getitem__(name)
+        except KeyError:
+            __not_supported__(self)
+        else:
+            if value != old_value:
+                __not_supported__(self)
+
+    __delattr__ = __delitem__ = __not_supported__
 
     def __call__(self, *args, **kwargs):
         value = self.__dict__['_frozen_target'](*args, **kwargs)
