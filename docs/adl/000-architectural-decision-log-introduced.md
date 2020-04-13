@@ -3,7 +3,7 @@
 * Status: accepted
 * Date: 2020-03-10
 
-Technical Story: #71
+Technical Story: [#71](https://github.com/pcah/python-clean-architecture/issues/71)
 
 ## Context and Problem Statement
 
