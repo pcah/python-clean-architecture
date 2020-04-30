@@ -8,6 +8,8 @@
 
 #### Development Status  (Stage 2 - Pre-Alpha Status)
 
+**THE LIBRARY IS NOT PRODUCTION- OR DEVELOPMENT-READY**. If you want to make it useful, come and help. See [CONTRIBUTING](CONTRIBUTING.md) for details.
+
 The concept for this library is ambitious and its core team has not as much spare time as it would like to dedicate, so don't expect rapid development here. If you are interested in making its progress more apparent, you are more than welcomed to propose your help. The core team reserves the right to choose focus points and scopes for the library, however.
 
 The library is still in a planning phase, so expect much refactorization and many changes to its API.
@@ -16,7 +18,7 @@ The library is still in a planning phase, so expect much refactorization and man
 
 There is a saying that every developer should write his own framework once in a lifetime. Being happily married with our professional jobs, we do this library in our spare time. Why? To show ourselves and fellow developers there is an achievable way to come closer to The Clean Architecture using a finite amount of effort. We try to show that Python community can build well designed applications as well. We treat following lectures as food for thoughts as we strive to implement ideas found there:
 
-- _Clean architecture_ by [Robert "Uncle Bob" Martin](https://www.oreilly.com/library/view/clean-architecture-a/9780134494272/) (2017) (or an eg. [Architecture the Lost Years](http://www.youtube.com/watch?v=WpkDN78P884) (2011))
+- _Clean architecture_ by [Robert "Uncle Bob" Martin](https://www.oreilly.com/library/view/clean-architecture-a/9780134494272/) (2017) (or e.g. [Architecture the Lost Years](http://www.youtube.com/watch?v=WpkDN78P884) (2011))
 - _Onion Architecture_ by [Jeffrey Palermo](http://jeffreypalermo.com/blog/the-onion-architecture-part-1/) (2008)
 - _Hexagonal Architecture_ by [Alistair Cockburn](http://alistair.cockburn.us/Hexagonal+architecture) (2005)
 - _Domain-Driven Design_ by [Eric Evans](http://dddcommunity.org/book/evans_2003/) (2003) & [Martin Fowler](https://martinfowler.com/tags/domain%20driven%20design.html) (2002)
