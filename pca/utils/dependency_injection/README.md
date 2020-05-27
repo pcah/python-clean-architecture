@@ -6,7 +6,7 @@ This package contains a micro-framework that serves as an implementation of [Dep
 - A [`create_component` helper](component.py), which allows ad-hoc creation of an instance of a dependency, according to its DI context.
 - A [`Component` mixin class or a `ComponentMeta` metaclass](component.py) designed to supply a class with capabilities of self-inspection of its DI context.
 - An [`Inject` descriptor](descriptors.py) that knows how to get a dependency instance when it's needed. Alternatively, it marks an argument of a function as a place to inject the dependency instance.
-- An [`inject` decorator](decorators.py) that injects values for all arguments marked with the `Inject` descriptor. It is a way to supply dependencies via function-wide scope instead of object-wide scope.
+- An [`inject` functional decorator](decorators.py) that injects values for all arguments marked with the `Inject` descriptor. It is a way to supply dependencies via function-wide scope instead of object-wide scope.
 - A [`scope` decorator and `Scope` enumerable](container.py), which describe how often an instance should be created.
 
-This library has potential to be extracted as an independent library in an undefined future, ie. when its API reaches stability.
+This library has potential to be extracted as an independent library in an undefined future when its API reaches stability.

@@ -20,12 +20,12 @@ class DIContext:
     """
     Describes the way a component might be requested from the Container.
 
-    :cvar name: is just an arbitrary string describing dependency, but it doesn't give any
+    :cvar name: an arbitrary string describing dependency, but it doesn't give any
         information about its interface
-    :cvar interface: (an alternative to `name` argument) is and interface of the dependency and is
+    :cvar interface: (an alternative to `name` argument) an interface of the dependency;
         often used along with annotations about the variable/argument that requests the dependency
-    :cvar qualifier: is an object of any type that adds a finer grade granularity about
-        the dependency; you may want a component of IDao interface but not just anyone, but
+    :cvar qualifier: an object of any type that adds a finer grade granularity about
+        the dependency; i.e. you may want a component of `IDao` interface: not just anyone, but
         the one that is modeling some specific schema; the qualifier describes the latter
         condition.
     """

@@ -1,13 +1,19 @@
+### python-clean-architecture
+## The Principles
+
 #### 1. Domain *First* Design
 
 The library promotes thinking that your domain should be *the first thing* you start to develop on the first day of your project. No choice of a framework should be required -- you may not discover yet enough information needed to choose one. Similarly, neither infrastructure configuration nor developer toolset should be required. You should be able to start by describing your domain with pseudocode.
 
 Quotes:
 > For most software projects, the primary focus should be on the domain and domain logic.
-> Eric Evans (2003), [Domain Driven Design: Tackling Complexity in the Heart of Software](http://dddcommunity.org/book/evans_2003/)
+>
+> — Eric Evans (2003), [Domain Driven Design: Tackling Complexity in the Heart of Software](http://dddcommunity.org/book/evans_2003/)
+
 
 >  A good software architecture allows decisions about frameworks, databases, web-servers, and other environmental issues and tools, to be deferred and delayed. A good architecture makes it unnecessary to decide on Rails, or Spring, or Hibernate, or Tomcat or MySql, until much later in the project.
-> Robert Martin (2011), [Clean Coder Blog: Screaming Architecture](https://blog.cleancoder.com/uncle-bob/2011/09/30/Screaming-Architecture.html)
+>
+> — Robert Martin (2011), [Clean Coder Blog: Screaming Architecture](https://blog.cleancoder.com/uncle-bob/2011/09/30/Screaming-Architecture.html)
 
 
 #### 2. Keep it simple and straightforward
@@ -21,7 +27,8 @@ Both terms describe either application component as a single element and relatio
 Pure functions are side-effect-free functions, which returned value is based only on its input. This is especially important when mentioned functions implement valid transformations between states of the application. For example, a function may describe how a value object representing money transforms into a (new) value object of another currency. We advise you not to expect such function to implicitly retrieve exchange ratio from an external source. Let the function that makes the transformation take the exchange ratio as an argument.
 
 > *Side-effect-free Functions.* Place as much of the logic of the program as possible into functions, operations that return results with no observable side effects. Strictly segregate commands (methods which result in modifications to observable state) into very simple operations that do not return domain information. Further control side effects by moving complex logic into value objects when a concept fitting the responsibility presents itself. All operations of a value object should be side-effect­‐free functions.
-> Eric Evans (2015), [Domain-­Driven Design Reference](http://domainlanguage.com/ddd/reference/)
+>
+> — Eric Evans (2015), [Domain-­Driven Design Reference](http://domainlanguage.com/ddd/reference/)
 
 ##### b) Self-contained Classes
 
@@ -29,7 +36,8 @@ Self-contained class has its intent formulated and understandable by its code an
 
 > *Standalone Classes.* Even within a module, the difficulty of interpreting a design increases wildly as dependencies are added. This adds to mental overload, limiting the design complexity a developer can handle. Implicit concepts contribute to this load even more than explicit references.
 Low coupling is fundamental to object design. When you can, go all the way. Eliminate all other concepts from the picture. Then the class will be completely self­‐contained and can be studied and understood alone. Every such self­‐contained class significantly eases the burden of understanding a module.
-> Eric Evans (2015), [Domain-­Driven Design Reference](http://domainlanguage.com/ddd/reference/)
+>
+> — Eric Evans (2015), [Domain-­Driven Design Reference](http://domainlanguage.com/ddd/reference/)
 
 ##### c) Single Responsibility Principle
 
@@ -47,10 +55,12 @@ Inspired by Robert Martin's The Clean Architecture, this library formulates thre
 
 Quotes:
 > The reason that good architectures are centered around use-cases is so that architects can safely describe the structures that support those use-cases without committing to frameworks, tools, and environment.
-> Robert Martin (2011), [Screaming Architecture](https://blog.cleancoder.com/uncle-bob/2011/09/30/Screaming-Architecture.html)
+>
+> — Robert Martin (2011), [Screaming Architecture](https://blog.cleancoder.com/uncle-bob/2011/09/30/Screaming-Architecture.html)
 
 > The overriding rule that makes this architecture work is _The Dependency Rule_. This rule says that source code dependencies can only point inwards. Nothing in an inner circle can know anything at all about something in an outer circle.
-> Robert Martin (2012), [The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+>
+> — Robert Martin (2012), [The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 
 
 #### 4. Coupling management
@@ -64,11 +74,13 @@ Most of the time, dependency injection is achieved using interfaces (in a python
 Quotes:
 
 > There are several ways to describe coupling, but it boils down to this: If changing one module in a program requires changing another module, then coupling exists. (...) Coupling also occurs when code in one module uses code from another, perhaps by calling a function or accessing some data. At this point, it becomes clear that, unlike duplication, you can’t treat coupling as something to always avoid. You can break a program into modules, but these modules will need to communicate in some way — otherwise, you’d just have multiple programs. Coupling is desirable, because if you ban coupling between modules, you have to put everything in one big module. Then, there would be lots of coupling — just all hidden under the rug. So coupling is something we need to control, but how?
-> Martin Fowler (2001), [Reducing Coupling](https://www.martinfowler.com/ieeeSoftware/coupling.pdf)
+>
+> — Martin Fowler (2001), [Reducing Coupling](https://www.martinfowler.com/ieeeSoftware/coupling.pdf)
 
 > Loose coupling enables independent variability among the participants, allowing for example one component to change its implementation technology or its version without affecting other systems. In an enterprise-wide or inter-enterprise (i.e., B2B) integration scenario, independent variability has considerable value because one party usually doesn't have control over all applications, meaning that some components can change without central coordination or approval. For example, if a business partner decides to upgrade to the latest version of SAP there is little one can do to stop them. In the reverse scenario, your business might need to update components without being able to force the other side to make the corresponding change.
 Loose coupling is like buying insurance. It's best when you don't need it, but that doesn't mean you wasted your money.
-> Gregor Hohpe, Bobby Woolf (2003), [Enterprise Integration Patterns](https://www.enterpriseintegrationpatterns.com/index.html)
+>
+> — Gregor Hohpe, Bobby Woolf (2003), [Enterprise Integration Patterns](https://www.enterpriseintegrationpatterns.com/index.html)
 
 #### 5. Be open to reimplementation
 
@@ -81,7 +93,8 @@ At the end, the library should become something more similar to a toolbox, that 
 Quotes:
 
 > *Pluggable Component Framework.* Distill an abstract core of interfaces and interactions and create a framework that allows diverse implementations of those interfaces to be freely substituted. Likewise, allow any application to use those components, so long as it operates strictly through the interfaces of the abstract core.
-> Eric Evans (2015), [Domain-­Driven Design Reference](http://domainlanguage.com/ddd/reference/)
+>
+> — Eric Evans (2015), [Domain-­Driven Design Reference](http://domainlanguage.com/ddd/reference/)
 
 
 #### 6. Batteries included
