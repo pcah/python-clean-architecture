@@ -29,9 +29,11 @@ class TestConstruction:
         assert json_dao._path == path
         assert Path(path).is_file()
 
+    @pytest.mark.skip("TODO #73")
     def test_implicit_json_storage(self, json_dao, tinydb):
         assert isinstance(json_dao._table._storage._storage, tinydb.storages.JSONStorage)
 
+    @pytest.mark.skip("TODO #73")
     def test_implicit_memory_storage(self, mock_container, tinydb):
         dao = TinyDbDao(mock_container, table_name='table_name')
         assert isinstance(dao._table._storage._storage, tinydb.storages.MemoryStorage)
@@ -118,6 +120,7 @@ class TestApi:
     def test_exists_all_success(self, dao: TinyDbDao):
         assert dao.all().exists()
 
+    @pytest.mark.skip("TODO #73")
     def test_exists_empty_fail(self, dao: TinyDbDao):
         dao.clear()
         assert not dao.all().exists()
@@ -230,6 +233,7 @@ class TestApi:
         assert list(dao.filter(where('foo').exists())) == batch
 
     # Dao.clear
+    @pytest.mark.skip("TODO #73")
     def test_clear(self, dao: TinyDbDao):
         dao.clear()
         assert list(dao.all()) == []
