@@ -24,7 +24,7 @@ class ExceptionWithCode(Exception):
     code: str = ''
     area: str = ''
     hint: str = ''
-    params: t.Mapping[str, t.Any] = None
+    params: t.Dict[str, t.Any] = None
     catalog: 'ErrorCatalog' = None
 
     def __init__(self, code: str = None, area: str = None, hint: str = None,
@@ -38,7 +38,7 @@ class ExceptionWithCode(Exception):
         if params:
             self.__dict__['params'] = params
 
-    def __set_name__(self, owner: t.Any, name: str):
+    def __set_name__(self, owner: t.Any, name: str) -> None:
         """
         Setting an instance on an ErrorCatalog subclass as a filed closely bounds both
         and can set default values to area/code fields.
@@ -58,16 +58,16 @@ class ExceptionWithCode(Exception):
             and self.code == other.code \
             and self.area == other.area
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """
         Hash compatible to __eq__. Doesn't take into account params.
         TODO notify when lack of params here is going to be a problem. __eq__ doesn't consider
-        `params` on purpose, but this also means that two instances of the same `area/code` are
-        equated.
+        `params` on purpose, but this also means that any two instances of the same error class
+        with the same `area/code` are equated.
         """
         return hash((self.__class__, self.code, self.area))
 
-    def __setattr__(self, key, value):
+    def __setattr__(self, key, value) -> None:
         raise AttributeError(  # pragma: no cover
             "The instances of this class should be considered immutable.")
 
@@ -76,8 +76,8 @@ class ExceptionWithCode(Exception):
         """
         Returns description that can be used to map errors to response value for a Presenter.
         """
-        param_json = json.dumps(self.params) if self.params else ''
-        return f"{self.area}/{self.code}/{param_json}"
+        param_json = '/' + json.dumps(self.params) if self.params else ''
+        return f"{self.area}/{self.code}{param_json}"
 
     def __repr__(self) -> str:
         params_str = f", params={self.params}" if self.params else ''
@@ -96,7 +96,7 @@ class ExceptionWithCode(Exception):
         copy.__dict__['catalog'] = self.catalog
         return copy
 
-    def clone(self):
+    def clone(self) -> 'ExceptionWithCode':
         """
         Creates new identical copy of the error class, but doesn't consider the catalog iff
         defined.
@@ -108,7 +108,7 @@ class ExceptionWithCode(Exception):
 
 class ErrorCatalogMeta(type):
 
-    _registry: dict
+    _registry: t.Dict[str, ExceptionWithCode]
 
     def __init__(cls, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -120,19 +120,19 @@ class ErrorCatalogMeta(type):
         """Iterate over registered errors."""
         yield from self._registry.values()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._registry)
 
     def __contains__(self, item: ExceptionWithCode) -> bool:
         return item in self._registry.values()
 
-    def add_instance(cls, error: ExceptionWithCode):
+    def add_instance(cls, error: ExceptionWithCode) -> None:
         """Registers an instance of an BaseError as an element of the ErrorCatalog."""
         cls._registry[error.code] = error
         setattr(cls, error.code, error)
         error.__dict__['catalog'] = cls
 
-    def all(cls):
+    def all(cls) -> t.Tuple[ExceptionWithCode]:
         return tuple(cls._registry.values())
 
 

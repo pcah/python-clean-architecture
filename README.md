@@ -41,7 +41,14 @@ Here you can find a short version of The Principles the library is meant to foll
 * Domain layer: bounded contexts (aka domains), entities, value objects, aggregates, repositories, policies, factories, domain services.
 * Application-specific logic: use-cases, application services, gateways, CQRS stacks, sagas. Task-, event- and data-driven applications, commands.
 
-#### Integrations:
+#### Micro-frameworks
+
+To accomplish the goals in a most convenient and readable manner, the library introduces some helper micro-frameworks:
+
+  * [pca/utils/dependency_injection](pca/utils/dependency_injection) to provide loose coupling between components in the pythonic way: interface-based with type annotations, declarative dependencies, introspection, no necessity for global-state container.
+  * [utils/errors.py](pca/utils/errors.py) as a declarative way to provide l10n-independent errors with params & hints for developers, together with thematic catalogues of errors.
+
+#### Integrations
 
 One of the goals of this library is to provide integration with popular Python frameworks and libraries. Here are the most notable ones: 
 
