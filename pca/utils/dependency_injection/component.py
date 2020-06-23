@@ -93,12 +93,15 @@ class Component(metaclass=ComponentMeta):
     """
 
 
+ConcreteComponent = t.TypeVar('ConcreteComponent')
+
+
 def create_component(
-    constructor: Constructor,
+    constructor: t.Type[ConcreteComponent],
     container: Container,
     context: DIContext = None,
     kwargs: Kwargs = None,
-) -> Component:
+) -> ConcreteComponent:
     """
     A helper function to create component respecting its relation to DI container & DI context.
     """

@@ -20,18 +20,49 @@ class DIContext:
     """
     Describes the way a component might be requested from the Container.
 
-    :cvar name: an arbitrary string describing dependency, but it doesn't give any
-        information about its interface
-    :cvar interface: (an alternative to `name` argument) an interface of the dependency;
-        often used along with annotations about the variable/argument that requests the dependency
+    It can be at one of two states:
+    * indeterminate - the context value will become determined when you bound its value to
+        the state of some target (a DI component) with `DIContext.determine` method.
+    * determined - the context is static, nothing is to be determined.
+
+    You can check the container with the DIContext only when the context is determined.
+
+    NB: DIContext is immutable, so calling `DIContext.determine` on a indeterminate context will
+        produce a new DIContext instance.
+
+    :cvar interface: an interface of the dependency. It's often used along with annotations about
+        the variable/argument that requests the dependency.
+    :cvar name: an arbitrary string describing dependency (an alternative to `interface` argument).
+        Simple to use, but it doesn't give any information about its interface.
     :cvar qualifier: an object of any type that adds a finer grade granularity about
         the dependency; i.e. you may want a component of `IDao` interface: not just anyone, but
         the one that is modeling some specific schema; the qualifier describes the latter
         condition.
+    :cvar get_qualifier: a function that can produce a qualifier from a component. Signature of
+        (target: Component) -> qualifier: str
     """
     name: str = None
     interface: t.Type = None
     qualifier: t.Any = None
+    get_qualifier: t.Callable[[t.Any], t.Any] = None
+
+    def __post_init__(self):
+        if self.qualifier and self.get_qualifier:
+            raise DIErrors.CONTRADICTORY_QUALIFIER_DEFINED.with_params(
+                qualifier=self.qualifier, get_qualifier=self.get_qualifier)
+
+    def is_determined(self):
+        """
+        Checks whether qualifier is already determined and static or yet has to be determined by
+        calling `get_qualifier` on an instance of a component.
+        """
+        return self.get_qualifier is None
+
+    def determine(self, target: t.Any) -> 'DIContext':
+        if self.is_determined():
+            return self
+        qualifier = self.get_qualifier(target)
+        return DIContext(name=self.name, interface=self.interface, qualifier=qualifier)
 
     def get(self, container: 'Container') -> t.Any:
         """
@@ -39,6 +70,14 @@ class DIContext:
         given container. Prioritizes name vs. interface precedence & collision when seeking for
         a dependency.
         """
+        if self.name and self.interface:
+            # exactly only one of those two defined
+            raise DIErrors.AMBIGUOUS_DEFINITION.with_params(
+                name=self.name, interface=self.interface)
+        if not self.is_determined():
+            raise DIErrors.INDETERMINATE_CONTEXT_BEING_RESOLVED.with_params(
+                name=self.name, interface=self.interface, get_qualifier=self.get_qualifier
+            )
         if self.name:
             return container.find_by_name(self.name, self.qualifier)
         elif self.interface:
@@ -137,7 +176,7 @@ class Container:
     ):
         """Technical detail of registering a constructor"""
         if context in self._constructor_registry:
-            raise DIErrors.AMBIGUOUS_DEFINITION.with_params(context=context)
+            raise DIErrors.ALREADY_REGISTERED.with_params(context=context)
         self._constructor_registry[context] = DIResolution(constructor=constructor, kwargs=kwargs)
         if scope is not None:
             setattr(constructor, _SCOPE_TYPE_REF, scope)
@@ -156,9 +195,9 @@ class Container:
             resolution = self._constructor_registry[context]
         except KeyError:
             raise DIErrors.DEFINITION_NOT_FOUND.with_params(context=context)
-        return self.get_object(resolution, context)
+        return self._get_object(resolution, context)
 
-    def get_object(self, resolution: DIResolution, context: DIContext = None) -> t.Any:
+    def _get_object(self, resolution: DIResolution, context: DIContext = None) -> t.Any:
         """
         Gets proper scope type and creates instance of registered constructor accordingly.
         """
@@ -197,8 +236,8 @@ class Container:
 
 
 class Scopes(Enum):
-    INSTANCE: ScopeFunction = partial(Container.instance_scope)
-    SINGLETON: ScopeFunction = partial(Container.singleton_scope)
+    INSTANCE: 'Scopes' = partial(Container.instance_scope)
+    SINGLETON: 'Scopes' = partial(Container.singleton_scope)
 
     def __call__(
             self,

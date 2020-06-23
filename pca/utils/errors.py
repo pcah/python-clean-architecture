@@ -35,8 +35,7 @@ class ExceptionWithCode(Exception):
             self.__dict__['area'] = area
         if hint:
             self.__dict__['hint'] = hint
-        if params:
-            self.__dict__['params'] = params
+        self.__dict__['params'] = params if params else {}
 
     def __set_name__(self, owner: t.Any, name: str) -> None:
         """

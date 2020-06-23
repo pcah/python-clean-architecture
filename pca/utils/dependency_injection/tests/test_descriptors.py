@@ -63,6 +63,7 @@ class TestInjectDescriptor:
                 '<locals>.NoAnnotationBike'
             ),
             'attribute': 'wheel',
+            'context': None,
         }
 
     def test_no_container(self, container):

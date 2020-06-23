@@ -28,13 +28,20 @@ class Inject:
     name: InitVar[str] = None
     interface: InitVar[t.Type] = None
     qualifier: InitVar[t.Any] = None
+    get_qualifier: InitVar[t.Callable[[t.Any], t.Any]] = None
 
     label: str = None
     annotation: t.Type = None
 
-    def __post_init__(self, name: str, interface: t.Type, qualifier: t.Any):
+    def __post_init__(
+            self,
+            name: str,
+            interface: t.Type,
+            qualifier: t.Any,
+            get_qualifier: t.Callable[[t.Any], t.Any] = None
+    ):
         object.__setattr__(self, 'context', DIContext(
-            name=name, interface=interface, qualifier=qualifier
+            name=name, interface=interface, qualifier=qualifier, get_qualifier=get_qualifier
         ))
 
     def __set_name__(self, owner, name: str) -> None:
@@ -54,10 +61,12 @@ class Inject:
                 class_name=instance.__class__.__qualname__,
                 attribute=self.label
             )
+        context = self.context.determine(instance)
         try:
-            return self.context.get(container=container)
+            return context.get(container=container)
         except ConfigError as e:
             raise e.with_params(
                 class_name=instance.__class__.__qualname__,
                 attribute=self.label,
+                context=e.params.get('context'),
             )

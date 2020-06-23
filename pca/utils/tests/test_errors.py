@@ -27,7 +27,7 @@ class TestCustomError:
         instance = ExceptionWithCode()
         assert instance.code == ''
         assert instance.area == ''
-        assert instance.params is None
+        assert instance.params == {}
         assert instance.catalog is None
 
     def test_setting_catalog(self, instance: ExceptionWithCode):

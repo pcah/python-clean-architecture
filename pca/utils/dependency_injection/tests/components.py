@@ -76,7 +76,7 @@ class Trike(Component):
     front_wheel: WheelInterface = Inject()
     left_wheel = Inject(interface=WheelInterface)
     right_wheel = Inject(name='right')
-    frame: FrameInterface = Inject(name='frame')
+    frame = Inject(name='frame')
 
     @property
     def components(self):
