@@ -5,7 +5,6 @@ from pca.utils.collections import frozendict
 from pca.utils.compat import GenericABCMeta
 
 from .container import (
-    Constructor,
     Container,
     DIContext,
     Kwargs,

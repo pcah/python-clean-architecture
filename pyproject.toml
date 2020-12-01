@@ -1,0 +1,39 @@
+[tool.poetry]
+name = "python-clean-architecture"
+version = "0.0.6"
+description = "A Python toolkit for applications driven by the Clean Architecture"
+authors = ["lhaze <github@lhaze.name>"]
+license = "MIT License"
+packages = [
+    { include = "pca" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+marshmallow = "^3.9.1"
+"ruamel.yaml" = "^0.16.12"
+JsonWeb = "0.8.2"
+# dataclasses = { version = "~0.8", python_version = "~3.6" }
+
+[tool.poetry.dev-dependencies]
+# "gitpython",
+# 'twine',
+# 'virtualenv',
+# 'wheel',
+
+tox = "^3.20.1"
+pytest = "^6.1.2"
+pytest-flake8 = "^1.0.6"
+mock = "^4.0.2"
+pytest-mock = "^3.3.1"
+pytest-cov = "^2.10.1"
+# pep8-naming = "^0.11.1"
+coverage = "^5.3"
+pyfakefs = "^4.3.2"
+ipython = "^7.19.0"
+pdbpp = "^0.10.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

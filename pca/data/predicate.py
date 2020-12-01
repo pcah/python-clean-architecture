@@ -182,7 +182,7 @@ class Var(object):
             test: t.Callable,
             operation: Operation,
             args: t.Iterable
-            ) -> Predicate:
+    ) -> Predicate:
         """
         Generate a Predicate object based on a test function.
 

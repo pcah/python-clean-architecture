@@ -18,7 +18,7 @@ from pca.utils.collections import (
     200,
     2000000000,
     1.15,
-    1+2j,
+    1 + 2j,
 ])
 def test_freeze_immutable(value):
     assert freeze(value) is value

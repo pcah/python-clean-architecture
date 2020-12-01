@@ -48,7 +48,7 @@ def test_load_dict_with_list_as_key():
         "---\n"
         "foo: &anchor [spam, eggs]\n"
         "included: !include inner.yaml"
-     ), (
+    ), (
         "---\n"
         "bar: *anchor\n"
     )),
