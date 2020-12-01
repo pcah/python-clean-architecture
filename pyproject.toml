@@ -2,8 +2,31 @@
 name = "python-clean-architecture"
 version = "0.0.6"
 description = "A Python toolkit for applications driven by the Clean Architecture"
-authors = ["lhaze <github@lhaze.name>"]
+authors = [
+    "lhaze <github@lhaze.name>",
+]
 license = "MIT License"
+readme = "README.md"
+homepage = "https://github.com/pcah/python-clean-architecture"
+repository = "https://github.com/pcah/python-clean-architecture"
+
+keywords = [
+    "python",
+    "architecture",
+    "design-patterns"
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development",
+    "Intended Audience :: Developers",
+    "Development Status :: 2 - Pre-Alpha",
+]
 packages = [
     { include = "pca" },
 ]
@@ -14,7 +37,6 @@ python = "^3.7"
 marshmallow = "^3.9.1"
 "ruamel.yaml" = "^0.16.12"
 JsonWeb = "0.8.2"
-# dataclasses = { version = "~0.8", python_version = "~3.6" }
 
 [tool.poetry.dev-dependencies]
 # "gitpython",
