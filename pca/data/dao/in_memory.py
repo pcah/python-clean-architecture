@@ -23,7 +23,6 @@ from .abstract import (
 
 @scope(Scopes.SINGLETON)
 class InMemoryDao(AbstractDao[int]):
-
     def __init__(self, initial_content: BatchOfKwargs = None):
         self._register: t.Dict[int, Dto] = {}
         self._id_generator = count(1)
@@ -36,10 +35,7 @@ class InMemoryDao(AbstractDao[int]):
     def _resolve_filter(self, query_chain: QueryChain) -> BatchOfDto:
         if query_chain._filters:
             filter_ = query_chain._reduced_filter
-            filtered: BatchOfDto = (
-                dto for dto in self._register.values()
-                if filter_(dto)
-            )
+            filtered: BatchOfDto = (dto for dto in self._register.values() if filter_(dto))
         else:
             filtered = self._register.values()
         if query_chain._ids:
@@ -63,19 +59,13 @@ class InMemoryDao(AbstractDao[int]):
         return len(filtered)
 
     def _resolve_update(self, query_chain: QueryChain, update: Kwargs) -> Ids:
-        updated_dtos = (
-            (dto.update(update), dto.id)
-            for dto in self._resolve_filter(query_chain)
-        )
+        updated_dtos = ((dto.update(update), dto.id) for dto in self._resolve_filter(query_chain))
         return [id_ for _, id_ in updated_dtos]
 
     def _resolve_remove(self, query_chain: QueryChain) -> Ids:
         if query_chain._is_trivial:
             raise QueryErrors.UNRESTRICTED_REMOVE
-        dtos_to_remove = (
-            self._register.pop(dto.id)
-            for dto in self._resolve_filter(query_chain)
-        )
+        dtos_to_remove = (self._register.pop(dto.id) for dto in self._resolve_filter(query_chain))
         return [dto.id for dto in dtos_to_remove]
 
     def insert(self, **kwargs) -> Id:

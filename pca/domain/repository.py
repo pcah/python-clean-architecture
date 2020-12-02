@@ -16,6 +16,7 @@ class Factory:
       * support dataclasses as entities
       * deconstruct specified fields (all dataclass fields by default)
     """
+
     # TODO #39 integrate with some kind of validation at the flow (application) layer
     # TODO #39 deconstruction of relations to other entites might consist of extraction their id
     # TODO #40 currently it doesn't care if values are entites.
@@ -43,10 +44,7 @@ class Factory:
         """
         data = asdict(entity)
         if self.mapped_fields:
-            data = {
-                field: value for field, value in data.items()
-                if field in self.mapped_fields
-            }
+            data = {field: value for field, value in data.items() if field in self.mapped_fields}
         dto = Dto(data)
         dto.__id__ = entity.__get_id__()
         return dto
@@ -61,6 +59,7 @@ class Repository(IRepository[Id, Entity]):
     Developers of repos for concrete entites are encouraged to subclass and put a meaningful
     query and command methods along the basic ones.
     """
+
     factory: t.ClassVar[t.Optional[Factory]] = None
 
     def __init__(self, container: Container, factory: Factory = None):

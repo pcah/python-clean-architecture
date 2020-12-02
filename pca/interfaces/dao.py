@@ -15,6 +15,7 @@ class Dto(Kwargs, dict):
     lying beneath the DAO. DTOs carry de-structured and normalized data of some kind of domain
     entity, intended to be put into the persistence layer.
     """
+
     __id__: Id = None
 
     @property
@@ -28,7 +29,7 @@ class Dto(Kwargs, dict):
         return self.__id__
 
 
-BatchOfDto = t.TypeVar('BatchOfDto', t.Iterable[Dto], t.Sized)
+BatchOfDto = t.TypeVar("BatchOfDto", t.Iterable[Dto], t.Sized)
 
 
 class IPredicate:
@@ -49,14 +50,14 @@ class IQueryChain(t.Iterable[Dto], t.Sized, t.Generic[Id]):
 
     # lazy queries
 
-    def filter(self, predicate: IPredicate) -> 'IQueryChain':
+    def filter(self, predicate: IPredicate) -> "IQueryChain":
         """
         Filters out objects by the predicate specifying conditions that they
         should met. Can be chained via `IQueryChain` helper class.
         """
         raise NotImplementedError
 
-    def filter_by(self, id_: Id = None, ids: Ids = None) -> 'IQueryChain':
+    def filter_by(self, id_: Id = None, ids: Ids = None) -> "IQueryChain":
         """
         Filters objects by a single id or a iterable of ids.
 

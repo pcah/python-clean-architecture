@@ -16,13 +16,13 @@ class TestErrorCatcher:
     @pytest.fixture
     def function(self):
         m = mock.Mock(return_value=42)
-        m.__qualname__ = 'a_function'
-        m.__module__ = 'a_module'
+        m.__qualname__ = "a_function"
+        m.__module__ = "a_module"
         return m
 
     @pytest.fixture
     def error(self):
-        return self.MyError('specific_error')
+        return self.MyError("specific_error")
 
     @pytest.fixture
     def error_function(self, function, error):
@@ -31,61 +31,54 @@ class TestErrorCatcher:
 
     @pytest.fixture
     def constructor(self):
-        return mock.Mock(return_value='42')
+        return mock.Mock(return_value="42")
 
     def test_success_wo_constructor(self, function):
         decorated = error_catcher()(function)
 
-        assert decorated(1, foo='bar') == 42
-        function.assert_called_once_with(1, foo='bar')
+        assert decorated(1, foo="bar") == 42
+        function.assert_called_once_with(1, foo="bar")
 
     def test_success_with_constructor(self, function, constructor):
         decorated = error_catcher(success_constructor=constructor)(function)
 
-        assert decorated(1, foo='bar') == '42'
-        function.assert_called_once_with(1, foo='bar')
+        assert decorated(1, foo="bar") == "42"
+        function.assert_called_once_with(1, foo="bar")
         constructor.assert_called_once_with(
-            args=(1,),
-            kwargs={'foo': 'bar'},
-            function_name='a_module.a_function',
-            result=42
+            args=(1,), kwargs={"foo": "bar"}, function_name="a_module.a_function", result=42
         )
 
     def test_error_with_constructor(self, error_function, constructor, error):
         decorated = error_catcher(error_constructor=constructor)(error_function)
 
-        assert decorated(1, foo='bar') == '42'
-        error_function.assert_called_once_with(1, foo='bar')
+        assert decorated(1, foo="bar") == "42"
+        error_function.assert_called_once_with(1, foo="bar")
         constructor.assert_called_once_with(
-            args=(1,),
-            kwargs={'foo': 'bar'},
-            function_name='a_module.a_function',
-            error=error
+            args=(1,), kwargs={"foo": "bar"}, function_name="a_module.a_function", error=error
         )
 
     def test_error_wo_constructor(self, error_function, error):
         decorated = error_catcher()(error_function)
 
-        assert decorated(1, foo='bar') == error
-        error_function.assert_called_once_with(1, foo='bar')
+        assert decorated(1, foo="bar") == error
+        error_function.assert_called_once_with(1, foo="bar")
 
     def test_error_narrowed_error_class_caught(self, error_function):
         decorated = error_catcher(error_class=ValueError)(error_function)
 
         with pytest.raises(self.MyError):
-            decorated(1, foo='bar')
-        error_function.assert_called_once_with(1, foo='bar')
+            decorated(1, foo="bar")
+        error_function.assert_called_once_with(1, foo="bar")
 
     def test_error_multiple_error_class(self, error_function):
         decorated = error_catcher(error_class=(ValueError, self.MyError))(error_function)
 
-        decorated(1, foo='bar')
-        error_function.assert_called_once_with(1, foo='bar')
+        decorated(1, foo="bar")
+        error_function.assert_called_once_with(1, foo="bar")
 
 
 # noinspection PyDecorator,PyNestedDecorators
 class TestSingleDispatchMethod:
-
     def test_method_register(self):
         class A:
             @singledispatchmethod
@@ -105,15 +98,15 @@ class TestSingleDispatchMethod:
         a.t(0)
         assert a.arg == "int"
         aa = A()
-        assert hasattr(aa, 'arg') is False
-        a.t('')
+        assert hasattr(aa, "arg") is False
+        a.t("")
         assert a.arg == "str"
         aa = A()
-        assert hasattr(aa, 'arg') is False
+        assert hasattr(aa, "arg") is False
         a.t(0.0)
         assert a.arg == "base"
         aa = A()
-        assert hasattr(aa, 'arg') is False
+        assert hasattr(aa, "arg") is False
 
     def test_staticmethod_register(self):
         # noinspection PyNestedDecorators
@@ -137,7 +130,7 @@ class TestSingleDispatchMethod:
 
         assert a
         assert A.t(0) is True
-        assert A.t('') is True
+        assert A.t("") is True
         assert A.t(0.0) == 0.0
 
     def test_classmethod_register(self):
@@ -162,7 +155,7 @@ class TestSingleDispatchMethod:
                 return cls("str")
 
         assert A.t(0).arg == "int"
-        assert A.t('').arg == "str"
+        assert A.t("").arg == "str"
         assert A.t(0.0).arg == "base"
 
     def test_callable_register(self):
@@ -187,12 +180,11 @@ class TestSingleDispatchMethod:
             return cls("str")
 
         assert A.t(0).arg == "int"
-        assert A.t('').arg == "str"
+        assert A.t("").arg == "str"
         assert A.t(0.0).arg == "base"
 
     def test_abstractmethod_register(self):
         class Abstract(abc.ABCMeta):
-
             @singledispatchmethod
             @abc.abstractmethod
             def add(self, x, y):
@@ -201,7 +193,8 @@ class TestSingleDispatchMethod:
         assert Abstract.add.__isabstractmethod__ is True
 
     @pytest.mark.skipif(
-        compat.PY36, reason="functools.singledispatch supports annotations since Py37")
+        compat.PY36, reason="functools.singledispatch supports annotations since Py37"
+    )
     def test_type_annotation_register(self):
         class A:
             @singledispatchmethod
@@ -219,5 +212,5 @@ class TestSingleDispatchMethod:
         a = A()
 
         assert a.t(0) == "int"
-        assert a.t('') == "str"
+        assert a.t("") == "str"
         assert a.t(0.0) == "base"

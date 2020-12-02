@@ -7,11 +7,11 @@ from pca.utils.sentinel import Sentinel
 
 # sentinel object for expressing that a value of a observable hasn't been set
 # NB: None object might be a valid value
-undefined_value = Sentinel(module='pca.data.observable', name='undefined_value')
+undefined_value = Sentinel(module="pca.data.observable", name="undefined_value")
 
 
-Owner = t.TypeVar('Owner')
-Value = t.TypeVar('Value')
+Owner = t.TypeVar("Owner")
+Value = t.TypeVar("Value")
 Preprocessor = t.Callable[[Value], Value]
 Validator = t.Callable[[Value], None]  # raises errors
 Observer = t.Callable[[Owner, Value, Value], None]
@@ -23,14 +23,14 @@ class Observable:
     _label: str
     # pattern for __dict__ key on the owner class; space char is intended to be
     # sure we are not colliding with any proper attribute name
-    _observer_key_pattern = '%s instance observers'
+    _observer_key_pattern = "%s instance observers"
 
     def __init__(
-            self,
-            default=undefined_value,
-            preprocessor: Preprocessor = None,
-            validator: Validator = None,
-            class_observers: t.Iterable[Observer] = None
+        self,
+        default=undefined_value,
+        preprocessor: Preprocessor = None,
+        validator: Validator = None,
+        class_observers: t.Iterable[Observer] = None,
     ):
         """
         Params:

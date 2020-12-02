@@ -16,6 +16,7 @@ class CustomYamlLoader(yaml.Loader):
     * supplies constructed object's arguments to __new__ during its construction (the old one
         forces __new__ without arguments
     """
+
     def __init__(self, stream: t.IO, *args, **kwargs):
         """Find CWD as the root dir of the filepaths"""
         try:
@@ -36,7 +37,7 @@ class CustomYamlLoader(yaml.Loader):
     def construct_yaml_object(self, node: t.Any, cls: t.Any) -> t.Any:
         state = self.construct_mapping(node, deep=True)
         data = cls.__new__(cls, **state)
-        if hasattr(data, '__setstate__'):
+        if hasattr(data, "__setstate__"):
             data.__setstate__(state)
         yield data
 
@@ -50,13 +51,11 @@ def _construct_include(loader: CustomYamlLoader, node: yaml.Node) -> t.Any:
     return load_yaml_from_filepath(filepath, master=loader)
 
 
-yaml.add_constructor('!include', _construct_include, CustomYamlLoader)
+yaml.add_constructor("!include", _construct_include, CustomYamlLoader)
 
 
 def load_yaml(
-        stream: t.Union[str, t.IO],
-        master: CustomYamlLoader = None,
-        version: str = None
+    stream: t.Union[str, t.IO], master: CustomYamlLoader = None, version: str = None
 ) -> t.Any:
     """
     Own YAML-deserialization based on:
@@ -82,8 +81,7 @@ def load_yaml(
 
 
 def load_yaml_from_filepath(
-        filepath: t.Union[str, 'pathlib.Path'],
-        master: CustomYamlLoader = None
+    filepath: t.Union[str, "pathlib.Path"], master: CustomYamlLoader = None
 ) -> t.Any:
     """
     See: `load_yaml` function. This function differs only with that it expects filepath

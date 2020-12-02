@@ -10,9 +10,9 @@ Constructor = t.Union[t.Type, t.Callable]
 Kwargs = t.Dict[str, t.Any]  # keyword-arguments of a Constructor
 ScopeFunction = t.Callable[[Constructor, Kwargs], t.Any]
 
-_CONTAINER_REF = '__di_container__'
-_CONTEXT_REF = '__di_context__'
-_SCOPE_TYPE_REF = '__di_scope__'
+_CONTAINER_REF = "__di_container__"
+_CONTEXT_REF = "__di_context__"
+_SCOPE_TYPE_REF = "__di_scope__"
 
 
 @dataclass(frozen=True)
@@ -41,6 +41,7 @@ class DIContext:
     :cvar get_qualifier: a function that can produce a qualifier from a component. Signature of
         (target: Component) -> qualifier: str
     """
+
     name: str = None
     interface: t.Type = None
     qualifier: t.Any = None
@@ -49,7 +50,8 @@ class DIContext:
     def __post_init__(self):
         if self.qualifier and self.get_qualifier:
             raise DIErrors.CONTRADICTORY_QUALIFIER_DEFINED.with_params(
-                qualifier=self.qualifier, get_qualifier=self.get_qualifier)
+                qualifier=self.qualifier, get_qualifier=self.get_qualifier
+            )
 
     def is_determined(self):
         """
@@ -58,13 +60,13 @@ class DIContext:
         """
         return self.get_qualifier is None
 
-    def determine(self, target: t.Any) -> 'DIContext':
+    def determine(self, target: t.Any) -> "DIContext":
         if self.is_determined():
             return self
         qualifier = self.get_qualifier(target)
         return DIContext(name=self.name, interface=self.interface, qualifier=qualifier)
 
-    def get(self, container: 'Container') -> t.Any:
+    def get(self, container: "Container") -> t.Any:
         """
         Finds a injected instance of the dependency declared by the `Inject` attributes using
         given container. Prioritizes name vs. interface precedence & collision when seeking for
@@ -73,7 +75,8 @@ class DIContext:
         if self.name and self.interface:
             # exactly only one of those two defined
             raise DIErrors.AMBIGUOUS_DEFINITION.with_params(
-                name=self.name, interface=self.interface)
+                name=self.name, interface=self.interface
+            )
         if not self.is_determined():
             raise DIErrors.INDETERMINATE_CONTEXT_BEING_RESOLVED.with_params(
                 name=self.name, interface=self.interface, get_qualifier=self.get_qualifier
@@ -94,6 +97,7 @@ class DIResolution:
     :cvar constructor: a type or a callable that builds the dependency instance
     :cvar kwargs: a kwargs dict that specifies keyword arguments for the dependency constructor
     """
+
     constructor: Constructor
     kwargs: Kwargs = None
 
@@ -104,18 +108,18 @@ class Container:
     and makes all the components use DI machinery for its own purposes.
     """
 
-    def __init__(self, default_scope: 'Scopes' = None):
+    def __init__(self, default_scope: "Scopes" = None):
         self._constructor_registry: t.Dict[DIContext, DIResolution] = {}
         self._singleton_registry = {}
         self._default_scope = default_scope
 
     def register_by_name(
-            self,
-            name: str,
-            constructor: Constructor,
-            qualifier: t.Any = None,
-            kwargs: Kwargs = None,
-            scope: 'Scopes' = None,
+        self,
+        name: str,
+        constructor: Constructor,
+        qualifier: t.Any = None,
+        kwargs: Kwargs = None,
+        scope: "Scopes" = None,
     ):
         """
         Registering constructors by name and (optional) qualifier.
@@ -133,17 +137,15 @@ class Container:
             scope of the container.
         """
         context = DIContext(name=name, qualifier=qualifier)
-        self._register(
-            context=context, constructor=constructor, kwargs=kwargs, scope=scope
-        )
+        self._register(context=context, constructor=constructor, kwargs=kwargs, scope=scope)
 
     def register_by_interface(
-            self,
-            interface: type,
-            constructor: Constructor,
-            qualifier: t.Any = None,
-            kwargs: Kwargs = None,
-            scope: 'Scopes' = None,
+        self,
+        interface: type,
+        constructor: Constructor,
+        qualifier: t.Any = None,
+        kwargs: Kwargs = None,
+        scope: "Scopes" = None,
     ):
         """
         Registering constructors by interface and (optional) qualifier.
@@ -163,16 +165,14 @@ class Container:
         """
         context = DIContext(interface=interface, qualifier=qualifier)
         # TODO Refs #20: should I register superclasses of the interface as well?
-        self._register(
-            context=context, constructor=constructor, kwargs=kwargs, scope=scope
-        )
+        self._register(context=context, constructor=constructor, kwargs=kwargs, scope=scope)
 
     def _register(
         self,
         context: DIContext,
         constructor: Constructor,
         kwargs: Kwargs = None,
-        scope: 'Scopes' = None,
+        scope: "Scopes" = None,
     ):
         """Technical detail of registering a constructor"""
         if context in self._constructor_registry:
@@ -210,10 +210,7 @@ class Container:
     # Implementation of the scopes
 
     def instance_scope(
-            self,
-            constructor: Constructor,
-            kwargs: Kwargs,
-            context: DIContext = None
+        self, constructor: Constructor, kwargs: Kwargs, context: DIContext = None
     ) -> t.Any:
         """Every injection makes a new instance."""
         instance = constructor(**kwargs)
@@ -221,10 +218,7 @@ class Container:
         return instance
 
     def singleton_scope(
-            self,
-            constructor: Constructor,
-            kwargs: Kwargs,
-            context: DIContext
+        self, constructor: Constructor, kwargs: Kwargs, context: DIContext
     ) -> t.Any:
         """First injection makes a new instance, later ones return the same instance."""
         try:
@@ -236,15 +230,15 @@ class Container:
 
 
 class Scopes(Enum):
-    INSTANCE: 'Scopes' = partial(Container.instance_scope)
-    SINGLETON: 'Scopes' = partial(Container.singleton_scope)
+    INSTANCE: "Scopes" = partial(Container.instance_scope)
+    SINGLETON: "Scopes" = partial(Container.singleton_scope)
 
     def __call__(
-            self,
-            container: Container,
-            constructor: Constructor,
-            kwargs: Kwargs,
-            context: DIContext = None,
+        self,
+        container: Container,
+        constructor: Constructor,
+        kwargs: Kwargs,
+        context: DIContext = None,
     ) -> t.Any:
         return self.value(container, constructor, kwargs, context)
 

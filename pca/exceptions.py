@@ -19,12 +19,14 @@ class PcaError(BaseError):
 
 class ConfigError(PcaError):
     """A problem has been encountered during loading configuration of the application."""
-    area = 'CONFIG'
+
+    area = "CONFIG"
 
 
 class IntegrationError(PcaError):
     """A problem has been encountered during loading an integration module."""
-    area = 'INTEGRATION'
+
+    area = "INTEGRATION"
 
 
 class ProcessError(BaseError):
@@ -36,7 +38,8 @@ class ProcessError(BaseError):
 
 class QueryError(ProcessError):
     """Process errors that are related to processing queries."""
-    area = 'QUERY'
+
+    area = "QUERY"
 
 
 class ValidationError(ProcessError, marshmallow.exceptions.ValidationError):
@@ -44,11 +47,13 @@ class ValidationError(ProcessError, marshmallow.exceptions.ValidationError):
     Process errors that happened during the data validation step of business logic.
     # TODO #39. integrate validation
     """
-    area = 'VALIDATION'
+
+    area = "VALIDATION"
 
 
 class LogicError(ProcessError):
     """
     Base error class for errors of purely business logic. This is the main
     """
-    area = 'LOGIC'
+
+    area = "LOGIC"

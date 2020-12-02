@@ -5,8 +5,8 @@ from .test import PyTest
 
 
 ALL = {
-    'test': PyTest,
-    'bump_version': BumpVersion,
-    'dist_build': DistBuild,
-    'publish': Publish,
+    "test": PyTest,
+    "bump_version": BumpVersion,
+    "dist_build": DistBuild,
+    "publish": Publish,
 }

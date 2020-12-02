@@ -19,7 +19,7 @@ def sget(target, key: str, default: t.Any = None):
     >>> assert sget(bunch, 'foo.bar.0') == 'value'
     >>> assert sget(bunch, 'foo.baz', 42) == 42
     """
-    key_iter = key.split('.') if hasattr(key, 'split') else [key]
+    key_iter = key.split(".") if hasattr(key, "split") else [key]
     value = target
     for part in key_iter:
         try:
@@ -48,7 +48,7 @@ def is_iterable(obj):
     We don't need to check for the Python 2 `unicode` type, because it doesn't
     have an `__iter__` attribute anyway.
     """
-    return hasattr(obj, '__iter__') and not isinstance(obj, str)
+    return hasattr(obj, "__iter__") and not isinstance(obj, str)
 
 
 def is_iterable_and_not_tuple(obj):
@@ -68,6 +68,7 @@ class OrderedSet(MutableSet):
     The code and its tests are taken from:
     https://github.com/LuminosoInsight/ordered-set
     """
+
     def __init__(self, iterable=None):
         self.items = []
         self.map = {}
@@ -89,7 +90,7 @@ class OrderedSet(MutableSet):
         """
         if index == SliceAll:
             return self
-        elif hasattr(index, '__index__') or isinstance(index, slice):
+        elif hasattr(index, "__index__") or isinstance(index, slice):
             result = self.items[index]
             if isinstance(result, list):
                 return OrderedSet(result)
@@ -98,8 +99,7 @@ class OrderedSet(MutableSet):
         elif is_iterable_and_not_tuple(index):
             return OrderedSet([self.items[i] for i in index])
         else:  # pragma: no cover
-            raise TypeError(
-                "Don't know how to index an OrderedSet by %r" % index)
+            raise TypeError("Don't know how to index an OrderedSet by %r" % index)
 
     def copy(self):
         return OrderedSet(self)
@@ -136,6 +136,7 @@ class OrderedSet(MutableSet):
             self.map[key] = len(self.items)
             self.items.append(key)
         return self.map[key]
+
     append = add
 
     def update(self, sequence):
@@ -148,8 +149,7 @@ class OrderedSet(MutableSet):
             for item in sequence:
                 item_index = self.add(item)
         except TypeError:  # pragma: no cover
-            raise ValueError(
-                'Argument needs to be an iterable, got %s' % type(sequence))
+            raise ValueError("Argument needs to be an iterable, got %s" % type(sequence))
         return item_index
 
     def index(self, key):
@@ -170,7 +170,7 @@ class OrderedSet(MutableSet):
         Raises KeyError if the set is empty.
         """
         if not self.items:
-            raise KeyError('Set is empty')
+            raise KeyError("Set is empty")
 
         elem = self.items[-1]
         del self.items[-1]
@@ -206,8 +206,8 @@ class OrderedSet(MutableSet):
 
     def __repr__(self):
         if not self:
-            return '%s()' % (self.__class__.__name__,)
-        return '%s(%r)' % (self.__class__.__name__, list(self))
+            return "%s()" % (self.__class__.__name__,)
+        return "%s(%r)" % (self.__class__.__name__, list(self))
 
     def __eq__(self, other):
         if isinstance(other, OrderedSet):
@@ -270,8 +270,7 @@ class frozendict(dict):  # noqa: N801
     code.activestate.com/recipes/414283-frozen-dictionaries/
     """
 
-    __delitem__ = __setitem__ = clear = \
-        pop = popitem = setdefault = update = __not_supported__
+    __delitem__ = __setitem__ = clear = pop = popitem = setdefault = update = __not_supported__
 
     def __copy__(self):
         """
@@ -315,13 +314,13 @@ class FrozenProxy:
     """
 
     def __init__(self, target: t.Any):
-        self.__dict__['_frozen_target'] = target
+        self.__dict__["_frozen_target"] = target
 
     def __getattr__(self, name: str) -> t.Any:
         try:
             value = self.__dict__[name]
         except KeyError:
-            value = getattr(self.__dict__['_frozen_target'], name)
+            value = getattr(self.__dict__["_frozen_target"], name)
             value = self.__dict__[name] = freeze(value)
         return value
 
@@ -329,7 +328,7 @@ class FrozenProxy:
         try:
             value = self.__dict__[item]
         except KeyError:
-            value = self.__dict__['_frozen_target'][item]
+            value = self.__dict__["_frozen_target"][item]
             value = self.__dict__[item] = freeze(value)
         return value
 
@@ -360,7 +359,7 @@ class FrozenProxy:
     __delattr__ = __delitem__ = __not_supported__
 
     def __call__(self, *args, **kwargs):
-        value = self.__dict__['_frozen_target'](*args, **kwargs)
+        value = self.__dict__["_frozen_target"](*args, **kwargs)
         return freeze(value)
 
     def __repr__(self):
@@ -498,9 +497,9 @@ class Bunch(dict):
         """
         keys = list(self.keys())
         keys.sort()
-        return '%s(%s)' % (
+        return "%s(%s)" % (
             self.__class__.__name__,
-            ', '.join(['%s=%r' % (key, self[key]) for key in keys])
+            ", ".join(["%s=%r" % (key, self[key]) for key in keys]),
         )
 
 

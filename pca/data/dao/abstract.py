@@ -26,19 +26,20 @@ class QueryChain(IQueryChain):
     (ie. filter, sort, aggregate, etc) to call owning DAO to resolve them when non-lazy
     (ie. get, exists, count, update, etc) is called.
     """
+
     # TODO lazy queries: order_by, aggregate, annotate
     # TODO evaluating queries: slicing
 
     _ids: Ids = None
     _filters: t.List[Predicate] = None
 
-    def __init__(self, dao: 'AbstractDao'):
+    def __init__(self, dao: "AbstractDao"):
         self._dao = dao
 
     @classmethod
     def _construct(
-            cls, dao: 'AbstractDao', filters: t.List[Predicate] = None, ids: t.List[Id] = None
-    ) -> 'QueryChain':
+        cls, dao: "AbstractDao", filters: t.List[Predicate] = None, ids: t.List[Id] = None
+    ) -> "QueryChain":
         """
         Technical detail of creating a new QueryChain with specified
         argument.
@@ -76,13 +77,13 @@ class QueryChain(IQueryChain):
 
     # lazy queries
 
-    def filter(self, predicate: Predicate) -> 'QueryChain':
+    def filter(self, predicate: Predicate) -> "QueryChain":
         """
         Filters out objects by the predicate specifying conditions that they should met.
         """
         return self._clone(filters=[predicate])
 
-    def filter_by(self, id_: Id = None, ids: Ids = None) -> 'QueryChain':
+    def filter_by(self, id_: Id = None, ids: Ids = None) -> "QueryChain":
         """
         Filters objects by a single id or a iterable of ids.
 

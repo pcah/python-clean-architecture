@@ -8,7 +8,6 @@ from .in_memory import InMemoryDao
 
 @scope(Scopes.SINGLETON)
 class FileDao(InMemoryDao):
-
     def __init__(self, container: Container, filepath: str, path: str = None):
         content = load_from_filepath(filepath)
         self.path = path

@@ -10,7 +10,7 @@ def replace_in_file(filepath: str, pattern: str, substitute: str) -> bool:
         contents = f.read()
     new_contents = replace_in_multiline_string(pattern, substitute, contents)
     if new_contents != contents:
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             f.write(new_contents)
         return True
     return False

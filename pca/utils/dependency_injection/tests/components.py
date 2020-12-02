@@ -18,11 +18,11 @@ class FrameInterface:
 
 @scope(Scopes.INSTANCE)
 class RoadFrame(FrameInterface):
-    name = 'Road frame'
+    name = "Road frame"
 
 
 class GravelFrame(FrameInterface):
-    name = 'Gravel frame'
+    name = "Gravel frame"
 
 
 class CustomColoredFrame(FrameInterface):
@@ -31,15 +31,15 @@ class CustomColoredFrame(FrameInterface):
 
     @property
     def name(self):
-        return f'Custom {self.color} frame'
+        return f"Custom {self.color} frame"
 
 
 class RoadWheel(WheelInterface):
-    name = 'Road wheel'
+    name = "Road wheel"
 
 
 class GravelWheel(WheelInterface):
-    name = 'Gravel wheel'
+    name = "Gravel wheel"
 
 
 class CustomColoredWheel(WheelInterface):
@@ -48,7 +48,7 @@ class CustomColoredWheel(WheelInterface):
 
     @property
     def name(self):
-        return f'Custom {self.color} wheel'
+        return f"Custom {self.color} wheel"
 
 
 class Bike:
@@ -57,14 +57,14 @@ class Bike:
         Doesn't inherit Component features. Manually uses DI container as a dependency manager and
         sets injected instances to the Bike instance fields.
         """
-        self.frame = container.find_by_name('frame')
+        self.frame = container.find_by_name("frame")
         self.wheel = container.find_by_interface(WheelInterface)
 
     @property
     def components(self):
         return {
-            'frame': self.frame.name,
-            'wheel': self.wheel.name,
+            "frame": self.frame.name,
+            "wheel": self.wheel.name,
         }
 
 
@@ -73,25 +73,26 @@ class Trike(Component):
     Inherits Component features. Automatically is being injected with DI instances using Inject
     descriptor.
     """
+
     front_wheel: WheelInterface = Inject()
     left_wheel = Inject(interface=WheelInterface)
-    right_wheel = Inject(name='right')
-    frame = Inject(name='frame')
+    right_wheel = Inject(name="right")
+    frame = Inject(name="frame")
 
     @property
     def components(self):
         return {
-            'front_wheel': self.front_wheel.name,
-            'left_wheel': self.left_wheel.name,
-            'right_wheel': self.right_wheel.name,
-            'frame': self.frame.name,
+            "front_wheel": self.front_wheel.name,
+            "left_wheel": self.left_wheel.name,
+            "right_wheel": self.right_wheel.name,
+            "frame": self.frame.name,
         }
 
     @inject
     def method_with_dependencies(
-            self,
-            frame: FrameInterface = Inject(),
-            front_wheel=Inject(name='front'),
-            rear_wheel=Inject(interface=WheelInterface)
+        self,
+        frame: FrameInterface = Inject(),
+        front_wheel=Inject(name="front"),
+        rear_wheel=Inject(interface=WheelInterface),
     ):
         pass

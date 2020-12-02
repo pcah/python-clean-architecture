@@ -25,22 +25,22 @@ class TestInjectDescriptor:
     def container(self, container):
         container.register_by_interface(FrameInterface, RoadFrame)
         container.register_by_interface(WheelInterface, RoadWheel)
-        container.register_by_name('frame', GravelFrame)
-        container.register_by_name('wheels', RoadWheel)
-        container.register_by_name('right', GravelWheel)
-        container.register_by_name('instance', Trike)
+        container.register_by_name("frame", GravelFrame)
+        container.register_by_name("wheels", RoadWheel)
+        container.register_by_name("right", GravelWheel)
+        container.register_by_name("instance", Trike)
         return container
 
     @pytest.fixture
     def instance(self, container):
-        return container.find_by_name('instance')
+        return container.find_by_name("instance")
 
     def test_descriptor_injection(self, instance):
         assert instance.components == {
-            'front_wheel': 'Road wheel',
-            'left_wheel': 'Road wheel',
-            'right_wheel': 'Gravel wheel',
-            'frame': 'Gravel frame',
+            "front_wheel": "Road wheel",
+            "left_wheel": "Road wheel",
+            "right_wheel": "Gravel wheel",
+            "frame": "Gravel frame",
         }
 
     def test_get_class(self):
@@ -58,24 +58,25 @@ class TestInjectDescriptor:
             assert instance.wheel
         assert error_info.value == DIErrors.NO_IDENTIFIER_SPECIFIED
         assert error_info.value.params == {
-            'class_name': (
-                'TestInjectDescriptor.test_no_name_no_interface.'
-                '<locals>.NoAnnotationBike'
+            "class_name": (
+                "TestInjectDescriptor.test_no_name_no_interface." "<locals>.NoAnnotationBike"
             ),
-            'attribute': 'wheel',
-            'context': None,
+            "attribute": "wheel",
+            "context": None,
         }
 
     def test_no_container(self, container):
         class A:
             descriptor = Inject()
+
         with pytest.raises(ConfigError) as error_info:
             assert A().descriptor
         assert error_info.value == DIErrors.NO_CONTAINER_PROVIDED.with_params(
-            module='', attribute='descriptor')
+            module="", attribute="descriptor"
+        )
         assert error_info.value.params == {
-            'class_name': 'TestInjectDescriptor.test_no_container.<locals>.A',
-            'attribute': 'descriptor'
+            "class_name": "TestInjectDescriptor.test_no_container.<locals>.A",
+            "attribute": "descriptor",
         }
 
     def test_get_dependencies_successful(self, instance):

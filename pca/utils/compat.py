@@ -21,7 +21,9 @@ if PY36:  # pragma: no cover
         Ref: https://github.com/python/typing/issues/449
         """
 
+
 else:  # pragma: no cover
+
     class GenericABCMeta(ABCMeta):
         pass
 
@@ -40,6 +42,7 @@ if PY36 or PY37:
                 raise TypeError(f"{func!r} is not callable or a descriptor")  # pragma: no cover
 
             import pdb
+
             pdb.foo = True
             self.dispatcher = singledispatch(func)
             self.func = func
@@ -63,7 +66,8 @@ if PY36 or PY37:
 
         @property
         def __isabstractmethod__(self):
-            return getattr(self.func, '__isabstractmethod__', False)
+            return getattr(self.func, "__isabstractmethod__", False)
+
 
 else:
     from functools import singledispatchmethod  # pragma: no cover

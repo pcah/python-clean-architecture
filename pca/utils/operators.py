@@ -22,8 +22,7 @@ def resolve_path(path: t.Iterable[str]) -> t.Callable[..., t.Any]:
 
 
 def check_path(
-    test: t.Callable[[t.Any, t.Any], bool],
-    path: t.Iterable[str]
+    test: t.Callable[[t.Any, t.Any], bool], path: t.Iterable[str]
 ) -> t.Callable[..., bool]:
     def check_path_curried(value):
         orig_value = value

@@ -34,7 +34,7 @@ def owner_with_validator():
 
 @pytest.fixture
 def value():
-    return Sentinel(name='value')
+    return Sentinel(name="value")
 
 
 def test_default_sentinel(owner):
@@ -50,9 +50,9 @@ def test_default_init(value):
 
 
 def test_label(owner):
-    assert owner.__class__.observable.label == 'observable'
+    assert owner.__class__.observable.label == "observable"
     with pytest.raises(AttributeError):
-        owner.__class__.observable.label = 'foo'
+        owner.__class__.observable.label = "foo"
 
 
 def test_class_observer_decorator(value):
@@ -91,15 +91,12 @@ def test_instance_observer(owner_with_instance_observer):
 
 def test_observer_not_notified_when_theres_no_change(owner_with_instance_observer):
     instance = owner_with_instance_observer
-    value_1 = Sentinel('value_1')
-    value_2 = Sentinel('value_2')
+    value_1 = Sentinel("value_1")
+    value_2 = Sentinel("value_2")
     instance.observable = value_1
     instance.observable = value_1
     instance.observable = value_2
-    expected = [
-        ((instance, undefined_value, value_1),),
-        ((instance, value_1, value_2),)
-    ]
+    expected = [((instance, undefined_value, value_1),), ((instance, value_1, value_2),)]
     assert instance.observer.call_args_list == expected
 
 
@@ -127,15 +124,12 @@ def test_validation_is_fired(owner_with_validator, value):
 
 def test_validator_not_notified_when_theres_no_change(owner_with_validator):
     instance = owner_with_validator
-    value_1 = Sentinel('value_1')
-    value_2 = Sentinel('value_2')
+    value_1 = Sentinel("value_1")
+    value_2 = Sentinel("value_2")
     instance.observable = value_1
     instance.observable = value_1
     instance.observable = value_2
-    expected = [
-        ((instance, undefined_value, value_1),),
-        ((instance, value_1, value_2),)
-    ]
+    expected = [((instance, undefined_value, value_1),), ((instance, value_1, value_2),)]
     assert instance.validator.call_args_list == expected
 
 

@@ -25,18 +25,17 @@ class Bike(Entity):
     wheel_type: str
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def data():
-    return {'frame_type': 'gravel', 'wheel_type': 'road'}
+    return {"frame_type": "gravel", "wheel_type": "road"}
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def factory():
     return Factory(Bike)
 
 
 class TestFactory:
-
     @pytest.fixture
     def dto(self, data):
         dto = Dto(data)
@@ -52,8 +51,8 @@ class TestFactory:
         entity = factory.construct(dto)
         assert isinstance(entity, Bike)
         assert entity.id == 17
-        assert entity.frame_type == 'gravel'
-        assert entity.wheel_type == 'road'
+        assert entity.frame_type == "gravel"
+        assert entity.wheel_type == "road"
 
     def test_deconstruction(self, entity, data):
         factory = Factory(Bike)
@@ -62,18 +61,18 @@ class TestFactory:
         assert result.id == entity.id
 
     def test_deconstruction_with_fields(self, entity, dto):
-        factory = Factory(Bike, fields=('wheel_type',))
+        factory = Factory(Bike, fields=("wheel_type",))
         result = factory.deconstruct(entity)
-        assert result == {'wheel_type': 'road'}
+        assert result == {"wheel_type": "road"}
         assert result.id == entity.id
 
 
 class TestConstruction:
-
     @pytest.fixture
     def dao_class(self, container):
         container.register_by_interface(
-            IDao, InMemoryDao,
+            IDao,
+            InMemoryDao,
             qualifier=Bike,
         )
         return InMemoryDao
@@ -91,17 +90,15 @@ class TestConstruction:
         with pytest.raises(ConfigError) as error_info:
             assert repo.dao
         assert error_info.value == DIErrors.DEFINITION_NOT_FOUND
-        assert error_info.value.params == {'context': DIContext(
-            interface=IDao, qualifier=Bike
-        )}
+        assert error_info.value.params == {"context": DIContext(interface=IDao, qualifier=Bike)}
 
 
 class TestApi:
-
     @pytest.fixture
     def dao(self, container: Container):
         container.register_by_interface(
-            IDao, InMemoryDao,
+            IDao,
+            InMemoryDao,
             qualifier=Bike,
         )
         return container.find_by_interface(IDao, qualifier=Bike)
@@ -136,7 +133,7 @@ class TestApi:
         with pytest.raises(QueryError) as error_info:
             assert repo.find(id_)
         assert error_info.value == QueryErrors.NOT_FOUND
-        assert error_info.value.params == {'id': id_, 'entity': Bike}
+        assert error_info.value.params == {"id": id_, "entity": Bike}
 
     def test_contains_success(self, data, repo: Repository, dao: IDao):
         id_ = dao.insert(**data)
@@ -149,9 +146,9 @@ class TestApi:
     def test_update_success(self, data, repo: Repository, dao: IDao):
         id_ = dao.insert(**data)
         entity = repo.find(id_)
-        entity.frame_type = 'road'
+        entity.frame_type = "road"
         repo.update(entity)
-        assert dao.get(id_) == {'frame_type': 'road', 'wheel_type': 'road'}
+        assert dao.get(id_) == {"frame_type": "road", "wheel_type": "road"}
 
     def test_remove_success(self, data, repo: Repository, dao: IDao):
         id_ = dao.insert(**data)
@@ -165,7 +162,7 @@ class TestApi:
         with pytest.raises(QueryError) as error_info:
             repo.remove(entity)
         assert error_info.value == QueryErrors.NOT_FOUND
-        assert error_info.value.params == {'id': entity.__get_id__(), 'entity': entity}
+        assert error_info.value.params == {"id": entity.__get_id__(), "entity": entity}
 
     def test_remove_error_wrong_id(self, data, repo: Repository, dao: IDao):
         id_ = dao.insert(**data)
@@ -174,4 +171,4 @@ class TestApi:
         with pytest.raises(QueryError) as error_info:
             repo.remove(entity)
         assert error_info.value == QueryErrors.NOT_FOUND
-        assert error_info.value.params == {'id': id_, 'entity': entity}
+        assert error_info.value.params == {"id": id_, "entity": entity}

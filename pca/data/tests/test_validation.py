@@ -5,7 +5,7 @@ from pca.data.validation import validated_by
 
 @pytest.fixture
 def input_data():
-    return {'some': 'data'}
+    return {"some": "data"}
 
 
 class MyError(Exception):
@@ -56,10 +56,10 @@ def test_multiple_validators_not_passing_by_data(input_data):
 
 def test_multiple_validators_passing_by_data(input_data):
     def validator_1(input_data):
-        return dict(input_data, some_int=int(input_data['some']))
+        return dict(input_data, some_int=int(input_data["some"]))
 
     def validator_2(input_data):
-        if not input_data.get('some_int'):
+        if not input_data.get("some_int"):
             raise MyError
 
     @validated_by(validator_1, validator_2)
@@ -70,7 +70,7 @@ def test_multiple_validators_passing_by_data(input_data):
         f(input_data)
 
     with pytest.raises(MyError):
-        f({'some': '0'})
+        f({"some": "0"})
 
-    valid_input_data = {'some': '42'}
-    assert f(valid_input_data) == {'some': '42', 'some_int': 42}
+    valid_input_data = {"some": "42"}
+    assert f(valid_input_data) == {"some": "42", "some_int": 42}

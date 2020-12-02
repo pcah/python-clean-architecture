@@ -29,7 +29,8 @@ class TinyDbDao(AbstractDao[int]):
 
     Caches instances representing different files, because TinyDb is not
     """
-    _db_cache: t.ClassVar[t.Dict[str, 'tinydb.TinyDB']] = {}
+
+    _db_cache: t.ClassVar[t.Dict[str, "tinydb.TinyDB"]] = {}
 
     @classmethod
     def clear_db_cache(cls):
@@ -37,9 +38,9 @@ class TinyDbDao(AbstractDao[int]):
 
     def __init__(self, container: Container, **kwargs):
         if not tinydb:  # pragma: no cover
-            raise IntegrationErrors.NOT_FOUND.with_params(target='tinydb')
+            raise IntegrationErrors.NOT_FOUND.with_params(target="tinydb")
         self._container = container
-        self._path = kwargs.get('path')
+        self._path = kwargs.get("path")
         """
         Path is needed to be specified when TinyDb gets JSONStorage (default one).
         We use value of path for identifying different DBs of TinyDb.
@@ -47,7 +48,7 @@ class TinyDbDao(AbstractDao[int]):
         MemoryStorage (if not explicitly defined) and not to cache the TinyDb instance.
         """
 
-        self._table_name = kwargs.pop('table_name', None) or kwargs.pop('qualifier', None)
+        self._table_name = kwargs.pop("table_name", None) or kwargs.pop("qualifier", None)
         if not self._table_name:
             raise IntegrationErrors.NO_TABLE_NAME_PROVIDED
 
@@ -56,8 +57,8 @@ class TinyDbDao(AbstractDao[int]):
                 self._db_cache[self._path] = tinydb.TinyDB(**kwargs)
             self._db: tinydb.TinyDB = self._db_cache[self._path]
         else:
-            if 'storage' not in kwargs:
-                kwargs['storage'] = tinydb.storages.MemoryStorage
+            if "storage" not in kwargs:
+                kwargs["storage"] = tinydb.storages.MemoryStorage
             self._db = tinydb.TinyDB(**kwargs)
         self._table: tinydb.database.Table = self._db.table(self._table_name)
 
@@ -68,9 +69,7 @@ class TinyDbDao(AbstractDao[int]):
             return self._table.all()
         if not query_chain._filters:
             # only ids as query
-            return list(filter(
-                None, (self._table.get(doc_id=id_) for id_ in query_chain._ids)
-            ))
+            return list(filter(None, (self._table.get(doc_id=id_) for id_ in query_chain._ids)))
         filtered = self._table.search(query_chain._reduced_filter)
         if not query_chain._ids:
             # only filters as query

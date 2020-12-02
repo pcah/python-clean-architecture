@@ -6,9 +6,9 @@ from .imports import get_dotted_path
 
 
 def error_catcher(
-        error_class: t.Union[t.Type[Exception], t.Sequence[t.Type[Exception]]] = Exception,
-        success_constructor: t.Callable = None,
-        error_constructor: t.Callable = None,
+    error_class: t.Union[t.Type[Exception], t.Sequence[t.Type[Exception]]] = Exception,
+    success_constructor: t.Callable = None,
+    error_constructor: t.Callable = None,
 ):
     """
     Catches expected type(s) of errors from a callable. Can process successful result
@@ -36,17 +36,11 @@ def error_catcher(
                 result = f(*args, **kwargs)
             except error_class as e:
                 result = error_constructor(
-                    error=e,
-                    function_name=function_name,
-                    args=args,
-                    kwargs=kwargs
+                    error=e, function_name=function_name, args=args, kwargs=kwargs
                 )
             else:
                 result = success_constructor(
-                    result=result,
-                    function_name=function_name,
-                    args=args,
-                    kwargs=kwargs
+                    result=result, function_name=function_name, args=args, kwargs=kwargs
                 )
             return result
 

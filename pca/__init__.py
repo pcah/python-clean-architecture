@@ -3,8 +3,8 @@ from os import path
 from devops.utils.version import Version
 
 
-PROJECT_NAME = 'python-clean-architecture'
-PACKAGE_NAME = 'pca'
+PROJECT_NAME = "python-clean-architecture"
+PACKAGE_NAME = "pca"
 VERSION = Version(0, 0, 6)
 
 PACKAGE_DIR = path.dirname(__file__)

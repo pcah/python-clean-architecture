@@ -26,12 +26,12 @@ class Loaders(Enum):
     @classmethod
     def __extension_map__(cls) -> dict:
         return {
-            '.ini': cls.ini,
-            '.cfg': cls.ini,
-            '.json': cls.json,
-            '.js': cls.json,
-            '.yaml': cls.yaml,
-            '.yml': cls.yaml,
+            ".ini": cls.ini,
+            ".cfg": cls.ini,
+            ".json": cls.json,
+            ".js": cls.json,
+            ".yaml": cls.yaml,
+            ".yml": cls.yaml,
         }
 
     @classmethod

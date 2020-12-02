@@ -13,11 +13,11 @@ from .container import (
 )
 from .descriptors import Inject
 
-_DEPENDENCIES_REF = '__di_dependencies__'
+_DEPENDENCIES_REF = "__di_dependencies__"
 
 AttributeContexts = t.Dict[str, DIContext]
 MethodContexts = t.Dict[str, t.Sequence[DIContext]]
-Injectable = t.TypeVar('Injectable', t.Callable, t.Type[object], covariant=True)
+Injectable = t.TypeVar("Injectable", t.Callable, t.Type[object], covariant=True)
 
 
 @dataclass(frozen=True)
@@ -30,21 +30,22 @@ class DIDependencies:
     :cvar method_contexts: DI contexts of all dependencies of all methods as a mapping
         {method_name: {argument_name: DIContext}}
     """
+
     attribute_contexts: AttributeContexts
     method_contexts: MethodContexts
 
 
 def set_dependencies_contexts(
-        instance: t.Any,
-        attribute_contexts: AttributeContexts,
-        method_contexts: MethodContexts
+    instance: t.Any, attribute_contexts: AttributeContexts, method_contexts: MethodContexts
 ) -> None:
     """
     A helper function to create and set a description object for all dependencies of a Component.
     """
-    setattr(instance, _DEPENDENCIES_REF, DIDependencies(
-        frozendict(attribute_contexts), frozendict(method_contexts)
-    ))
+    setattr(
+        instance,
+        _DEPENDENCIES_REF,
+        DIDependencies(frozendict(attribute_contexts), frozendict(method_contexts)),
+    )
 
 
 def get_dependencies_contexts(instance: t.Any) -> DIDependencies:
@@ -59,8 +60,7 @@ def get_attribute_dependencies(instance: t.Any) -> t.Dict[str, t.Any]:
         return {}
     container = get_di_container(instance)
     return {
-        name: context.get(container)
-        for name, context in description.attribute_contexts.items()
+        name: context.get(container) for name, context in description.attribute_contexts.items()
     }
 
 
@@ -69,18 +69,15 @@ class ComponentMeta(GenericABCMeta):
     A metaclass that gathers all dependency markers (from its attributes and methods)
     in a describing data class.
     """
+
     def __init__(cls, name, bases, d, **kwargs):
         # noinspection PyArgumentList
         super().__init__(name, bases, d, **kwargs)
         attribute_contexts: t.Dict[str, DIContext] = {
-            k: v.context
-            for k, v in d.items()
-            if isinstance(v, Inject)
+            k: v.context for k, v in d.items() if isinstance(v, Inject)
         }
         method_contexts: t.Dict[str, t.Sequence[DIContext]] = {
-            k: v
-            for k, v in d.items()
-            if hasattr(v, _DEPENDENCIES_REF)
+            k: v for k, v in d.items() if hasattr(v, _DEPENDENCIES_REF)
         }
         set_dependencies_contexts(cls, attribute_contexts, method_contexts)
 
@@ -92,7 +89,7 @@ class Component(metaclass=ComponentMeta):
     """
 
 
-ConcreteComponent = t.TypeVar('ConcreteComponent')
+ConcreteComponent = t.TypeVar("ConcreteComponent")
 
 
 def create_component(

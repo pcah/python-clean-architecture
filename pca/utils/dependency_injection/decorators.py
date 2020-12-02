@@ -23,9 +23,11 @@ def scope(scope_type: Scopes) -> t.Callable[[Constructor], Constructor]:
 
     :param scope_type: a scope enum to set for the decorated constructor
     """
+
     def decorator(constructor: Constructor) -> Constructor:
         set_scope_type(constructor, scope_type)
         return constructor
+
     return decorator
 
 
@@ -42,7 +44,7 @@ def inject(f: Injectable) -> Injectable:
         if isinstance(default, Inject):
             dependency_declarations[name] = default.context
             if param.annotation is not param.empty:
-                object.__setattr__(default.context, 'interface', param.annotation)
+                object.__setattr__(default.context, "interface", param.annotation)
 
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -53,7 +55,8 @@ def inject(f: Injectable) -> Injectable:
         if not container:
             # noinspection PyUnresolvedReferences
             raise DIErrors.NO_CONTAINER_PROVIDED.with_params(
-                module=f.__module__, function=f.__qualname__)
+                module=f.__module__, function=f.__qualname__
+            )
 
         # provide arguments that haven't been supplied by the call's kwargs
         for name_, dependency_declaration in dependency_declarations.items():
@@ -64,9 +67,7 @@ def inject(f: Injectable) -> Injectable:
         return f(*args, **kwargs)
 
     set_dependencies_contexts(
-        wrapper,
-        attribute_contexts=dependency_declarations,
-        method_contexts={}
+        wrapper, attribute_contexts=dependency_declarations, method_contexts={}
     )
     return wrapper
 
@@ -77,6 +78,7 @@ def container_supplier(target: Injectable) -> t.Callable[[Injectable], Injectabl
     a function. Target can be either a function to use with a `inject` decorator or a class
     which methods use `inject` decorator.
     """
+
     @wraps(target)
     def container_closure(container: Container, context: DIContext = None) -> Injectable:
         """A closure supplying a component or a function with a container instance."""

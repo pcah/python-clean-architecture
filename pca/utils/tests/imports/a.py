@@ -1,5 +1,4 @@
-
-a = 'a'
+a = "a"
 
 
 class Class(object):
@@ -10,7 +9,7 @@ def function():
     pass
 
 
-duplicated = 'duplicated from a.py'
+duplicated = "duplicated from a.py"
 
 
-_private = 'private'
+_private = "private"

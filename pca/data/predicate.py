@@ -25,32 +25,28 @@ from pca.utils.operators import resolve_path, check_path
 
 class Operation(Enum):
     # algebraic ops
-    EQ = '=='
-    NE = '!='
-    LT = '<'
-    LE = '<='
-    GT = '>'
-    GE = '>='
+    EQ = "=="
+    NE = "!="
+    LT = "<"
+    LE = "<="
+    GT = ">"
+    GE = ">="
 
     # db-like ops
-    EXISTS = 'exists'
-    MATCHES = 'matches'
-    SEARCH = 'search'
-    TEST = 'test'
+    EXISTS = "exists"
+    MATCHES = "matches"
+    SEARCH = "search"
+    TEST = "test"
 
     # logical ops
-    NOT = 'not'
-    AND = 'and'
-    OR = 'or'
-    ANY = 'any'
-    ALL = 'all'
+    NOT = "not"
+    AND = "and"
+    OR = "or"
+    ANY = "any"
+    ALL = "all"
 
 
-COMPOSITE_PREDICATES = (
-    Operation.OR,
-    Operation.AND,
-    Operation.NOT
-)
+COMPOSITE_PREDICATES = (Operation.OR, Operation.AND, Operation.NOT)
 
 
 class Predicate(IPredicate):
@@ -59,6 +55,7 @@ class Predicate(IPredicate):
     predicate is evaluated by calling its object. Predicates can be combined
     with logical and/or and modified with logical not.
     """
+
     def __init__(self, test, operator, args, var_name=None):
         self.test = test
         self.args = args
@@ -73,17 +70,18 @@ class Predicate(IPredicate):
         return hash((self.operator, self.args, self.var_name))
 
     def __repr__(self):
-        return 'Predicate({}{}, {})'.format(
-            self.var_name + ', ' if self.var_name else '',
-            self.operator.name,
-            self.args
+        return "Predicate({}{}, {})".format(
+            self.var_name + ", " if self.var_name else "", self.operator.name, self.args
         )
 
     def __eq__(self, other):
         if not isinstance(other, Predicate):
             return False
-        return self.operator, self.args, self.var_name == \
-            other.operator, other.args, other.var_name
+        return (self.operator, self.args, self.var_name) == (
+            other.operator,
+            other.args,
+            other.var_name,
+        )
 
     # --- Associativity of Predicates
 
@@ -93,7 +91,7 @@ class Predicate(IPredicate):
         return Predicate(
             test=lambda value: self(value) and other(value),
             operator=Operation.AND,
-            args=frozenset([self, other])
+            args=frozenset([self, other]),
         )
 
     def __or__(self, other):
@@ -102,15 +100,11 @@ class Predicate(IPredicate):
         return Predicate(
             test=lambda value: self(value) or other(value),
             operator=Operation.OR,
-            args=frozenset([self, other])
+            args=frozenset([self, other]),
         )
 
     def __invert__(self):
-        return Predicate(
-            test=lambda value: not self(value),
-            operator=Operation.NOT,
-            args=(self,)
-        )
+        return Predicate(test=lambda value: not self(value), operator=Operation.NOT, args=(self,))
 
 
 class Var(object):
@@ -155,9 +149,9 @@ class Var(object):
         elif is_iterable(_path):
             self._path = tuple(_path)
         elif isinstance(_path, str):
-            self._path = tuple(_path.split('.'))
+            self._path = tuple(_path.split("."))
 
-    def __getattr__(self, item: str) -> 'Var':
+    def __getattr__(self, item: str) -> "Var":
         """
         Returns new Var instance with the same name of variable but its path
         extended by additional path element, given with `item` argument.
@@ -167,7 +161,7 @@ class Var(object):
         """
         return Var(self._name, self._path + (item,))
 
-    def __getitem__(self, item: str) -> 'Var':
+    def __getitem__(self, item: str) -> "Var":
         """
         Returns new Var instance with the same name of variable but its path
         extended by dotted path, given with `item` argument.
@@ -175,13 +169,10 @@ class Var(object):
         :param item: A Python dotted path.
         :return: A new Var instance with extended path.
         """
-        return Var(self._name, self._path + tuple(item.split('.')))
+        return Var(self._name, self._path + tuple(item.split(".")))
 
     def _build_predicate(
-            self,
-            test: t.Callable,
-            operation: Operation,
-            args: t.Iterable
+        self, test: t.Callable, operation: Operation, args: t.Iterable
     ) -> Predicate:
         """
         Generate a Predicate object based on a test function.
@@ -191,13 +182,8 @@ class Var(object):
         :return: A `Predicate` object
         """
         if not self._path:
-            raise ValueError('Var has no path')
-        return Predicate(
-            check_path(test, self._path),
-            operation,
-            args,
-            self._name
-        )
+            raise ValueError("Var has no path")
+        return Predicate(check_path(test, self._path), operation, args, self._name)
 
     def __eq__(self, rhs: t.Any) -> Predicate:
         """
@@ -211,9 +197,7 @@ class Var(object):
         """
         rhs_curried = _curry_rhs(rhs)
         return self._build_predicate(
-            lambda lhs, value: lhs == rhs_curried(value),
-            Operation.EQ,
-            (self._path, freeze(rhs))
+            lambda lhs, value: lhs == rhs_curried(value), Operation.EQ, (self._path, freeze(rhs))
         )
 
     def __ne__(self, rhs: t.Any) -> Predicate:
@@ -229,9 +213,7 @@ class Var(object):
         """
         rhs_curried = _curry_rhs(rhs)
         return self._build_predicate(
-            lambda lhs, value: lhs != rhs_curried(value),
-            Operation.NE,
-            (self._path, freeze(rhs))
+            lambda lhs, value: lhs != rhs_curried(value), Operation.NE, (self._path, freeze(rhs))
         )
 
     def __lt__(self, rhs: t.Any) -> Predicate:
@@ -246,9 +228,7 @@ class Var(object):
         """
         rhs_curried = _curry_rhs(rhs)
         return self._build_predicate(
-            lambda lhs, value: lhs < rhs_curried(value),
-            Operation.LT,
-            (self._path, rhs)
+            lambda lhs, value: lhs < rhs_curried(value), Operation.LT, (self._path, rhs)
         )
 
     def __le__(self, rhs: t.Any) -> Predicate:
@@ -263,9 +243,7 @@ class Var(object):
         """
         rhs_curried = _curry_rhs(rhs)
         return self._build_predicate(
-            lambda lhs, value: lhs <= rhs_curried(value),
-            Operation.LE,
-            (self._path, rhs)
+            lambda lhs, value: lhs <= rhs_curried(value), Operation.LE, (self._path, rhs)
         )
 
     def __gt__(self, rhs: t.Any) -> Predicate:
@@ -280,9 +258,7 @@ class Var(object):
         """
         rhs_curried = _curry_rhs(rhs)
         return self._build_predicate(
-            lambda lhs, value: lhs > rhs_curried(value),
-            Operation.GT,
-            (self._path, rhs)
+            lambda lhs, value: lhs > rhs_curried(value), Operation.GT, (self._path, rhs)
         )
 
     def __ge__(self, rhs: t.Any) -> Predicate:
@@ -297,9 +273,7 @@ class Var(object):
         """
         rhs_curried = _curry_rhs(rhs)
         return self._build_predicate(
-            lambda lhs, value: lhs >= rhs_curried(value),
-            Operation.GE,
-            (self._path, rhs)
+            lambda lhs, value: lhs >= rhs_curried(value), Operation.GE, (self._path, rhs)
         )
 
     def exists(self) -> Predicate:
@@ -307,11 +281,7 @@ class Var(object):
         Test for a dict/object where a provided key exists.
         >>> var('f1').exists()
         """
-        return self._build_predicate(
-            lambda _, __: True,
-            Operation.EXISTS,
-            (self._path,)
-        )
+        return self._build_predicate(lambda _, __: True, Operation.EXISTS, (self._path,))
 
     def matches(self, regex: str) -> Predicate:
         """
@@ -321,9 +291,7 @@ class Var(object):
         :param regex: The regular expression to use for matching
         """
         return self._build_predicate(
-            lambda lhs, value: bool(re.match(regex, lhs)),
-            Operation.MATCHES,
-            (self._path, regex)
+            lambda lhs, value: bool(re.match(regex, lhs)), Operation.MATCHES, (self._path, regex)
         )
 
     def search(self, regex: str) -> Predicate:
@@ -335,9 +303,7 @@ class Var(object):
         :param regex: The regular expression to use for matching
         """
         return self._build_predicate(
-            lambda lhs, value: bool(re.search(regex, lhs)),
-            Operation.SEARCH,
-            (self._path, regex)
+            lambda lhs, value: bool(re.search(regex, lhs)), Operation.SEARCH, (self._path, regex)
         )
 
     def test(self, func: t.Callable[..., bool], *args, **kwargs) -> Predicate:
@@ -357,38 +323,38 @@ class Var(object):
         return self._build_predicate(
             lambda lhs, value: func(lhs, *args, **kwargs),
             Operation.TEST,
-            (self._path, func, args, freeze(kwargs))
+            (self._path, func, args, freeze(kwargs)),
         )
 
     def any(self, cond: t.Union[Predicate, t.Iterable]) -> Predicate:
         """
-        Checks if a condition is met by any element in a list,
-        where a condition can also be a sequence (e.g. list).
-        >>> var('f1').any(var('f2').exists())
-        Matches::
-            {'f1': [{'f2': 1}, {'f2': 0}]}
-        >>> var('f1').any([1, 2, 3])
-        # Match f1 that contains any element from [1, 2, 3]
-        Matches::
-            {'f1': [1, 2]}
-            {'f1': [3, 4, 5]}
+                Checks if a condition is met by any element in a list,
+                where a condition can also be a sequence (e.g. list).
+                >>> var('f1').any(var('f2').exists())
+                Matches::
+                    {'f1': [{'f2': 1}, {'f2': 0}]}
+                >>> var('f1').any([1, 2, 3])
+                # Match f1 that contains any element from [1, 2, 3]
+                Matches::
+                    {'f1': [1, 2]}
+                    {'f1': [3, 4, 5]}
 
-        :param cond: Either a Predicate that at least one element has to match
-         or a list of which at least one element has to be contained
-         in the tested element.
--        """
+                :param cond: Either a Predicate that at least one element has to match
+                 or a list of which at least one element has to be contained
+                 in the tested element.
+        -"""
         if callable(cond):
+
             def _cmp(value):
                 return is_iterable(value) and any(cond(e) for e in value)
 
         else:
+
             def _cmp(value):
                 return is_iterable(value) and any(e in cond for e in value)
 
         return self._build_predicate(
-            lambda lhs, value: _cmp(lhs),
-            Operation.ANY,
-            (self._path, freeze(cond))
+            lambda lhs, value: _cmp(lhs), Operation.ANY, (self._path, freeze(cond))
         )
 
     def all(self, cond: t.Union[Predicate, t.Iterable]) -> Predicate:
@@ -407,17 +373,17 @@ class Var(object):
          a list which has to be contained in the tested element.
         """
         if callable(cond):
+
             def _cmp(value):
                 return is_iterable(value) and all(cond(e) for e in value)
 
         else:
+
             def _cmp(value):
                 return is_iterable(value) and all(e in value for e in cond)
 
         return self._build_predicate(
-            lambda lhs, value: _cmp(lhs),
-            Operation.ALL,
-            (self._path, freeze(cond))
+            lambda lhs, value: _cmp(lhs), Operation.ALL, (self._path, freeze(cond))
         )
 
 
@@ -442,7 +408,7 @@ def var(path: str) -> Var:
 
     :param path: A Python dotted path.
     """
-    name = path.rsplit('.', 1)[-1]
+    name = path.rsplit(".", 1)[-1]
     return Var(name, _path=path)
 
 

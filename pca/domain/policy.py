@@ -8,7 +8,7 @@ def policy_constructor(cls, d):
     Pass all the kwargs but __type__ (which was already used to choose `cls`
     class) to the class __init__.
     """
-    d.pop('__type__')
+    d.pop("__type__")
     instance = cls(**d)
     return instance
 
@@ -63,24 +63,27 @@ class Policy(metaclass=PolicyMeta):
                 where strategy_role is a key to STRATEGY_CHOICES dict, and
                 strategy_name is pythonic name of the strategy function.
         """
-        assert set(strategies.keys()) == set(self.STRATEGY_CHOICES.keys()), (
-            "Invalid set of strategies. Given: {}. Expected: {}.".format(
-                strategies.keys(), self.STRATEGY_CHOICES.keys()))
+        assert set(strategies.keys()) == set(
+            self.STRATEGY_CHOICES.keys()
+        ), "Invalid set of strategies. Given: {}. Expected: {}.".format(
+            strategies.keys(), self.STRATEGY_CHOICES.keys()
+        )
 
         # get strategy functions for all roles declared by STRATEGY_CHOICES
         # for each role
         for role in strategies:
             # take declared strategy name
-            assert strategies[role] in self.STRATEGY_CHOICES[role], (
-                "Unknown strategy name '{}' for the role '{}'".format(
-                    strategies[role], role))
+            assert (
+                strategies[role] in self.STRATEGY_CHOICES[role]
+            ), "Unknown strategy name '{}' for the role '{}'".format(strategies[role], role)
             # look for such name in the module
             strategy = getattr(self.STRATEGY_MODULE, strategies[role], None)
             if strategy is None:
-                raise ValueError((
-                    "Strategy named '{}' for the role of '{}' not found in the"
-                    " '{}' module.").format(
-                        strategies[role], role, self.STRATEGY_MODULE))
+                raise ValueError(
+                    (
+                        "Strategy named '{}' for the role of '{}' not found in the" " '{}' module."
+                    ).format(strategies[role], role, self.STRATEGY_MODULE)
+                )
             # and set it on self under the role name
             setattr(self, role, strategy)
 
@@ -91,17 +94,11 @@ class Policy(metaclass=PolicyMeta):
         (normally, functions aren't serializable).
         """
         # names of all strategy functions under strategy role keys
-        d = dict(
-            (role, get_func_name(getattr(self, role)))
-            for role in self.STRATEGY_CHOICES
-        )
+        d = dict((role, get_func_name(getattr(self, role))) for role in self.STRATEGY_CHOICES)
         # additional attributes to serialize
-        d.update(
-            (key, getattr(self, key))
-            for key in self.SERIALIZED_ATTRS
-        )
+        d.update((key, getattr(self, key)) for key in self.SERIALIZED_ATTRS)
         # __type__ name for jsonweb object_hook
-        d['__type__'] = type(self).__name__
+        d["__type__"] = type(self).__name__
         return d
 
     def __eq__(self, other):
@@ -110,11 +107,9 @@ class Policy(metaclass=PolicyMeta):
         declared in STRATEGY_CHOICES.
         """
         attrs = set(self.SERIALIZED_ATTRS).union(other.SERIALIZED_ATTRS)
-        strategy_roles = set(self.STRATEGY_CHOICES).union(
-            other.STRATEGY_CHOICES)
+        strategy_roles = set(self.STRATEGY_CHOICES).union(other.STRATEGY_CHOICES)
 
         def compare_attrs(attrs):
-            return all(
-                getattr(self, attr) == getattr(other, attr) for attr in attrs)
+            return all(getattr(self, attr) == getattr(other, attr) for attr in attrs)
 
         return compare_attrs(attrs) and compare_attrs(strategy_roles)

@@ -15,13 +15,8 @@ class ValueObject(abc.ABC):
         (practical decision for large dataclasses).
         """
         # noinspection PyDataclass
-        fields = (
-            (f.name, getattr(self, f.name), f.default)
-            for f in dataclasses.fields(self)
-        )
-        fields_str = ', '.join(
-            f"{name}={repr(value)}"
-            for name, value, default in fields
-            if value is not default
+        fields = ((f.name, getattr(self, f.name), f.default) for f in dataclasses.fields(self))
+        fields_str = ", ".join(
+            f"{name}={repr(value)}" for name, value, default in fields if value is not default
         )
         return f"{self.__class__.__qualname__}({fields_str})"

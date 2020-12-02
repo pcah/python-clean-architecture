@@ -7,10 +7,10 @@ from pca.data.errors import QueryError, QueryErrors
 from pca.data.predicate import where
 
 
-pred_a = where('char') == 'a'
-pred_not_a = ~(where('char') == 'a')
-pred_c = where('char') == 'c'
-pred_z = where('char') == 'z'
+pred_a = where("char") == "a"
+pred_not_a = ~(where("char") == "a")
+pred_c = where("char") == "c"
+pred_z = where("char") == "z"
 
 
 def get_ids(objects: t.Iterable):
@@ -19,18 +19,16 @@ def get_ids(objects: t.Iterable):
 
 @pytest.fixture
 def content():
-    return [{'char': c, 'is_a': c == 'a'} for c in 'abc']
+    return [{"char": c, "is_a": c == "a"} for c in "abc"]
 
 
 class TestConstruction:
-
     def test_initial_content(self, mock_container, content):
         dao = InMemoryDao(initial_content=content)
         assert list(dao.all()) == content
 
 
 class TestApi:
-
     @pytest.fixture
     def dao(self, mock_container, content):
         """
@@ -48,11 +46,11 @@ class TestApi:
 
     # QueryChain.filter
     def test_multiple_filter_success(self, dao: InMemoryDao):
-        assert list(dao.filter(pred_not_a).filter(pred_c)) == [{'char': 'c', 'is_a': False}]
+        assert list(dao.filter(pred_not_a).filter(pred_c)) == [{"char": "c", "is_a": False}]
 
     # QueryChain.filter_by
     def test_filter_by_success(self, dao: InMemoryDao):
-        assert list(dao.filter(pred_not_a).filter_by(id_=3)) == [{'char': 'c', 'is_a': False}]
+        assert list(dao.filter(pred_not_a).filter_by(id_=3)) == [{"char": "c", "is_a": False}]
 
     def test_filter_by_both_arguments_error(self, dao: InMemoryDao):
         with pytest.raises(QueryError):
@@ -64,7 +62,7 @@ class TestApi:
 
     # QueryChain.get
     def test_get_success(self, dao: InMemoryDao):
-        assert dao.get(1) == {'char': 'a', 'is_a': True}
+        assert dao.get(1) == {"char": "a", "is_a": True}
 
     def test_get_fail(self, dao: InMemoryDao):
         assert dao.get(42) is None
@@ -99,39 +97,39 @@ class TestApi:
 
     # QueryChain.update
     def test_update_all(self, dao: InMemoryDao):
-        ids = dao.all().update(char='z')
+        ids = dao.all().update(char="z")
         assert ids == [1, 2, 3]
         assert list(dao.all()) == [
-            {'char': 'z', 'is_a': True},
-            {'char': 'z', 'is_a': False},
-            {'char': 'z', 'is_a': False},
+            {"char": "z", "is_a": True},
+            {"char": "z", "is_a": False},
+            {"char": "z", "is_a": False},
         ]
 
     def test_update_filtered(self, dao: InMemoryDao):
-        ids = dao.filter(pred_not_a).update(char='z')
+        ids = dao.filter(pred_not_a).update(char="z")
         assert ids == [2, 3]
         assert list(dao.all()) == [
-            {'char': 'a', 'is_a': True},
-            {'char': 'z', 'is_a': False},
-            {'char': 'z', 'is_a': False},
+            {"char": "a", "is_a": True},
+            {"char": "z", "is_a": False},
+            {"char": "z", "is_a": False},
         ]
 
     def test_update_filtered_by_id(self, dao: InMemoryDao):
-        ids = dao.filter(pred_not_a).filter_by(id_=2).update(char='z')
+        ids = dao.filter(pred_not_a).filter_by(id_=2).update(char="z")
         assert ids == [2]
         assert list(dao.all()) == [
-            {'char': 'a', 'is_a': True},
-            {'char': 'z', 'is_a': False},
-            {'char': 'c', 'is_a': False},
+            {"char": "a", "is_a": True},
+            {"char": "z", "is_a": False},
+            {"char": "c", "is_a": False},
         ]
 
     def test_update_none(self, dao: InMemoryDao):
-        ids = dao.filter(pred_z).update(char='z')
+        ids = dao.filter(pred_z).update(char="z")
         assert ids == []
         assert list(dao.all()) == [
-            {'char': 'a', 'is_a': True},
-            {'char': 'b', 'is_a': False},
-            {'char': 'c', 'is_a': False},
+            {"char": "a", "is_a": True},
+            {"char": "b", "is_a": False},
+            {"char": "c", "is_a": False},
         ]
 
     # QueryChain.remove
@@ -157,7 +155,7 @@ class TestApi:
 
     # Dao.filter_by
     def test_dao_filter_by_success(self, dao: InMemoryDao):
-        assert list(dao.filter_by(id_=3)) == [{'char': 'c', 'is_a': False}]
+        assert list(dao.filter_by(id_=3)) == [{"char": "c", "is_a": False}]
 
     def test_dao_filter_by_both_arguments_error(self, dao: InMemoryDao):
         with pytest.raises(QueryError):
@@ -169,15 +167,15 @@ class TestApi:
 
     # Dao.insert
     def test_insert(self, dao: InMemoryDao):
-        id_ = dao.insert(foo='bar')
+        id_ = dao.insert(foo="bar")
         assert id_ == 4
 
     # Dao.batch_insert
     def test_batch_insert(self, dao: InMemoryDao):
-        batch = [{'foo': 'bar'}, {'foo': 'baz'}]
+        batch = [{"foo": "bar"}, {"foo": "baz"}]
         result = dao.batch_insert(batch)
         assert result == (4, 5)
-        assert list(dao.filter(where('foo').exists())) == batch
+        assert list(dao.filter(where("foo").exists())) == batch
 
     # Dao.clear
     def test_clear(self, dao: InMemoryDao):

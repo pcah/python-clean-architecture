@@ -10,6 +10,7 @@ class PcaFlask(Flask):
         """
         Function decorator factory that introduces Controller pattern into integration with Flask.
         """
+
         def decorator(wrapped):
             # TODO #52. implementation
             return self.route(wrapped)
@@ -19,4 +20,5 @@ class PcaFlask(Flask):
 
 class FlaskRequestStrategy:
     """A strategy that knows how to bind DI relations in the scope of Flask's request class """
+
     # TODO #52. implementation

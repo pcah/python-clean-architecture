@@ -36,8 +36,8 @@ InteractorFunction = t.Callable[[RequestModel, t.Any], ResponseModel]
 
 
 def interactor_factory(
-        error_handler: t.Callable = None,
-        error_class: t.Union[t.Type[Exception], t.Sequence[t.Type[Exception]]] = ProcessError
+    error_handler: t.Callable = None,
+    error_class: t.Union[t.Type[Exception], t.Sequence[t.Type[Exception]]] = ProcessError,
 ):
     """
     Decorator factory that builds a decorator to enriches an application function
@@ -48,6 +48,7 @@ def interactor_factory(
     * errors, described with `error_class`, raised during validation and interaction itself,
       will be turned into a result using `error_handler`
     """
+
     def interactor(*validators: Validator):
         """
         Closure which encloses arguments of error handling. Takes series of validators
@@ -59,16 +60,16 @@ def interactor_factory(
             dependencies
         :returns: container closure that returns decorated interactor
         """
+
         def decorator(f: InteractorFunction):
             """
             The actual decorator of an interactor function. Enwraps decorated with decorators
             of validation, error handling and dependency injection.
             """
             decorated_f = validated_by(*validators)(f)
-            decorated_f = error_catcher(
-                error_class=error_class,
-                error_constructor=error_handler
-            )(decorated_f)
+            decorated_f = error_catcher(error_class=error_class, error_constructor=error_handler)(
+                decorated_f
+            )
             decorated_f = inject(decorated_f)
             decorated_f = container_supplier(decorated_f)
             return decorated_f

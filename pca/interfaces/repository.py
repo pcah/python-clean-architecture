@@ -13,6 +13,7 @@ class IRepository(t.Generic[Id, Entity]):
     Developers of repos for concrete entites are encouraged to subclass and put a meaningful
     query and command methods along the basic ones.
     """
+
     dao: t.ClassVar[IDao]
     """
     Data Access Object which gives repo a persistence API. Its value is created

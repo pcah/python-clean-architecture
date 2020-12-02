@@ -11,7 +11,7 @@ from pca.utils.compat import GenericABCMeta
 field = dataclasses.field
 
 
-IdType = t.TypeVar('IdType')
+IdType = t.TypeVar("IdType")
 
 
 class Id(t.Generic[IdType], metaclass=GenericABCMeta):
@@ -20,13 +20,13 @@ class Id(t.Generic[IdType], metaclass=GenericABCMeta):
     describing identity of Entity subclasses.
     """
 
-    _ID_ATTR_NAME: t.ClassVar[str] = '__id__'
+    _ID_ATTR_NAME: t.ClassVar[str] = "__id__"
 
     def __set_name__(self, owner: t.Any, name: str) -> None:
         self.owner = owner
         self.name = name
 
-    def __get__(self, instance, owner) -> t.Union['Id', t.Tuple]:
+    def __get__(self, instance, owner) -> t.Union["Id", t.Tuple]:
         if not instance:
             return self
         return getattr(instance, self._ID_ATTR_NAME, None)
@@ -42,6 +42,7 @@ class AutoId(Id[IdType]):
     Descriptor describing identity of an entity as auto-generated value.
     Strategy of value generation is set as an `generator` argument.
     """
+
     def __init__(self, generator: t.Callable[[], IdType]) -> None:
         """
         A function, passed as `generator` argument, will be used to generate
@@ -64,8 +65,10 @@ class SequenceId(AutoId[int]):
     NB: Doesn't take into account either collisions in the effect of any concurrency
     nor any kind of synchronization between instances of ID field.
     """
+
     def __init__(self):
         from itertools import count
+
         self._counter = count(1)
         super().__init__(generator=lambda: next(self._counter))
 
@@ -75,6 +78,7 @@ class Uuid4Id(AutoId[UUID]):
     Identity descriptor that auto-generates UUID v4, which are random
     Universally Unique Identifiers of 128-bit length.
     """
+
     def __init__(self):
         super().__init__(generator=uuid4)
 
@@ -84,6 +88,7 @@ class NaturalId(Id):
     Descriptor describing identity of an entity as a tuple of its unique and
     immutable values forming a natural ID.
     """
+
     def __init__(self, *field_names: str):
         """
         Given field_names are fields of the owner to build an identity key.
@@ -93,10 +98,7 @@ class NaturalId(Id):
 
     def __set_name__(self, owner, name):
         super().__set_name__(owner, name)
-        annotations = {
-            name: owner.__annotations__.get(name, None)
-            for name in self._field_names
-        }
+        annotations = {name: owner.__annotations__.get(name, None) for name in self._field_names}
         assert all(annotations.values()), (
             f"Entity owner has to have all field_names as dataclass "
             f"annotations: {self._field_names}"
@@ -118,13 +120,14 @@ class Entity(t.Generic[IdType]):
     * Entity (and an aggregate root especially) should represent complex data and shouldn't
       be normalized.
     """
+
     __id_field_name__: t.ClassVar[str]
 
     @classmethod
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         id_fields = [(k, v) for k, v in cls.__dict__.items() if isinstance(v, Id)]
-        if not getattr(cls, '__id_field_name__', None):
+        if not getattr(cls, "__id_field_name__", None):
             assert len(id_fields) == 1, (
                 f"Exactly one ID field is required for any Entity class. Got: "
                 f"{dict(id_fields) if id_fields else None}"
@@ -147,7 +150,7 @@ class Entity(t.Generic[IdType]):
         """Returns value of the identity field."""
         return getattr(self, self.__id_field_name__)
 
-    def __set_id__(self, id_value: IdType = None) -> 'Entity':
+    def __set_id__(self, id_value: IdType = None) -> "Entity":
         self.__get_id_field__().__set_id__(self, id_value)
         return self
 

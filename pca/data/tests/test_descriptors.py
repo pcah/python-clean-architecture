@@ -8,11 +8,10 @@ from pca.data.descriptors import (
 
 
 class TestReify:
-
     @pytest.fixture
     def reified(self):
         def wrapped(instance):
-            return 'a'
+            return "a"
 
         return reify(wrapped)
 
@@ -31,8 +30,8 @@ class TestReify:
 
     def test___get__with_inst(self, reified, instance):
         result = reified.__get__(instance, instance)
-        assert result == 'a'
-        assert instance.__dict__['wrapped'] == 'a'
+        assert result == "a"
+        assert instance.__dict__["wrapped"] == "a"
 
     def test___get__wo_inst(self, reified):
         result = reified.__get__(None, None)
@@ -62,22 +61,28 @@ class TestFrozen:
         with pytest.raises(TypeError):
             instance.field
 
-    @pytest.mark.parametrize("value, frozen_value", [
-        ({1}, frozenset({1})),
-        (frozenset({1}), frozenset({1})),
-        (None, None),
-    ])
+    @pytest.mark.parametrize(
+        "value, frozen_value",
+        [
+            ({1}, frozenset({1})),
+            (frozenset({1}), frozenset({1})),
+            (None, None),
+        ],
+    )
     def test_raises_on_second_assignment(self, instance, value, frozen_value):
         instance.field = value
         assert instance.field == frozen_value
         with pytest.raises(TypeError):
             instance.field = set()
 
-    @pytest.mark.parametrize("value, second_value", [
-        ({1}, {1}),
-        ({1}, frozenset({1})),
-        (None, None),
-    ])
+    @pytest.mark.parametrize(
+        "value, second_value",
+        [
+            ({1}, {1}),
+            ({1}, frozenset({1})),
+            (None, None),
+        ],
+    )
     def test_not_raises_when_value_dont_change(self, instance, value, second_value):
         instance.field = value
         # second assignment doesn't mutate the value, should pass silently

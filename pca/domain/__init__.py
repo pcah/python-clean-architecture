@@ -5,7 +5,7 @@ from .entity import (  # noqa: F401
     SequenceId,
     Uuid4Id,
 )
-from .repository import (    # noqa: F401
+from .repository import (  # noqa: F401
     Factory,
     Repository,
 )

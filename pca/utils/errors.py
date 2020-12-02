@@ -21,21 +21,20 @@ class ExceptionWithCode(Exception):
       error class is made for.
     """
 
-    code: str = ''
-    area: str = ''
-    hint: str = ''
+    code: str = ""
+    area: str = ""
+    hint: str = ""
     params: t.Dict[str, t.Any] = None
-    catalog: 'ErrorCatalog' = None
+    catalog: "ErrorCatalog" = None
 
-    def __init__(self, code: str = None, area: str = None, hint: str = None,
-                 params: dict = None):
+    def __init__(self, code: str = None, area: str = None, hint: str = None, params: dict = None):
         if code:
-            self.__dict__['code'] = code
+            self.__dict__["code"] = code
         if area:
-            self.__dict__['area'] = area
+            self.__dict__["area"] = area
         if hint:
-            self.__dict__['hint'] = hint
-        self.__dict__['params'] = params if params else {}
+            self.__dict__["hint"] = hint
+        self.__dict__["params"] = params if params else {}
 
     def __set_name__(self, owner: t.Any, name: str) -> None:
         """
@@ -44,18 +43,20 @@ class ExceptionWithCode(Exception):
         """
         if not issubclass(owner, ErrorCatalog):
             return
-        self.__dict__['catalog'] = owner
-        self.__dict__['code'] = self.code or name
-        self.__dict__['area'] = self.area or self.catalog.default_area
+        self.__dict__["catalog"] = owner
+        self.__dict__["code"] = self.code or name
+        self.__dict__["area"] = self.area or self.catalog.default_area
 
     def __eq__(self, other: t.Any) -> bool:
         """
         Equality with accuracy to class type, `area` & `code` values.
         `params` are not relevant.
         """
-        return other.__class__ is self.__class__ \
-            and self.code == other.code \
+        return (
+            other.__class__ is self.__class__
+            and self.code == other.code
             and self.area == other.area
+        )
 
     def __hash__(self) -> int:
         """
@@ -68,23 +69,24 @@ class ExceptionWithCode(Exception):
 
     def __setattr__(self, key, value) -> None:
         raise AttributeError(  # pragma: no cover
-            "The instances of this class should be considered immutable.")
+            "The instances of this class should be considered immutable."
+        )
 
     @property
     def short_description(self) -> str:
         """
         Returns description that can be used to map errors to response value for a Presenter.
         """
-        param_json = '/' + json.dumps(self.params) if self.params else ''
+        param_json = "/" + json.dumps(self.params) if self.params else ""
         return f"{self.area}/{self.code}{param_json}"
 
     def __repr__(self) -> str:
-        params_str = f", params={self.params}" if self.params else ''
+        params_str = f", params={self.params}" if self.params else ""
         return f"{self.__class__.__name__}(code='{self.code}', area='{self.area}'{params_str})"
 
     __str__ = __repr__
 
-    def with_params(self, **kwargs) -> 'ExceptionWithCode':
+    def with_params(self, **kwargs) -> "ExceptionWithCode":
         """
         Clones the instance of error and sets kwargs as the new instance's params. Sets the
         same catalog.
@@ -92,10 +94,10 @@ class ExceptionWithCode(Exception):
         Used to supply logic-dependent params to the catalog-defined instance of an error.
         """
         copy: ExceptionWithCode = self.__class__(code=self.code, area=self.area, params=kwargs)
-        copy.__dict__['catalog'] = self.catalog
+        copy.__dict__["catalog"] = self.catalog
         return copy
 
-    def clone(self) -> 'ExceptionWithCode':
+    def clone(self) -> "ExceptionWithCode":
         """
         Creates new identical copy of the error class, but doesn't consider the catalog iff
         defined.
@@ -129,7 +131,7 @@ class ErrorCatalogMeta(type):
         """Registers an instance of an BaseError as an element of the ErrorCatalog."""
         cls._registry[error.code] = error
         setattr(cls, error.code, error)
-        error.__dict__['catalog'] = cls
+        error.__dict__["catalog"] = cls
 
     def all(cls) -> t.Tuple[ExceptionWithCode]:
         return tuple(cls._registry.values())
@@ -156,4 +158,5 @@ class ErrorCatalog(metaclass=ErrorCatalogMeta):
     >>> assert OldCatalog.ERROR.catalog == OldCatalog
     >>> assert NewCatalog.AN_EXISTING_ERROR.catalog == NewCatalog
     """
-    default_area: str = ''
+
+    default_area: str = ""

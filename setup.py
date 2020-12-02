@@ -4,5 +4,5 @@ from setuptools import (
     find_packages,
 )
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     setup(packages=find_packages())

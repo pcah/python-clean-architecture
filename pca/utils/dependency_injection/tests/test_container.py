@@ -53,7 +53,9 @@ class TestContainer:
         with pytest.raises(ConfigError) as error_info:
             container.find_by_interface(interface, qualifier)
         assert error_info.value == DIErrors.DEFINITION_NOT_FOUND
-        assert error_info.value.params == {"context": DIContext(interface=FrameInterface, qualifier="qualifier")}
+        assert error_info.value.params == {
+            "context": DIContext(interface=FrameInterface, qualifier="qualifier")
+        }
 
     def test_container_name_duplicates(self, container):
         name = "frame"
@@ -73,14 +75,21 @@ class TestContainer:
         with pytest.raises(ConfigError) as error_info:
             container.find_by_name(name, qualifier)
         assert error_info.value == DIErrors.DEFINITION_NOT_FOUND
-        assert error_info.value.params == {"context": DIContext(name="frame", qualifier="qualifier")}
+        assert error_info.value.params == {
+            "context": DIContext(name="frame", qualifier="qualifier")
+        }
 
     def test_constructor_kwargs(self, container):
-        container.register_by_name(name="frame", constructor=CustomColoredFrame, kwargs={"color": "pink"})
+        container.register_by_name(
+            name="frame", constructor=CustomColoredFrame, kwargs={"color": "pink"}
+        )
         container.register_by_interface(
             interface=WheelInterface, constructor=CustomColoredWheel, kwargs={"color": "pink"}
         )
-        assert Bike(container).components == {"frame": "Custom pink frame", "wheel": "Custom pink wheel"}
+        assert Bike(container).components == {
+            "frame": "Custom pink frame",
+            "wheel": "Custom pink wheel",
+        }
 
 
 class TestScopes:
@@ -142,7 +151,9 @@ class TestContext:
 
     def test_get_di_context_by_interface(self, container: Container):
         qualifier = "qualifier"
-        container.register_by_interface(interface=WheelInterface, qualifier=qualifier, constructor=RoadWheel)
+        container.register_by_interface(
+            interface=WheelInterface, qualifier=qualifier, constructor=RoadWheel
+        )
         instance = container.find_by_interface(WheelInterface, qualifier=qualifier)
         assert get_di_context(instance) == DIContext(interface=WheelInterface, qualifier=qualifier)
 
@@ -180,10 +191,14 @@ class TestContext:
         bar_context = get_di_context(foo.bar)
         # the dependent on component has the dependency context already determined, based
         # on the dependant state
-        assert bar_context == DIContext(name="bar", qualifier=class_with_indeterminate_contexts.qualifier)
+        assert bar_context == DIContext(
+            name="bar", qualifier=class_with_indeterminate_contexts.qualifier
+        )
         assert bar_context.is_determined()
 
-    def test_interface_get_qualifier_on_instance(self, class_with_indeterminate_contexts, container):
+    def test_interface_get_qualifier_on_instance(
+        self, class_with_indeterminate_contexts, container
+    ):
         foo = create_component(class_with_indeterminate_contexts, container)
         baz_context = get_di_context(foo.baz)
         # the dependent on component has the dependency context already determined, based
@@ -200,4 +215,6 @@ class TestContext:
         with pytest.raises(ConfigError) as error_info:
             context.get(container)
         assert error_info.value == DIErrors.INDETERMINATE_CONTEXT_BEING_RESOLVED
-        assert error_info.value.params == dict(name="foo", interface=None, get_qualifier=get_qualifier)
+        assert error_info.value.params == dict(
+            name="foo", interface=None, get_qualifier=get_qualifier
+        )
