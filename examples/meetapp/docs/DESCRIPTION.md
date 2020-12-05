@@ -1,7 +1,7 @@
 ### python-clean-architecture
 ## Description of the Example Application
 
-This description is largely based on the architectural analysis made by © Kamil Grzybek (2020) at the  [Modular Monolith with DDD](https://github.com/kgrzybek/modular-monolith-with-ddd) Project. The places where `python-clean-architecture` library has made its changes are marked with **`[PCA]`** marker. 
+This description is largely based on the architectural analysis made by © Kamil Grzybek (2020) at the  [Modular Monolith with DDD](https://github.com/kgrzybek/modular-monolith-with-ddd) Project. The places where `python-clean-architecture` library has made its changes are marked with **`[PCA]`** marker.
 
 ### Domain
 

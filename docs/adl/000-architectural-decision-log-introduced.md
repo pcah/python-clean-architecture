@@ -34,7 +34,7 @@ Chosen option: "1. Use `docs\adl` in the codebase to store ADRs", because it lea
 * Good, because we're keeping rationale behind each significant decision (ADs) in the library.
 * Good, because the decisions are bounded to a concrete state of the code, including the flaws that were an impulse to mark the decision at all.
 * Hard, because it takes some effort to state the rationale explicitly.
-* A bit harder, because it takes some effort to make code review process around the ADR, while option 2 makes publishing faster and easier.  
+* A bit harder, because it takes some effort to make code review process around the ADR, while option 2 makes publishing faster and easier.
 
 ### 2. Use github's wiki to store ADRs
 

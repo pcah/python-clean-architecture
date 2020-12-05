@@ -1,4 +1,5 @@
 from itertools import chain
+
 import pytest
 
 from pca.utils.collections import get_duplicates

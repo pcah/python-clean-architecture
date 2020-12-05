@@ -1,15 +1,18 @@
 import pytest
 
-from pca.data.predicate import var, where, Predicate, Var  # noqa
+from pca.data.predicate import Predicate  # noqa
+from pca.data.predicate import (
+    Var,
+    var,
+    where,
+)
 
 
 @pytest.fixture(scope="session")
 def example_dict():
     return {
         "foo": 1,
-        "bar": {
-            "baz": {"a": 1},
-        },
+        "bar": {"baz": {"a": 1},},
     }
 
 

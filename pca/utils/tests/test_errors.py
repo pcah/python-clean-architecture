@@ -1,6 +1,9 @@
 import pytest
 
-from pca.utils.errors import ExceptionWithCode, ErrorCatalog
+from pca.utils.errors import (
+    ErrorCatalog,
+    ExceptionWithCode,
+)
 
 
 class TestCustomError:

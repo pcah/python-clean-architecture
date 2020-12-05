@@ -6,8 +6,8 @@ from pca.data.dao import (
 )
 from pca.data.errors import QueryErrors
 from pca.interfaces.dao import (
-    BatchOfKwargs,
     BatchOfDto,
+    BatchOfKwargs,
     Dto,
     Id,
     Ids,
@@ -16,6 +16,7 @@ from pca.interfaces.dao import (
 from pca.utils.dependency_injection import Container
 
 from .errors import IntegrationErrors
+
 
 try:
     import tinydb

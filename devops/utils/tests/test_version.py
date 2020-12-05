@@ -60,12 +60,7 @@ def test_as_git_tag(params, expected):
 
 
 @pytest.mark.parametrize(
-    "method",
-    [
-        Version.bump_major,
-        Version.bump_minor,
-        Version.bump_micro,
-    ],
+    "method", [Version.bump_major, Version.bump_minor, Version.bump_micro,],
 )
 def test_bumping_non_final(method):
     version = Version(1, 2, 3, "a", 3)
@@ -74,11 +69,7 @@ def test_bumping_non_final(method):
 
 
 @pytest.mark.parametrize(
-    "method",
-    [
-        Version.bump_pre,
-        Version.promote_pre,
-    ],
+    "method", [Version.bump_pre, Version.promote_pre,],
 )
 def test_promoting_final(method):
     version = Version(1, 2, 3)

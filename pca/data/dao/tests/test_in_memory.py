@@ -3,7 +3,10 @@ import typing as t
 import pytest
 
 from pca.data.dao import InMemoryDao
-from pca.data.errors import QueryError, QueryErrors
+from pca.data.errors import (
+    QueryError,
+    QueryErrors,
+)
 from pca.data.predicate import where
 
 

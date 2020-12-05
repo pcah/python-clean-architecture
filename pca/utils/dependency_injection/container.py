@@ -1,9 +1,11 @@
+import typing as t
+
 from dataclasses import dataclass
 from enum import Enum
 from functools import partial
-import typing as t
 
 from .errors import DIErrors
+
 
 NameOrInterface = t.Union[type, str]
 Constructor = t.Union[t.Type, t.Callable]

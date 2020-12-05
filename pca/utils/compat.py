@@ -1,9 +1,10 @@
+import os
+
+from abc import ABCMeta
 from functools import (
     singledispatch,
     update_wrapper,
 )
-import os
-from abc import ABCMeta
 
 
 PY36 = (3, 6) <= os.sys.version_info < (3, 7)
@@ -40,10 +41,6 @@ if PY36 or PY37:
         def __init__(self, func):
             if not callable(func) and not hasattr(func, "__get__"):
                 raise TypeError(f"{func!r} is not callable or a descriptor")  # pragma: no cover
-
-            import pdb
-
-            pdb.foo = True
             self.dispatcher = singledispatch(func)
             self.func = func
 

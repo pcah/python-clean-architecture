@@ -30,7 +30,7 @@ class RecipientCreateInputData:
 First of all, `dataclass` decorator gives the class `__init__` method, based on
 variable annotations. One block of boilerplate code less.
 
-Second observation: variable annotations with types gives you typing check 
+Second observation: variable annotations with types gives you typing check
 through type hinting feature (using [mypy](http://mypy-lang.org/) or your IDE
 code introspection).
 
@@ -39,7 +39,7 @@ Third observation: there's no validation! Any of those `max_length=2`,
 intentional - dataclass should describe what can be done to a portion
 of the data. If some field is described that it is a `str`, you can check if
 If it's a list `List` —  to iterate through. The validation part
-of the Django Form example takes place on the boundary of the application layer 
+of the Django Form example takes place on the boundary of the application layer
 and it is provided by specialised class, the Validator.
 
 ```python

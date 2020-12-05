@@ -37,6 +37,7 @@ python = "^3.7"
 "ruamel.yaml" = "^0.16.12"
 JsonWeb = "0.8.2"
 marshmallow = "^3.9.1"
+isort = "^5.6.4"
 
 [tool.poetry.dev-dependencies]
 # "gitpython",
@@ -47,15 +48,16 @@ marshmallow = "^3.9.1"
 
 black = "^20.8b1"
 coverage = "^5.3"
+flake8 = "^3.8.4"
 ipython = "^7.19.0"
 mock = "^4.0.2"
 pdbpp = "^0.10.2"
 pyfakefs = "^4.3.2"
 pytest = "^6.1.2"
 pytest-cov = "^2.10.1"
-pytest-flake8 = "^1.0.6"
 pytest-mock = "^3.3.1"
 tox = "^3.20.1"
+pre-commit = "^2.9.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -78,3 +80,16 @@ exclude = '''
   | dist
 )/
 '''
+
+[tool.isort]
+profile = "black"
+force_grid_wrap = 2
+atomic = true
+include_trailing_comma = true
+lines_after_imports = 2
+lines_between_types = 1
+use_parentheses = true
+src_paths = ["pca",]
+skip_glob = ["*/setup.py"]
+filter_files = true
+known_first_party = ["pca", "devops"]

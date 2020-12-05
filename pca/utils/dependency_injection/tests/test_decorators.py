@@ -6,10 +6,10 @@ from pca.utils.dependency_injection import (
     Component,
     DIContext,
     DIErrors,
+    Inject,
     container_supplier,
     create_component,
     inject,
-    Inject,
 )
 
 from .components import (

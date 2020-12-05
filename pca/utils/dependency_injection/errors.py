@@ -1,4 +1,7 @@
-from pca.exceptions import ConfigError, ErrorCatalog
+from pca.exceptions import (
+    ConfigError,
+    ErrorCatalog,
+)
 
 
 class DIErrors(ErrorCatalog):

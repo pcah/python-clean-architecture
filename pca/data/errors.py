@@ -1,4 +1,7 @@
-from pca.exceptions import ErrorCatalog, QueryError
+from pca.exceptions import (
+    ErrorCatalog,
+    QueryError,
+)
 
 
 class QueryErrors(ErrorCatalog):

@@ -1,5 +1,6 @@
-from dataclasses import dataclass
 import typing as t
+
+from dataclasses import dataclass
 
 from pca.utils.collections import frozendict
 from pca.utils.compat import GenericABCMeta
@@ -12,6 +13,7 @@ from .container import (
     set_di_context,
 )
 from .descriptors import Inject
+
 
 _DEPENDENCIES_REF = "__di_dependencies__"
 

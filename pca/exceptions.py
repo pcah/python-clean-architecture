@@ -1,6 +1,7 @@
 import marshmallow.exceptions
 
-from pca.utils.errors import ExceptionWithCode, ErrorCatalog  # noqa: F401
+from pca.utils.errors import ErrorCatalog  # noqa: F401
+from pca.utils.errors import ExceptionWithCode
 
 
 class BaseError(ExceptionWithCode):

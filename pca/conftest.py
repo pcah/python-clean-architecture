@@ -1,7 +1,10 @@
 import mock
 import pytest
 
-from pca.utils.dependency_injection import Container, Scopes
+from pca.utils.dependency_injection import (
+    Container,
+    Scopes,
+)
 
 
 @pytest.fixture

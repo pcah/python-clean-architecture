@@ -1,5 +1,6 @@
-from setuptools.command.test import test
 import sys
+
+from setuptools.command.test import test
 
 
 class PyTest(test):

@@ -1,6 +1,9 @@
 import typing as t
 
-from .entity import Id, Ids
+from .entity import (
+    Id,
+    Ids,
+)
 
 
 Kwargs = t.Dict[str, t.Any]

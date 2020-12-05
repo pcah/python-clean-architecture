@@ -1,7 +1,9 @@
+import typing as t
+
 from enum import Enum
 from functools import partial
+
 from setuptools import Command
-import typing as t
 
 from devops.utils.os import replace_in_file
 from devops.utils.repo import get_repo

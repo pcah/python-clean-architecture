@@ -1,7 +1,10 @@
 import typing as t
 
 from .dao import IDao
-from .entity import Entity, Id
+from .entity import (
+    Entity,
+    Id,
+)
 
 
 class IRepository(t.Generic[Id, Entity]):

@@ -1,5 +1,6 @@
-from functools import wraps
 import typing as t
+
+from functools import wraps
 
 from .compat import singledispatchmethod  # noqa: F401 backported to this repo
 from .imports import get_dotted_path

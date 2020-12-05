@@ -63,11 +63,7 @@ class TestFrozen:
 
     @pytest.mark.parametrize(
         "value, frozen_value",
-        [
-            ({1}, frozenset({1})),
-            (frozenset({1}), frozenset({1})),
-            (None, None),
-        ],
+        [({1}, frozenset({1})), (frozenset({1}), frozenset({1})), (None, None),],
     )
     def test_raises_on_second_assignment(self, instance, value, frozen_value):
         instance.field = value
@@ -76,12 +72,7 @@ class TestFrozen:
             instance.field = set()
 
     @pytest.mark.parametrize(
-        "value, second_value",
-        [
-            ({1}, {1}),
-            ({1}, frozenset({1})),
-            (None, None),
-        ],
+        "value, second_value", [({1}, {1}), ({1}, frozenset({1})), (None, None),],
     )
     def test_not_raises_when_value_dont_change(self, instance, value, second_value):
         instance.field = value

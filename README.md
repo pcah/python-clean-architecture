@@ -1,7 +1,7 @@
 # python-clean-architecture
 ![GitHub tag](https://img.shields.io/github/tag-date/pcah/python-clean-architecture.svg?style=popout)
 [![development status](https://img.shields.io/badge/development%20status-pre--alpha-orange.svg)](https://pypi.org/project/python-clean-architecture/)
-[![Build Status](https://travis-ci.org/pcah/python-clean-architecture.svg?branch=master)](https://travis-ci.org/pcah/python-clean-architecture) 
+[![Build Status](https://travis-ci.org/pcah/python-clean-architecture.svg?branch=master)](https://travis-ci.org/pcah/python-clean-architecture)
 [![codecov](https://codecov.io/gh/pcah/python-clean-architecture/branch/master/graph/badge.svg)](https://codecov.io/gh/pcah/python-clean-architecture) [![Join the chat at https://gitter.im/pcah/python-clean-architecture](https://badges.gitter.im/pcah/python-clean-architecture.svg)](https://gitter.im/pcah/python-clean-architecture?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 *python-clean-architecture* is a Python library aiming to bring your code closer to The Clean Architecture. The first goal is to equip you with a set of patterns and good practices. The second one is to provide you a toolbox of adapters for integration with popular frameworks. Using them can make your code more focused on the knowledge you are trying to embody with your application and separation from technical details. A nice side-effects of this approach is an ease of plugging your application to a different variants of your infrastructure and lightweight testing the key fragments of your codebase.
@@ -50,7 +50,7 @@ To accomplish the goals in a most convenient and readable manner, the library in
 
 #### Integrations
 
-One of the goals of this library is to provide integration with popular Python frameworks and libraries. Here are the most notable ones: 
+One of the goals of this library is to provide integration with popular Python frameworks and libraries. Here are the most notable ones:
 
   * [TinyDb](https://tinydb.readthedocs.io) as a [DAO](pca/integration/tinydb.py)
   * YAML, JSON or INI file loaded into the memory as a [DAO](pca/data/dao/file.py)

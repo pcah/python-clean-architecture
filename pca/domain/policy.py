@@ -1,4 +1,7 @@
-from jsonweb import decode, encode
+from jsonweb import (
+    decode,
+    encode,
+)
 
 from pca.utils.inspect import get_func_name
 

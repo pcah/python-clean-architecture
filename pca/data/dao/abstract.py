@@ -1,20 +1,20 @@
+import typing as t
+
 from abc import abstractmethod
 from functools import reduce
 from operator import and_
-import typing as t
 
+from pca.data.errors import QueryErrors
+from pca.data.predicate import Predicate
 from pca.interfaces.dao import (
     BatchOfDto,
     Dto,
     Id,
-    Ids,
     IDao,
+    Ids,
     IQueryChain,
     Kwargs,
 )
-
-from pca.data.errors import QueryErrors
-from pca.data.predicate import Predicate
 from pca.utils.dependency_injection import Component
 
 

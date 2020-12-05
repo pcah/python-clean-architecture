@@ -1,7 +1,14 @@
-from jsonweb import decode, encode
 import pytest
 
-from pca.domain.policy import Policy, policy_constructor
+from jsonweb import (
+    decode,
+    encode,
+)
+
+from pca.domain.policy import (
+    Policy,
+    policy_constructor,
+)
 from pca.utils.inspect import get_func_name
 
 
@@ -27,10 +34,7 @@ class SomePolicy(Policy):
     SERIALIZED_ATTRS = ("test_attr",)
     STRATEGY_MODULE = FakeStrategyModule
     STRATEGY_CHOICES = {
-        "role_a": (
-            "a1",
-            "a2",
-        ),
+        "role_a": ("a1", "a2",),
         "role_b": ("b",),
     }
 

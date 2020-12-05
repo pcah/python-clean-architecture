@@ -1,5 +1,6 @@
-from itertools import count
 import typing as t
+
+from itertools import count
 
 from pca.data.errors import QueryErrors
 from pca.interfaces.dao import (

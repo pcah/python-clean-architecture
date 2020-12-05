@@ -14,13 +14,20 @@ True
 >>> predicate({'val': 1})
 False
 """
-from enum import Enum
 import re
 import typing as t
 
+from enum import Enum
+
 from pca.interfaces.dao import IPredicate
-from pca.utils.collections import freeze, is_iterable
-from pca.utils.operators import resolve_path, check_path
+from pca.utils.collections import (
+    freeze,
+    is_iterable,
+)
+from pca.utils.operators import (
+    check_path,
+    resolve_path,
+)
 
 
 class Operation(Enum):

@@ -1,5 +1,6 @@
-from setuptools import Command
 from pathlib import Path
+
+from setuptools import Command
 
 
 class Publish(Command):
@@ -17,6 +18,7 @@ class Publish(Command):
 
     def run(self):
         from twine.commands import upload
+
         from devops import PROJECT_PACKAGE
 
         assert hasattr(PROJECT_PACKAGE, "PROJECT_DIR"), "No PROJECT_DIR variable declared"

@@ -3,7 +3,7 @@
 
 This package contains a full-featured, tested and runnable web application, as a showcase of the [`python-clean-architecture`](https://github.com/pcah/python-clean-architecture). The core domain of the application is the process of organizing group meetings, based on the [Meetup.com](https://www.meetup.com/) system.
 
-For more functional description, go to the [DESCRIPTION doc](docs/DESCRIPTION.md). 
+For more functional description, go to the [DESCRIPTION doc](docs/DESCRIPTION.md).
 
 This package has the potential to be extracted as an independent repository in an undefined future when its codebase reaches stability.
 
@@ -17,7 +17,7 @@ As described by the [original project](https://github.com/kgrzybek/modular-monol
 ### 2.1. The Purpose of this Repository
 
 > This is a list of the main goals of this repository:
-> 
+>
 > - Showing how you can implement a **monolith** application in a **modular** way
 > - Presentation of the **full implementation** of an application
 >   - This is not another simple application
@@ -28,8 +28,8 @@ As described by the [original project](https://github.com/kgrzybek/modular-monol
 > - Presentation of some **architectural** considerations, decisions, approaches
 > - Presentation of the implementation using **Domain-Driven Design** approach (**tactical** patterns)
 > - Presentation of the implementation of **Unit Tests** for Domain Model (Testable Design in mind)
-> 
-> — Kamil Grzybek (2020), [Modular Monolith with DDD](https://github.com/kgrzybek/modular-monolith-with-ddd) 
+>
+> — Kamil Grzybek (2020), [Modular Monolith with DDD](https://github.com/kgrzybek/modular-monolith-with-ddd)
 
 
 ### 2.2. The Reason
@@ -45,4 +45,4 @@ As described by the [original project](https://github.com/kgrzybek/modular-monol
 > - Implemented in old technology
 > - Not maintained
 >
-> — Kamil Grzybek (2020), [Modular Monolith with DDD](https://github.com/kgrzybek/modular-monolith-with-ddd) 
+> — Kamil Grzybek (2020), [Modular Monolith with DDD](https://github.com/kgrzybek/modular-monolith-with-ddd)

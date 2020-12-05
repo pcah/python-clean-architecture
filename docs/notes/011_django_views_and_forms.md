@@ -51,8 +51,8 @@ class RegistrationView(FormView):
         request and the registration form is available here.
         """
         raise NotImplementedError
-        
-        
+
+
 class RegistrationView(BaseRegistrationView):
     """
     Register a new (inactive) user account, generate an activation key

@@ -4,9 +4,9 @@ from pca.exceptions import ConfigError
 from pca.utils.dependency_injection import (
     Component,
     DIErrors,
+    Inject,
     create_component,
     get_attribute_dependencies,
-    Inject,
 )
 
 from .components import (
@@ -15,8 +15,8 @@ from .components import (
     GravelWheel,
     RoadFrame,
     RoadWheel,
-    WheelInterface,
     Trike,
+    WheelInterface,
 )
 
 

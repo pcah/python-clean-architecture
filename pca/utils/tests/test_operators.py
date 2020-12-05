@@ -1,9 +1,9 @@
 import pytest
 
 from pca.utils.operators import (
+    PredicatePathNotFoundError,
     check_path,
     resolve_path,
-    PredicatePathNotFoundError,
 )
 
 
@@ -11,9 +11,7 @@ from pca.utils.operators import (
 def example_dict():
     return {
         "foo": 1,
-        "bar": {
-            "baz": {"a": 1},
-        },
+        "bar": {"baz": {"a": 1},},
     }
 
 
@@ -31,11 +29,7 @@ def example_object():
 
 
 @pytest.mark.parametrize(
-    "path, expected",
-    [
-        (("foo",), 1),
-        (("bar", "baz"), {"a": 1}),
-    ],
+    "path, expected", [(("foo",), 1), (("bar", "baz"), {"a": 1}),],
 )
 def test_resolve_path_dict_positive(example_dict, path, expected):
     resolve_path_curried = resolve_path(path)
@@ -43,12 +37,7 @@ def test_resolve_path_dict_positive(example_dict, path, expected):
 
 
 @pytest.mark.parametrize(
-    "path",
-    [
-        ("foo2",),
-        ("foo2", "bar"),
-        ("foo", "bar", "baz", "b"),
-    ],
+    "path", [("foo2",), ("foo2", "bar"), ("foo", "bar", "baz", "b"),],
 )
 def test_resolve_path_dict_negative(example_dict, path):
     resolve_path_curried = resolve_path(path)
@@ -57,11 +46,7 @@ def test_resolve_path_dict_negative(example_dict, path):
 
 
 @pytest.mark.parametrize(
-    "path, expected",
-    [
-        (("foo",), 1),
-        (("bar", "baz"), {"a": 1}),
-    ],
+    "path, expected", [(("foo",), 1), (("bar", "baz"), {"a": 1}),],
 )
 def test_resolve_path_object_positive(example_object, path, expected):
     resolve_path_curried = resolve_path(path)
@@ -69,12 +54,7 @@ def test_resolve_path_object_positive(example_object, path, expected):
 
 
 @pytest.mark.parametrize(
-    "path",
-    [
-        ("foo2",),
-        ("foo2", "bar"),
-        ("foo", "bar", "baz", "b"),
-    ],
+    "path", [("foo2",), ("foo2", "bar"), ("foo", "bar", "baz", "b"),],
 )
 def test_resolve_path_object_negative(example_object, path):
     resolve_path_curried = resolve_path(path)

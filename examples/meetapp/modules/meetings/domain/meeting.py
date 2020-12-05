@@ -1,4 +1,8 @@
-from pca.domain import Entity, Uuid4Id, ValueObject  # noqa: F401
+from pca.domain import (  # noqa: F401
+    Entity,
+    Uuid4Id,
+    ValueObject,
+)
 
 from .time import MeetingTerm
 

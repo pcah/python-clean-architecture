@@ -1,7 +1,10 @@
 import mock
 import pytest
 
-from pca.data.observable import Observable, undefined_value
+from pca.data.observable import (
+    Observable,
+    undefined_value,
+)
 from pca.utils.sentinel import Sentinel
 
 

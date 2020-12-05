@@ -5,11 +5,15 @@ import pytest
 
 from pca.application.interactor import (
     Interactor,
-    ResponseModel,
     RequestModel,
+    ResponseModel,
     interactor_factory,
 )
-from pca.domain.entity import Entity, SequenceId, field
+from pca.domain.entity import (
+    Entity,
+    SequenceId,
+    field,
+)
 from pca.domain.repository import Repository
 from pca.exceptions import LogicError
 from pca.utils.dependency_injection import (

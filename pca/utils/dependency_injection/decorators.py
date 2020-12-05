@@ -1,17 +1,21 @@
-from functools import wraps
 import inspect
 import typing as t
 
+from functools import wraps
+
+from .component import (
+    Injectable,
+    set_dependencies_contexts,
+)
 from .container import (
-    Container,
     Constructor,
+    Container,
     DIContext,
     Scopes,
     get_di_container,
     set_di_context,
     set_scope_type,
 )
-from .component import Injectable, set_dependencies_contexts
 from .descriptors import Inject
 from .errors import DIErrors
 

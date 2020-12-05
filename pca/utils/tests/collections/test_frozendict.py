@@ -1,5 +1,6 @@
-from copy import copy
 import operator
+
+from copy import copy
 
 import pytest
 
@@ -15,10 +16,7 @@ def test_freeze():
         "list": [2, 3, 4],
         "tuple": (5, 6),
         "set": {7, 8},
-        "dict": {
-            "7": 9,
-            "8": (10, 11),
-        },
+        "dict": {"7": 9, "8": (10, 11),},
         (1, 2): "an iterable key",
         frozendict(some="value"): "a structured key",
     }

@@ -1,7 +1,11 @@
-from functools import update_wrapper
 import typing as t
 
-from pca.data.values import Value, Owner
+from functools import update_wrapper
+
+from pca.data.values import (
+    Owner,
+    Value,
+)
 from pca.utils.collections import freeze
 
 

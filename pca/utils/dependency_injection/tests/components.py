@@ -1,10 +1,10 @@
 from pca.utils.dependency_injection import (
     Component,
     Container,
-    inject,
     Inject,
-    scope,
     Scopes,
+    inject,
+    scope,
 )
 
 

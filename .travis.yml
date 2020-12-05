@@ -1,10 +1,12 @@
-sudo: false
-dist: "xenial"
+os:
+  - linux
+  - windows
+dist: xenial
 language: python
 python:
   - "3.7"
   - "3.8"
   - "3.9"
-install: pip install poetry tox-travis codecov
+before_install: pip install poetry tox-travis codecov
 script: tox
 after_success: codecov

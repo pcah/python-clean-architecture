@@ -1,6 +1,8 @@
+import typing as t
+
 from collections.abc import MutableSet
 from functools import singledispatch
-import typing as t
+
 
 SliceAll = slice(None)
 generator_type = type(e for e in ())

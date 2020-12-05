@@ -1,16 +1,19 @@
 import abc
-
-from dataclasses import dataclass
 import typing as t
 
+from dataclasses import dataclass
+
 from pca.data.descriptors import reify
-from pca.data.validation import Validator, validated_by
+from pca.data.validation import (
+    Validator,
+    validated_by,
+)
 from pca.exceptions import ProcessError
 from pca.utils.dependency_injection import (
     Component,
     container_supplier,
-    inject,
     get_attribute_dependencies,
+    inject,
 )
 from pca.utils.functools import error_catcher
 

@@ -2,9 +2,15 @@ from pathlib import Path
 
 import pytest
 
+from pca.data.errors import (
+    QueryError,
+    QueryErrors,
+)
 from pca.data.predicate import where
-from pca.data.errors import QueryError, QueryErrors
-from pca.integration.errors import ConfigError, IntegrationErrors
+from pca.integration.errors import (
+    ConfigError,
+    IntegrationErrors,
+)
 from pca.integration.tinydb import TinyDbDao
 
 

@@ -1,9 +1,10 @@
+import typing as t
+
 from dataclasses import (
     InitVar,
     dataclass,
     field,
 )
-import typing as t
 
 from .container import (
     DIContext,

@@ -1,10 +1,15 @@
 import abc
 import dataclasses
 import typing as t
-from uuid import UUID, uuid4
+
+from uuid import (
+    UUID,
+    uuid4,
+)
 
 # from pca.utils.collections import frozen  # TODO
 from pca.utils.compat import GenericABCMeta
+
 
 # TODO #40. is entity module using dataclasses `field` or have its own API for `fields`?
 # proxy import for now

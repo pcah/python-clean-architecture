@@ -1,6 +1,13 @@
 from pca.data.errors import QueryErrors
-from pca.utils.collections import iterate_over_values, sget
-from pca.utils.dependency_injection import Container, Scopes, scope
+from pca.utils.collections import (
+    iterate_over_values,
+    sget,
+)
+from pca.utils.dependency_injection import (
+    Container,
+    Scopes,
+    scope,
+)
 from pca.utils.serialization import load_from_filepath
 
 from .in_memory import InMemoryDao

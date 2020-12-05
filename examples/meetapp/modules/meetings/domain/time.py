@@ -1,10 +1,13 @@
 import datetime
 import typing as t
 
-from pca.domain import ValueObject
-from pca.utils.dependency_injection import inject, Inject
-
 from meetapp.modules.shared_domain.clock import IClockService
+
+from pca.domain import ValueObject
+from pca.utils.dependency_injection import (
+    Inject,
+    inject,
+)
 
 
 class MeetingTerm(ValueObject):

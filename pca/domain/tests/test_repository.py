@@ -2,19 +2,28 @@ import dataclasses
 
 import pytest
 
-from pca.data.errors import QueryErrors
 from pca.data.dao import InMemoryDao
-from pca.domain.repository import Factory, Repository
-from pca.domain.entity import Entity, SequenceId
+from pca.data.errors import QueryErrors
+from pca.domain.entity import (
+    Entity,
+    SequenceId,
+)
+from pca.domain.repository import (
+    Factory,
+    Repository,
+)
 from pca.exceptions import (
     ConfigError,
     QueryError,
 )
-from pca.interfaces.dao import Dto, IDao
+from pca.interfaces.dao import (
+    Dto,
+    IDao,
+)
 from pca.utils.dependency_injection import (
     Container,
-    DIErrors,
     DIContext,
+    DIErrors,
 )
 
 
@@ -71,9 +80,7 @@ class TestConstruction:
     @pytest.fixture
     def dao_class(self, container):
         container.register_by_interface(
-            IDao,
-            InMemoryDao,
-            qualifier=Bike,
+            IDao, InMemoryDao, qualifier=Bike,
         )
         return InMemoryDao
 
@@ -97,9 +104,7 @@ class TestApi:
     @pytest.fixture
     def dao(self, container: Container):
         container.register_by_interface(
-            IDao,
-            InMemoryDao,
-            qualifier=Bike,
+            IDao, InMemoryDao, qualifier=Bike,
         )
         return container.find_by_interface(IDao, qualifier=Bike)
 

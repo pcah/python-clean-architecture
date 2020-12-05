@@ -1,7 +1,8 @@
+import typing as t
+
 from enum import Enum
 from functools import partial
 from pathlib import Path
-import typing as t
 
 from .ini import load_ini_from_filepath
 from .json import load_json_from_filepath

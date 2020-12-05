@@ -1,6 +1,7 @@
 def get_repo():
-    from devops import PROJECT_PACKAGE
     import git
+
+    from devops import PROJECT_PACKAGE
 
     assert hasattr(PROJECT_PACKAGE, "PROJECT_DIR"), "No PROJECT_DIR variable declared"
     assert PROJECT_PACKAGE.PROJECT_DIR, "No PROJECT_DIR variable injected"
