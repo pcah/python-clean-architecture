@@ -10,6 +10,7 @@ dist/
 *.egg-info
 .tox
 .coverage
+coverage.xml
 
 # IDEs
 *.swp

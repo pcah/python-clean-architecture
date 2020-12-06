@@ -19,9 +19,11 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.7",
     "Operating System :: OS Independent",
     "Topic :: Software Development",
     "Intended Audience :: Developers",
@@ -32,10 +34,11 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.6"
 
 "ruamel.yaml" = "^0.16.12"
 JsonWeb = "0.8.2"
+dataclasses = { version = "^0.8", python = ">=3.6,<3.7" }
 marshmallow = "^3.9.1"
 isort = "^5.6.4"
 
@@ -46,18 +49,21 @@ isort = "^5.6.4"
 # 'wheel',
 # pep8-naming = "^0.11.1"
 
-black = "^20.8b1"
+black = { version = "^20.8b1", markers = "platform_python_implementation == 'PyPy'" }
 coverage = "^5.3"
 flake8 = "^3.8.4"
-ipython = "^7.19.0"
+ipython = [
+    {version = "^7.19.0", python = "^3.7"},
+    {version = "~7.16.0", python = "3.6"},
+]
 mock = "^4.0.2"
 pdbpp = "^0.10.2"
+pre-commit = "^2.9.2"
 pyfakefs = "^4.3.2"
 pytest = "^6.1.2"
 pytest-cov = "^2.10.1"
 pytest-mock = "^3.3.1"
 tox = "^3.20.1"
-pre-commit = "^2.9.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -93,3 +99,33 @@ src_paths = ["pca",]
 skip_glob = ["*/setup.py"]
 filter_files = true
 known_first_party = ["pca", "devops"]
+
+[tool.pytest.ini_options]
+python_files = [
+    "pca/**/tests/**/*.py",
+    "pca/**/tests/*.py",
+    "devops/**/tests/*.py",
+]
+addopts = "--cov-fail-under=90 --tb=short"
+
+[tool.coverage.run]
+source = ["pca"]
+omit = ["**/tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_lines = [
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+    # Don't complain if non-runnable code isn't run:
+    "if __name__ == .__main__.:",
+]
+
+[tool.coverage.xml]
+output = "coverage.xml"
