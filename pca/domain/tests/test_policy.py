@@ -34,7 +34,10 @@ class SomePolicy(Policy):
     SERIALIZED_ATTRS = ("test_attr",)
     STRATEGY_MODULE = FakeStrategyModule
     STRATEGY_CHOICES = {
-        "role_a": ("a1", "a2",),
+        "role_a": (
+            "a1",
+            "a2",
+        ),
         "role_b": ("b",),
     }
 

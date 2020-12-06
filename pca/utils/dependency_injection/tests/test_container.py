@@ -132,10 +132,14 @@ class TestContext:
             baz = Inject(interface=Bar, get_qualifier=get_qualifier)
 
         container.register_by_name(
-            name="bar", qualifier=Foo.qualifier, constructor=Bar,
+            name="bar",
+            qualifier=Foo.qualifier,
+            constructor=Bar,
         )
         container.register_by_interface(
-            interface=Bar, qualifier=Foo.qualifier, constructor=Bar,
+            interface=Bar,
+            qualifier=Foo.qualifier,
+            constructor=Bar,
         )
         return Foo
 

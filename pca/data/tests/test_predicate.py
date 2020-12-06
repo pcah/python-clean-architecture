@@ -12,7 +12,9 @@ from pca.data.predicate import (
 def example_dict():
     return {
         "foo": 1,
-        "bar": {"baz": {"a": 1},},
+        "bar": {
+            "baz": {"a": 1},
+        },
     }
 
 

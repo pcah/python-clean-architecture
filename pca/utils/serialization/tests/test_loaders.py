@@ -39,7 +39,11 @@ def json_contents():
         '{"objects": [{"id": 1, "n": "foo"}, {"id": 2, "n": "bar"}, {"id": 3, "n": "baz"}]}'
     )
     expected_contents = {
-        "objects": [{"id": 1, "n": "foo"}, {"id": 2, "n": "bar"}, {"id": 3, "n": "baz"},]
+        "objects": [
+            {"id": 1, "n": "foo"},
+            {"id": 2, "n": "bar"},
+            {"id": 3, "n": "baz"},
+        ]
     }
     return json_contents, expected_contents
 
@@ -58,7 +62,11 @@ def yaml_contents():
         )
     )
     expected_contents = {
-        "objects": [{"id": 1, "n": "foo"}, {"id": 2, "n": "bar"}, {"id": 3, "n": "baz"},]
+        "objects": [
+            {"id": 1, "n": "foo"},
+            {"id": 2, "n": "bar"},
+            {"id": 3, "n": "baz"},
+        ]
     }
     return yaml_contents, expected_contents
 

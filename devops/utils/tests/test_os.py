@@ -12,9 +12,25 @@ from devops.utils import os
             # substitute
             "\n* 1\n* 2\n",
             # text
-            "\n".join(("<sub>some text</sub>", "", "", "",)),
+            "\n".join(
+                (
+                    "<sub>some text</sub>",
+                    "",
+                    "",
+                    "",
+                )
+            ),
             # expected
-            "\n".join(("<sub>some text</sub>", "", "* 1", "* 2", "", "",)),
+            "\n".join(
+                (
+                    "<sub>some text</sub>",
+                    "",
+                    "* 1",
+                    "* 2",
+                    "",
+                    "",
+                )
+            ),
         ),
         (
             # pattern
@@ -50,7 +66,14 @@ def test_replace_in_multiline_string(pattern, substitute, text, expected):
 @pytest.mark.skip
 @pytest.mark.parametrize(
     "contents, pattern, substitute, expected",
-    [("foo\n1\n2\nbar", "1\n2", "a\nb\nc", "foo\na\nb\nc\nbar",),],
+    [
+        (
+            "foo\n1\n2\nbar",
+            "1\n2",
+            "a\nb\nc",
+            "foo\na\nb\nc\nbar",
+        ),
+    ],
 )
 def test_replace_in_file(fs, contents, pattern, substitute, expected):
     filepath = "tmp/test_file"

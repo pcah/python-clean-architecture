@@ -11,7 +11,18 @@ from pca.utils.collections import (
 
 
 @pytest.mark.parametrize(
-    "value", [None, True, False, "value", 1, 200, 2000000000, 1.15, 1 + 2j,],
+    "value",
+    [
+        None,
+        True,
+        False,
+        "value",
+        1,
+        200,
+        2000000000,
+        1.15,
+        1 + 2j,
+    ],
 )
 def test_freeze_immutable(value):
     assert freeze(value) is value

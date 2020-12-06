@@ -80,7 +80,9 @@ class TestConstruction:
     @pytest.fixture
     def dao_class(self, container):
         container.register_by_interface(
-            IDao, InMemoryDao, qualifier=Bike,
+            IDao,
+            InMemoryDao,
+            qualifier=Bike,
         )
         return InMemoryDao
 
@@ -104,7 +106,9 @@ class TestApi:
     @pytest.fixture
     def dao(self, container: Container):
         container.register_by_interface(
-            IDao, InMemoryDao, qualifier=Bike,
+            IDao,
+            InMemoryDao,
+            qualifier=Bike,
         )
         return container.find_by_interface(IDao, qualifier=Bike)
 
