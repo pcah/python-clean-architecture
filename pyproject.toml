@@ -23,9 +23,12 @@ classifiers = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
     "Operating System :: OS Independent",
     "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
     "Intended Audience :: Developers",
     "Development Status :: 2 - Pre-Alpha",
 ]
@@ -34,7 +37,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.6.1"
 
 "ruamel.yaml" = "^0.16.12"
 JsonWeb = "0.8.2"
@@ -49,7 +52,7 @@ isort = "^5.6.4"
 # 'wheel',
 # pep8-naming = "^0.11.1"
 
-black = { version = "^20.8b1", markers = "platform_python_implementation == 'PyPy'" }
+black = { version = "^20.8b1", markers = "platform_python_implementation!='PyPy'" }
 coverage = "^5.3"
 flake8 = "^3.8.4"
 ipython = [

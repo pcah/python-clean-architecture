@@ -19,8 +19,12 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.3.0
     hooks:
+      - id: check-merge-conflict
       - id: trailing-whitespace
-        exclude: ^tests/.*/fixtures/.*
       - id: end-of-file-fixer
-        exclude: ^tests/.*/fixtures/.*
       - id: debug-statements
+      - id: check-toml
+      - id: check-yaml
+      - id: check-byte-order-marker
+      - id: check-added-large-files
+      - id: detect-private-key

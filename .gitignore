@@ -11,6 +11,7 @@ dist/
 .tox
 .coverage
 coverage.xml
+poetry.toml
 
 # IDEs
 *.swp

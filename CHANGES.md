@@ -5,6 +5,9 @@
 
 ### staged
 - Enhancement: Dependency Injection micro-framework now allows relative qualifiers: #75
+- Introduced: Python 3.9 support: #79
+- Introduced: PyPy3.7 support: #79
+- Introduced: Modern tools for code quality in CI process (black, isort, twine, GitHub Actions): #79
 
 ### 0.0.6
 - Introduced: Architectural Decisions Log
