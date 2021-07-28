@@ -1,4 +1,4 @@
-FROM ubuntu:focal
+FROM ubuntu:focal as dev
 ARG DOCKER_MULTI_PYTHON_SCRIPT_URL=https://raw.githubusercontent.com/fkrull/docker-multi-python/2fb60d333f3e407fea4ceb4293b414cc435ff084/setup.sh
 ENV DEBIAN_FRONTEND=noninteractive \
     PATH="${PATH}:/root/.poetry/bin" \
@@ -20,12 +20,17 @@ RUN apt update -y \
     tree \
     vim \
     && curl -sSL $DOCKER_MULTI_PYTHON_SCRIPT_URL | bash \
-    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
     && dpkg-query --show pypy3 >> /versions
-RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3 - --version $POETRY_VERSION \
+RUN pip3 install -U \
+    pip \
+    poetry==${POETRY_VERSION} \
+    setuptools \
+    tox \
     && mkdir -p /root/.cache/pypoetry/virtualenvs/
 COPY pyproject.toml poetry.lock ./
-RUN pip3 install -U tox virtualenv \
-    && poetry export --without-hashes --dev > /requirements.txt
-COPY . .
+RUN poetry install --no-root --no-interaction
 CMD [ "/bin/bash" ]
+
+FROM dev AS test
+CMD [ "poetry", "run", "tox" ]

@@ -2,14 +2,13 @@ version: '3.8'
 
 services:
 
-  # test versions of containers
-
-  test_py39: &main_default
-    container_name: pca_test_py39
+  # dev versions of containers
+  dev_py39: &main_default
+    container_name: pca_dev_py39
     build: &build_default
       dockerfile: devops/Dockerfile
       context: .
-      target: test
+      target: dev
       args:
         PYTHON_VERSION: 3.9
     volumes:
@@ -18,44 +17,35 @@ services:
     stdin_open: true
     tty: true
 
-  test_py38:
+  dev_py38:
     <<: *main_default
-    container_name: pca_test_py38
+    container_name: pca_dev_py38
     build:
       <<: *build_default
       args:
         PYTHON_VERSION: 3.8
 
-  test_py37:
+  dev_py37:
     <<: *main_default
-    container_name: pca_test_py37
+    container_name: pca_dev_py37
     build:
       <<: *build_default
       args:
         PYTHON_VERSION: 3.7
 
-  test_py36:
+  dev_py36:
     <<: *main_default
-    container_name: pca_test_py36
+    container_name: pca_dev_py36
     build:
       <<: *build_default
       args:
         PYTHON_VERSION: 3.6
 
-  test_pypy3:
+  dev_pypy3:
     <<: *main_default
-    container_name: pca_test_pypy3
+    container_name: pca_dev_pypy3
     build:
       <<: *build_default
       args:
         IMAGE_VERSION: pypy:3.7-slim
         PYTHON_VERSION: 3.7
-
-  lint:
-    <<: *main_default
-    container_name: pca_lint
-    build:
-      <<: *build_default
-      target: lint
-      args:
-        PYTHON_VERSION: 3.9
