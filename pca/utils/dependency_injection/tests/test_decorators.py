@@ -1,3 +1,5 @@
+import platform
+
 import mock
 import pytest
 
@@ -20,6 +22,9 @@ from .components import (
     RoadWheel,
     WheelInterface,
 )
+
+
+pytestmark = pytest.mark.skipif(platform.python_implementation() == "PyPy", reason="TODO #80")
 
 
 class TestInjectDecorator:

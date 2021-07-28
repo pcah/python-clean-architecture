@@ -1,4 +1,5 @@
 import dataclasses
+import platform
 
 import pytest
 
@@ -25,6 +26,9 @@ from pca.utils.dependency_injection import (
     DIContext,
     DIErrors,
 )
+
+
+pytestmark = pytest.mark.skipif(platform.python_implementation() == "PyPy", reason="TODO #80")
 
 
 @dataclasses.dataclass

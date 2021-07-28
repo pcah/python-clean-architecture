@@ -1,3 +1,5 @@
+import platform
+
 import pytest
 
 from pca.exceptions import ConfigError
@@ -18,6 +20,9 @@ from .components import (
     Trike,
     WheelInterface,
 )
+
+
+pytestmark = pytest.mark.skipif(platform.python_implementation() == "PyPy", reason="TODO #80")
 
 
 class TestInjectDescriptor:
