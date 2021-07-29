@@ -1,4 +1,5 @@
 ### python-clean-architecture
+
 ## The Principles
 
 #### 1. Domain *First* Design
@@ -10,11 +11,9 @@ Quotes:
 >
 > — Eric Evans (2003), [Domain Driven Design: Tackling Complexity in the Heart of Software](http://dddcommunity.org/book/evans_2003/)
 
-
->  A good software architecture allows decisions about frameworks, databases, web-servers, and other environmental issues and tools, to be deferred and delayed. A good architecture makes it unnecessary to decide on Rails, or Spring, or Hibernate, or Tomcat or MySql, until much later in the project.
+> A good software architecture allows decisions about frameworks, databases, web-servers, and other environmental issues and tools, to be deferred and delayed. A good architecture makes it unnecessary to decide on Rails, or Spring, or Hibernate, or Tomcat or MySql, until much later in the project.
 >
 > — Robert Martin (2011), [Clean Coder Blog: Screaming Architecture](https://blog.cleancoder.com/uncle-bob/2011/09/30/Screaming-Architecture.html)
-
 
 #### 2. Keep it simple and straightforward
 
@@ -62,7 +61,6 @@ Quotes:
 >
 > — Robert Martin (2012), [The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 
-
 #### 4. Coupling management
 
 The library wants to promote a design that makes its components coupled only there when it is needed and suitable. On the other hand, components that have reason to exists only together or don't exist at all, should be tightly coupled.
@@ -95,7 +93,6 @@ Quotes:
 > *Pluggable Component Framework.* Distill an abstract core of interfaces and interactions and create a framework that allows diverse implementations of those interfaces to be freely substituted. Likewise, allow any application to use those components, so long as it operates strictly through the interfaces of the abstract core.
 >
 > — Eric Evans (2015), [Domain-­Driven Design Reference](http://domainlanguage.com/ddd/reference/)
-
 
 #### 6. Batteries included
 

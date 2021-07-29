@@ -3,6 +3,7 @@
 # 2. Data and validation - how it could be done
 
 ### A concept
+
 ```python
 import dataclasses
 import enum

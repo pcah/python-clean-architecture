@@ -133,6 +133,7 @@ class RegistrationView(BaseRegistrationView):
 ```
 
 ##### Django Forms
+
 [TODO]
 
 ```python
@@ -159,6 +160,8 @@ class InitialSignupForm(forms.Form):
 
 One can discover 3 problems here:
 
-##### 1. Form is both a data description object & data validation object.
-##### 2. Form is both a data description and a presenter (HTML renderer).
-##### 3. Business logic is closely coupled with framework views.
+##### 1. Form is both a data description object & data validation object
+
+##### 2. Form is both a data description and a presenter (HTML renderer)
+
+##### 3. Business logic is closely coupled with framework views

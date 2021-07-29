@@ -17,6 +17,7 @@ Illinois, September 1997
 The quote above sounds frightening and extreme. But we all witness it as
 we Look at following symptoms. If you experience a few of them, these articles
 are for you:
+
 * The application is a spaghetti of close coupled classes without clear
 responsibilities. Every new developer has to have a long introductory period
 before they can locate the piece of code they are searching for
@@ -56,5 +57,6 @@ patterns, that are introduced by most known Python application frameworks.
 
 [[1a. Django views and forms](011_django_views_and_forms.md)]
 
-### References:
+### References
+
 <a id="ref-1">1.</a> [Robert "Uncle Bob" Martin, The Clean Architecture](http://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)

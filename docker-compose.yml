@@ -4,8 +4,8 @@ services:
 
   # test versions of containers
 
-  test_py39: &main_default
-    container_name: pca_test_py39
+  test: &main_default
+    container_name: pca_test
     build: &build_default
       dockerfile: devops/Dockerfile
       context: .
@@ -17,6 +17,10 @@ services:
     env_file: devops/.env
     stdin_open: true
     tty: true
+
+  test_py39:
+    container_name: pca_test_py39
+    <<: *main_default
 
   test_py38:
     <<: *main_default

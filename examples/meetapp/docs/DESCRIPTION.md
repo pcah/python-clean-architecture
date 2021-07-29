@@ -1,4 +1,5 @@
 ### python-clean-architecture
+
 ## Description of the Example Application
 
 This description is largely based on the architectural analysis made by © Kamil Grzybek (2020) at the  [Modular Monolith with DDD](https://github.com/kgrzybek/modular-monolith-with-ddd) Project. The places where `python-clean-architecture` library has made its changes are marked with **`[PCA]`** marker.
@@ -56,7 +57,6 @@ Each `User` is assigned one or more `User Role`.
 
 Each `User Role` has set of `Permissions`. A `Permission` defines whether `User` can invoke a particular action.
 
-
 ### Conceptual Model
 
 #### Definition
@@ -64,7 +64,6 @@ Each `User Role` has set of `Permissions`. A `Permission` defines whether `User`
 > Conceptual Model - A conceptual model is a representation of a system, made of the composition of concepts that are used to help people know, understand, or simulate a subject the model represents.
 >
 > [Wikipedia - Conceptual model](https://en.wikipedia.org/wiki/Conceptual_model)
-
 
 #### The Conceptual Model
 

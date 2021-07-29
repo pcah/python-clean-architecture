@@ -16,10 +16,10 @@ repos:
         additional_dependencies: [toml]
         exclude: ^.*/?setup\.py$
 
-  # - repo: https://github.com/igorshubovych/markdownlint-cli
-  #   rev: v0.28.1
-  #   hooks:
-  #     - id: markdownlint
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.28.1
+    hooks:
+      - id: markdownlint
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.3.0
@@ -30,6 +30,6 @@ repos:
       - id: debug-statements
       - id: check-toml
       - id: check-yaml
-      - id: check-byte-order-marker
+      - id: fix-byte-order-marker
       - id: check-added-large-files
       - id: detect-private-key

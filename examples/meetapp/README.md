@@ -1,4 +1,5 @@
 ### python-clean-architecture
+
 ## Example application
 
 This package contains a full-featured, tested and runnable web application, as a showcase of the [`python-clean-architecture`](https://github.com/pcah/python-clean-architecture). The core domain of the application is the process of organizing group meetings, based on the [Meetup.com](https://www.meetup.com/) system.
@@ -8,6 +9,7 @@ For more functional description, go to the [DESCRIPTION doc](docs/DESCRIPTION.md
 This package has the potential to be extracted as an independent repository in an undefined future when its codebase reaches stability.
 
 ### 1. Origin
+
 It is a reimplementation of [Modular Monolith with DDD](https://github.com/kgrzybek/modular-monolith-with-ddd) Project in Python language (the original is written in C# using ASP.NET Core MVC). All kudos for some great design go to © [Kamil Grzybek](https://www.kamilgrzybek.com/), the author of the original repository.
 
 ### 2. The Purpose & the Reason
@@ -31,10 +33,10 @@ As described by the [original project](https://github.com/kgrzybek/modular-monol
 >
 > — Kamil Grzybek (2020), [Modular Monolith with DDD](https://github.com/kgrzybek/modular-monolith-with-ddd)
 
-
 ### 2.2. The Reason
 
 > The reason for creating this repository is the lack of something similar. Most sample applications on GitHub have at least one of the following issues:
+>
 > - Very, very simple - few entities and use cases implemented
 > - Not finished (for example there is no authentication, logging, etc..)
 > - Poorly designed (in my opinion)

@@ -1,12 +1,14 @@
 # python-clean-architecture
+
 ![GitHub tag](https://img.shields.io/github/tag-date/pcah/python-clean-architecture.svg?style=popout)
 [![development status](https://img.shields.io/badge/development%20status-pre--alpha-orange.svg)](https://pypi.org/project/python-clean-architecture/)
-[![supports](https://img.shields.io/pypi/pyversions/python-clean-architecture)](https://github.com/pcah/python-clean-architecture/blob/master/tox.ini)
-[![build status](https://img.shields.io/github/workflow/status/pcah/python-clean-architecture/Code%20Quality)](https://github.com/pcah/python-clean-architecture/actions)
+[![supports](https://img.shields.io/pypi/pyversions/python-clean-architecture)](docker-compose.dev.yml)
+[![build status](https://img.shields.io/github/workflow/status/pcah/python-clean-architecture/code--quality)](https://github.com/pcah/python-clean-architecture/actions)
 [![codecov](https://codecov.io/gh/pcah/python-clean-architecture/branch/master/graph/badge.svg)](https://codecov.io/gh/pcah/python-clean-architecture) [![Join the chat at https://gitter.im/pcah/python-clean-architecture](https://badges.gitter.im/pcah/python-clean-architecture.svg)](https://gitter.im/pcah/python-clean-architecture?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 *python-clean-architecture* is a Python library aiming to bring your code closer to The Clean Architecture. The first goal is to equip you with a set of patterns and good practices. The second one is to provide you a toolbox of adapters for integration with popular frameworks. Using them can make your code more focused on the knowledge you are trying to embody with your application and separation from technical details. A nice side-effects of this approach is an ease of plugging your application to a different variants of your infrastructure and lightweight testing the key fragments of your codebase.
 
+<!-- markdownlint-disable-next-line MD001 -->
 #### Development Status  (Stage 2 - Pre-Alpha Status)
 
 **THE LIBRARY IS NOT PRODUCTION- OR DEVELOPMENT-READY**. If you want to make it useful, come and help. See [CONTRIBUTING](CONTRIBUTING.md) for details.
@@ -24,7 +26,6 @@ There is a saying that every developer should write his own framework once in a 
 - _Hexagonal Architecture_ by [Alistair Cockburn](http://alistair.cockburn.us/Hexagonal+architecture) (2005)
 - _Domain-Driven Design_ by [Eric Evans](http://dddcommunity.org/book/evans_2003/) (2003) & [Martin Fowler](https://martinfowler.com/tags/domain%20driven%20design.html) (2002)
 
-
 #### The Principles of the Library
 
 Here you can find a short version of The Principles the library is meant to follow. [If you want to read more about them, take a look at our docs](docs/PRINCIPLES.md).
@@ -38,21 +39,21 @@ Here you can find a short version of The Principles the library is meant to foll
 
 #### Tiers of the architecture
 
-* Data-level logic: data description objects, factories, serialization, predicates, formulae. (it's not a specific layer)
-* Domain layer: bounded contexts, entities, value objects, aggregates, repositories, policies, factories, domain services.
-* Application-specific logic: use-cases, application services, gateways, CQRS stacks, sagas. Task-, event- and data-driven applications, commands.
+- Data-level logic: data description objects, factories, serialization, predicates, formulae. (it's not a specific layer)
+- Domain layer: bounded contexts, entities, value objects, aggregates, repositories, policies, factories, domain services.
+- Application-specific logic: use-cases, application services, gateways, CQRS stacks, sagas. Task-, event- and data-driven applications, commands.
 
 #### Micro-frameworks
 
 To accomplish the goals in a most convenient and readable manner, the library introduces some helper micro-frameworks:
 
-  * [pca/utils/dependency_injection](pca/utils/dependency_injection) to provide loose coupling between components in the pythonic way: interface-based with type annotations, declarative dependencies, introspection, no necessity for global-state container.
-  * [utils/errors.py](pca/utils/errors.py) as a declarative way to provide l10n-independent errors with params & hints for developers, together with thematic catalogues of errors.
+- [pca/utils/dependency_injection](pca/utils/dependency_injection) to provide loose coupling between components in the pythonic way: interface-based with type annotations, declarative dependencies, introspection, no necessity for global-state container.
+- [utils/errors.py](pca/utils/errors.py) as a declarative way to provide l10n-independent errors with params & hints for developers, together with thematic catalogues of errors.
 
 #### Integrations
 
 One of the goals of this library is to provide integration with popular Python frameworks and libraries. Here are the most notable ones:
 
-  * [TinyDb](https://tinydb.readthedocs.io) as a [DAO](pca/integration/tinydb.py)
-  * YAML, JSON or INI file loaded into the memory as a [DAO](pca/data/dao/file.py)
-  * more to come soon...
+- [TinyDb](https://tinydb.readthedocs.io) as a [DAO](pca/integration/tinydb.py)
+- YAML, JSON or INI file loaded into the memory as a [DAO](pca/data/dao/file.py)
+- more to come soon...

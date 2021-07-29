@@ -9,5 +9,6 @@ An **architecture decision** (AD) is a software design choice that addresses a s
 An **architecture decision log** (ADL) is the collection of all ADRs created and maintained for a particular project (or organization).
 
 ### The List
- - [000 - Architectural Decision Log Introduced](000-architectural-decision-log-introduced.md)
- - [001 - Entity and the Source of Its Id](001-entity-and-the-source-of-its-id.md)
+
+- [000 - Architectural Decision Log Introduced](000-architectural-decision-log-introduced.md)
+- [001 - Entity and the Source of Its Id](001-entity-and-the-source-of-its-id.md)

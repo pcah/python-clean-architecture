@@ -3,8 +3,8 @@ version: '3.8'
 services:
 
   # dev versions of containers
-  dev_py39: &main_default
-    container_name: pca_dev_py39
+  dev: &main_default
+    container_name: pca_dev
     build: &build_default
       dockerfile: devops/Dockerfile
       context: .
@@ -16,6 +16,10 @@ services:
     env_file: devops/.env
     stdin_open: true
     tty: true
+
+  dev_py39:
+      container_name: pca_dev_py39
+      <<: *main_default
 
   dev_py38:
     <<: *main_default
