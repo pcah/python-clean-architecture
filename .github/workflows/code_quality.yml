@@ -25,36 +25,23 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version:
-          - '3.6'
-          - '3.7'
-          - '3.8'
-          - '3.9'
+          - 'py36'
+          - 'py37'
+          - 'py38'
+          - 'py39'
           - 'pypy3'
-        include:
+        # include:
+          # TODO #81 CI pipline for other OSes
           # - os: windows-latest
-          #   python-version: 3.8
-          - os: macos-latest
-            python-version: 3.8
+          #   python-version: 38
+          # - os: macos-latest
+          #   python-version: 38
     steps:
 
     - uses: actions/checkout@v2
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Install Poetry
-      uses: snok/install-poetry@v1.1.1
-      with:
-        virtualenvs-create: true
-        virtualenvs-in-project: true
-
-    - name: Install dependencies
-      run: poetry install --no-interaction
-
-    - name: Run tests
-      run: poetry run pytest --cov --cov-report=xml
+    - name: Run compose to build & run tests against ${{ matrix.python-version }} container
+      run: docker-compose run test_${{ matrix.python-version }}
 
     - name: Upload coverage
       uses: codecov/codecov-action@v1

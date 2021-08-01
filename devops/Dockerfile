@@ -50,7 +50,7 @@ RUN poetry install --no-root --no-interaction
 ENTRYPOINT [ "/bin/bash" ]
 
 FROM dev AS test
-ENTRYPOINT [ "pytest" ]
+ENTRYPOINT [ "pytest", "--cov", "--cov-report", "term", "--cov-report", "xml"]
 
 FROM dev AS lint
 COPY .git .git
