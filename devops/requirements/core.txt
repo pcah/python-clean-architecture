@@ -1,4 +1,0 @@
-dataclasses; python_version=='3.6'
-marshmallow~=3.0.0rc4
-ruamel.yaml==0.16.5
-JsonWeb==0.8.2

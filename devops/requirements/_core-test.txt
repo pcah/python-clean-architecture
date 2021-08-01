@@ -1,9 +1,0 @@
-# test process
-pytest
-pytest-flake8
-mock
-pytest-mock
-pytest-cov
-pep8-naming
-coverage
-pyfakefs

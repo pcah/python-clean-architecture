@@ -43,14 +43,12 @@ python = "^3.6.1"
 JsonWeb = "0.8.2"
 dataclasses = { version = "^0.8", python = ">=3.6,<3.7" }
 marshmallow = "^3.9.1"
-isort = "^5.6.4"
 
 [tool.poetry.dev-dependencies]
 # "gitpython",
 # 'twine',
 # 'virtualenv',
 # 'wheel',
-# pep8-naming = "^0.11.1"
 
 black = { version = "^20.8b1", markers = "platform_python_implementation!='PyPy'" }
 coverage = "^5.3"
@@ -59,6 +57,7 @@ ipython = [
     {version = "^7.19.0", python = "^3.7"},
     {version = "~7.16.0", python = "3.6"},
 ]
+isort = "^5.6.4"
 mock = "^4.0.2"
 pdbpp = "^0.10.2"
 pre-commit = "^2.9.2"
@@ -66,6 +65,10 @@ pyfakefs = "^4.3.2"
 pytest = "^6.1.2"
 pytest-cov = "^2.10.1"
 pytest-mock = "^3.3.1"
+tinydb = { version = "^4.5.1", optional = true }
+
+[tool.poetry.extras]
+tinydb = ["tinydb"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
